@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
@@ -35,11 +35,12 @@ export default function BirthEventPage() {
   }
 
   const bornMonster = monsters.find((m) => m.monsterId === gameState.currentMonsterId);
-  const eventText = useMemo(() => {
-    if (hatchPhase === "egg") return "タマゴが揺れている...";
-    if (hatchPhase === "crack") return "ピシッ...タマゴにヒビが入った！";
-    return `${bornMonster?.name ?? "スライム"} が誕生した！`;
-  }, [bornMonster?.name, hatchPhase]);
+  const eventText =
+    hatchPhase === "egg"
+      ? "タマゴが揺れている..."
+      : hatchPhase === "crack"
+        ? "ピシッ...タマゴにヒビが入った！"
+        : `${bornMonster?.name ?? "スライム"} が誕生した！`;
 
   const onContinue = () => {
     finishBirthEvent();
