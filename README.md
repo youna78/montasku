@@ -60,6 +60,20 @@ npm run dev
 
 ブラウザで `http://localhost:3000` を開きます。
 
+## Vercel 公開手順
+
+1. GitHub に push する
+2. Vercel で `New Project` -> 対象 GitHub リポジトリを選択
+3. Framework Preset は `Next.js` のままにする
+4. Build Command: `npm run build`（デフォルト）
+5. Output Directory: `.next`（デフォルト）
+6. Node.js Version: `20.x`
+7. `Deploy` を実行
+
+補足:
+- このアプリは `localStorage` を使用するため、データはブラウザごとに保存されます（端末/ブラウザ間で共有されません）。
+- 初回確認時はブラウザの `localStorage` キー `habit-monster-mvp-state` を削除してから試すと検証しやすいです。
+
 ## MVP確認項目
 
 1. 初回フローが通ること  
@@ -119,3 +133,11 @@ npm run dev
 4. 図鑑反映  
 - 誕生/進化したモンスターが `dex` に反映される  
 - 未取得は `???` のまま
+
+## GitHub push 前のデプロイ注意点
+
+1. `npm run build` がローカルで成功していること
+2. `public/img` / `public/sound` のファイル名の大文字小文字が、コード内パスと一致していること
+3. `DevDebugPanel` が本番で表示されないこと（`NODE_ENV=development` のみ表示）
+4. `.next` と `node_modules` を Git に含めないこと
+5. 音声はユーザー操作後に再生されるため、初回自動再生はブラウザ制限でブロックされる可能性があること
