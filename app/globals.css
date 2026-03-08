@@ -241,6 +241,7 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  align-items: center;
 }
 
 .rpg-link-grid .ui-link-button {
@@ -431,6 +432,14 @@ button:disabled {
   .monster-img-walk-hop {
     animation: none;
   }
+
+  .hatch-scene.phase-egg .hatch-egg,
+  .hatch-scene.phase-crack .hatch-egg,
+  .hatch-scene.phase-crack .hatch-smoke,
+  .hatch-scene.phase-born .hatch-smoke,
+  .hatch-scene.phase-born .hatch-monster {
+    animation: none;
+  }
 }
 
 .attr-label {
@@ -467,6 +476,120 @@ button:disabled {
   font-weight: 700;
   color: #fff;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 2px 0 #0c2458;
+}
+
+.centered-button-wrap {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.logo-wrap.logo-wrap-tutorial {
+  margin-top: 26px;
+}
+
+.section-bottom-action {
+  margin-top: 12px;
+}
+
+.centered-actions {
+  align-items: center;
+}
+
+.hatch-scene {
+  position: relative;
+  height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.hatch-egg {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  z-index: 2;
+}
+
+.hatch-smoke {
+  position: absolute;
+  width: 150px;
+  height: 92px;
+  object-fit: contain;
+  opacity: 0;
+  z-index: 3;
+}
+
+.hatch-monster {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  opacity: 0;
+  transform: translateY(14px) scale(0.9);
+  z-index: 1;
+}
+
+.hatch-scene.phase-egg .hatch-egg {
+  animation: egg-wobble 0.36s linear infinite;
+}
+
+.hatch-scene.phase-crack .hatch-egg {
+  animation: egg-crack 0.38s ease-in-out infinite;
+}
+
+.hatch-scene.phase-crack .hatch-smoke {
+  opacity: 0.85;
+  animation: smoke-burst 0.55s ease-out infinite;
+}
+
+.hatch-scene.phase-born .hatch-egg {
+  opacity: 0;
+}
+
+.hatch-scene.phase-born .hatch-smoke {
+  opacity: 0.55;
+  animation: smoke-fade 0.5s ease-out both;
+}
+
+.hatch-scene.phase-born .hatch-monster {
+  opacity: 1;
+  z-index: 4;
+  animation: hatch-pop 0.62s ease-out both;
+}
+
+@keyframes egg-wobble {
+  0% { transform: rotate(-4deg); }
+  25% { transform: rotate(0deg); }
+  50% { transform: rotate(4deg); }
+  75% { transform: rotate(0deg); }
+  100% { transform: rotate(-4deg); }
+}
+
+@keyframes egg-crack {
+  0% { transform: translateX(-4px) rotate(-9deg); }
+  25% { transform: translateX(4px) rotate(7deg); }
+  50% { transform: translateX(-3px) rotate(-6deg); }
+  75% { transform: translateX(2px) rotate(4deg); }
+  100% { transform: translateX(-4px) rotate(-9deg); }
+}
+
+@keyframes smoke-burst {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  100% { transform: scale(1.06); opacity: 0.1; }
+}
+
+@keyframes smoke-fade {
+  0% { transform: scale(1.1); opacity: 0.7; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+
+@keyframes hatch-pop {
+  0% { transform: translateY(20px) scale(0.78); }
+  65% { transform: translateY(-8px) scale(1.05); }
+  100% { transform: translateY(0) scale(1); }
 }
 
 .badge-wrap {

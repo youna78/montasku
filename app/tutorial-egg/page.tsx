@@ -39,9 +39,11 @@ export default function TutorialEggPage() {
         </div>
         <p>このタマゴは、あなたの行動で育ちます。</p>
         <p>タスクを3つ達成して誕生イベントを見ましょう。</p>
-        <button className="primary ui-image-button" onClick={() => router.push("/tasks")}>
-          タスクへ
-        </button>
+        <div className="centered-button-wrap">
+          <button className="primary ui-image-button" onClick={() => router.push("/tasks")}>
+            タスクへ
+          </button>
+        </div>
       </section>
       <DevDebugPanel gameState={gameState} monsters={monsters} />
       <BottomNav />

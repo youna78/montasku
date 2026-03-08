@@ -61,10 +61,10 @@ export default function TaskSettingsPage() {
 
       <section className="card decorated-card">
         <p>タスクは公式タスクから選択して追加できます。</p>
-        <div className="settings-links rpg-link-grid">
-          <Link href="/task-add" className="ui-link-button ui-link-primary">公式タスクを追加</Link>
-          <Link href="/task-remove" className="ui-link-button ui-link-secondary">タスク削除へ</Link>
-          <Link href="/task-reorder" className="ui-link-button ui-link-secondary">タスク並び替えへ</Link>
+        <div className="settings-links rpg-link-grid centered-actions">
+          <Link href="/task-add" className="ui-link-button quest-btn quest-btn-secondary">タスクを追加へ</Link>
+          <Link href="/task-remove" className="ui-link-button quest-btn quest-btn-secondary">タスク削除へ</Link>
+          <Link href="/task-reorder" className="ui-link-button quest-btn quest-btn-secondary">タスク並び替えへ</Link>
         </div>
       </section>
 

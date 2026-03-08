@@ -29,15 +29,19 @@ export default function SettingsPage() {
   return (
     <main className="page-shell">
       <div className="title-panel">設定</div>
-      <section className="card">
-        <Link href="/task-settings" className="ui-link-button ui-link-primary">
-          タスク設定へ
-        </Link>
+      <section className="card decorated-card">
+        <div className="settings-links centered-actions">
+          <Link href="/task-settings" className="ui-link-button ui-link-primary">
+            タスク設定へ
+          </Link>
+        </div>
       </section>
-      <section className="card">
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSflbsd5RHq5IBKaTU7k6aIFPJjhk1GINQ0VqSjwSYRFBtUvJA/viewform?usp=publish-editor" target="_blank" rel="noreferrer" className="ui-link-button ui-link-secondary">
-          タスク追加リクエスト
-        </a>
+      <section className="card decorated-card">
+        <div className="settings-links centered-actions">
+          <a href="https://docs.google.com/forms/d/e/1FAIpQLSflbsd5RHq5IBKaTU7k6aIFPJjhk1GINQ0VqSjwSYRFBtUvJA/viewform?usp=publish-editor" target="_blank" rel="noreferrer" className="ui-link-button ui-link-secondary">
+            タスク追加リクエスト
+          </a>
+        </div>
       </section>
       <DevDebugPanel gameState={gameState} monsters={monsters} />
       <BottomNav />

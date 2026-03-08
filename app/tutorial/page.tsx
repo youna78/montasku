@@ -27,22 +27,24 @@ export default function TutorialPage() {
 
   return (
     <main className="page-shell page-tutorial">
-      <div className="logo-wrap">
+      <div className="logo-wrap logo-wrap-tutorial">
         <img src="/img/branding/logo_title_01.png" alt="title" className="logo-title" />
       </div>
       <section className="card decorated-card">
         <div className="title-panel small">チュートリアル</div>
         <p>タスクを達成して、モンスターを育てるアプリです。</p>
         <p>まずは3つタスクを達成してタマゴを孵化させましょう。</p>
-        <button
-          className="primary ui-image-button"
-          onClick={() => {
-            startTutorialFlow();
-            router.push("/tutorial-egg");
-          }}
-        >
-          はじめる
-        </button>
+        <div className="centered-button-wrap">
+          <button
+            className="primary ui-image-button"
+            onClick={() => {
+              startTutorialFlow();
+              router.push("/tutorial-egg");
+            }}
+          >
+            はじめる
+          </button>
+        </div>
       </section>
       <DevDebugPanel gameState={gameState} monsters={monsters} />
       <BottomNav />

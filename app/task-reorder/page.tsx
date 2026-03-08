@@ -94,6 +94,11 @@ export default function TaskReorderPage() {
             </li>
           ))}
         </ul>
+        <div className="settings-links rpg-link-grid section-bottom-action">
+          <Link href="/task-settings" className="ui-link-button quest-btn quest-btn-secondary">
+            タスク設定へ戻る
+          </Link>
+        </div>
       </section>
 
       <DevDebugPanel gameState={gameState} monsters={monsters} />

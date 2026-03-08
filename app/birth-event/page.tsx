@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
@@ -10,6 +10,7 @@ import { useGame } from "@/lib/game/useGame";
 export default function BirthEventPage() {
   const router = useRouter();
   const { monsters, gameState, isLoading, finishBirthEvent } = useGame();
+  const [hatchPhase, setHatchPhase] = useState<"egg" | "crack" | "born">("egg");
 
   useEffect(() => {
     if (!gameState) return;
@@ -18,11 +19,27 @@ export default function BirthEventPage() {
     }
   }, [gameState, router]);
 
+  useEffect(() => {
+    if (!gameState?.birthEventPending) return;
+    setHatchPhase("egg");
+    const crackTimer = window.setTimeout(() => setHatchPhase("crack"), 700);
+    const bornTimer = window.setTimeout(() => setHatchPhase("born"), 1400);
+    return () => {
+      window.clearTimeout(crackTimer);
+      window.clearTimeout(bornTimer);
+    };
+  }, [gameState?.birthEventPending]);
+
   if (isLoading || !gameState) {
     return <main>Loading...</main>;
   }
 
   const bornMonster = monsters.find((m) => m.monsterId === gameState.currentMonsterId);
+  const eventText = useMemo(() => {
+    if (hatchPhase === "egg") return "タマゴが揺れている...";
+    if (hatchPhase === "crack") return "ピシッ...タマゴにヒビが入った！";
+    return `${bornMonster?.name ?? "スライム"} が誕生した！`;
+  }, [bornMonster?.name, hatchPhase]);
 
   const onContinue = () => {
     finishBirthEvent();
@@ -33,19 +50,17 @@ export default function BirthEventPage() {
     <main className="page-shell page-birth">
       <div className="title-panel">誕生イベント</div>
       <section className="card decorated-card">
-        <div className="birth-wrap">
-          <img src="/img/ui/ui_egg_symbol_01.png" alt="egg" className="birth-img small" />
-          <img src="/img/effect/effect_smoke_01.png" alt="smoke" className="birth-img small" />
-          <img src="/img/ui/fx_levelup_01.png" alt="light" className="birth-img small" />
+        <div className={`hatch-scene phase-${hatchPhase}`}>
+          <img src="/img/ui/ui_egg_symbol_01.png" alt="egg" className="hatch-egg" />
+          <img src="/img/effect/effect_smoke_01.png" alt="smoke" className="hatch-smoke" />
+          <img src={getMonsterImage(bornMonster?.monsterId)} alt={bornMonster?.name ?? "monster"} className="hatch-monster" />
         </div>
-        <p>タマゴが光りはじめた...</p>
-        <div className="monster-wrap">
-          <img src={getMonsterImage(bornMonster?.monsterId)} alt={bornMonster?.name ?? "monster"} className="monster-img" />
+        <p style={{ textAlign: "center" }}>{eventText}</p>
+        <div className="centered-button-wrap">
+          <button className="primary ui-image-button" onClick={onContinue}>
+            ホームへ
+          </button>
         </div>
-        <p style={{ textAlign: "center" }}>{bornMonster?.name ?? "スライム"} が誕生した！</p>
-        <button className="primary ui-image-button" onClick={onContinue}>
-          ホームへ
-        </button>
       </section>
       <DevDebugPanel gameState={gameState} monsters={monsters} />
       <BottomNav />
