@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
+import { playSfx } from "@/lib/game/sfx";
 import { getTaskLimitInfo } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 import type { TaskMaster } from "@/types/master";
@@ -43,6 +44,7 @@ export default function TaskReorderPage() {
       return;
     }
     if (result.moved) {
+      playSfx("irekae");
       setMessage("並び順を更新しました");
       return;
     }
@@ -62,7 +64,7 @@ export default function TaskReorderPage() {
           タスク数: {limits.current} / {limits.max}
         </div>
         <div className="settings-links rpg-link-grid">
-          <Link href="/task-settings" className="ui-link-button ui-link-secondary">
+          <Link href="/task-settings" className="ui-link-button quest-btn quest-btn-secondary">
             タスク設定へ戻る
           </Link>
         </div>
@@ -82,10 +84,10 @@ export default function TaskReorderPage() {
                 </span>
               </div>
               <div className="row-tight">
-                <button className="primary" onClick={() => onMove(task.taskId, "up")} disabled={index === 0}>
+                <button className="quest-btn quest-btn-primary quest-btn-icon" onClick={() => onMove(task.taskId, "up")} disabled={index === 0}>
                   ↑
                 </button>
-                <button className="primary" onClick={() => onMove(task.taskId, "down")} disabled={index === activeTasks.length - 1}>
+                <button className="quest-btn quest-btn-primary quest-btn-icon" onClick={() => onMove(task.taskId, "down")} disabled={index === activeTasks.length - 1}>
                   ↓
                 </button>
               </div>

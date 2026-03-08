@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { ATTRIBUTE_ICON_BY_KEY } from "@/lib/game/assets";
+import { playSfx } from "@/lib/game/sfx";
 import { useGame } from "@/lib/game/useGame";
 import type { TaskMaster } from "@/types/master";
 
@@ -43,6 +44,7 @@ export default function TasksPage() {
   const onComplete = (taskId: number) => {
     const result = completeTask(taskId);
     if (!result || result.alreadyCompleted) return;
+    playSfx("s_Check");
 
     const fragments = [`EXP +${result.gainedExp}`];
     if (result.levelUp) fragments.push("LV UP");
@@ -57,9 +59,11 @@ export default function TasksPage() {
   };
 
   return (
-    <main>
-      <h1>タスク</h1>
-      <p>各タスクは1日1回のみ達成できます。</p>
+    <main className="page-shell">
+      <div className="title-panel">タスク</div>
+      <section className="card decorated-card quest-heading-card">
+        <p>各タスクは1日1回のみ達成できます。</p>
+      </section>
 
       {feedback && <div className="toast">{feedback}</div>}
 
@@ -67,7 +71,7 @@ export default function TasksPage() {
         const completed = gameState.completedTaskIdsToday.includes(task.taskId);
 
         return (
-          <section className="card" key={task.taskId}>
+          <section className="card decorated-card" key={task.taskId}>
             <div className="row">
               <div>
                 <div>{task.name}</div>

@@ -47,7 +47,7 @@ docs/
 - タスクはユーザー自由入力ではなく、公式タスクのみを使用
 - 理由: タスク -> EXP -> モンスター成長のゲームバランス維持
 - 要望収集は `settings` の「タスク追加リクエスト」導線で実施
-  - フォームURL（仮）: `https://example.com/task-request`
+  - フォームURL: `https://docs.google.com/forms/d/e/1FAIpQLSflbsd5RHq5IBKaTU7k6aIFPJjhk1GINQ0VqSjwSYRFBtUvJA/viewform?usp=publish-editor`
 
 ## 開発起動手順
 

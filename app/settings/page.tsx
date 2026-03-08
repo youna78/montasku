@@ -35,7 +35,7 @@ export default function SettingsPage() {
         </Link>
       </section>
       <section className="card">
-        <a href="https://example.com/task-request" target="_blank" rel="noreferrer" className="ui-link-button ui-link-secondary">
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSflbsd5RHq5IBKaTU7k6aIFPJjhk1GINQ0VqSjwSYRFBtUvJA/viewform?usp=publish-editor" target="_blank" rel="noreferrer" className="ui-link-button ui-link-secondary">
           タスク追加リクエスト
         </a>
       </section>

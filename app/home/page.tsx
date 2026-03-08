@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage, getStageBadge } from "@/lib/game/assets";
+import { playSfx } from "@/lib/game/sfx";
 import { progressToNextLevel } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 
@@ -15,7 +17,14 @@ function toPercent(value: number, total: number): number {
 
 export default function HomePage() {
   const router = useRouter();
-  const { tasks, monsters, gameState, isLoading } = useGame();
+  const { tasks, monsters, gameState, isLoading, completeTask } = useGame();
+  const [feedback, setFeedback] = useState("");
+
+  useEffect(() => {
+    if (!feedback) return;
+    const timer = window.setTimeout(() => setFeedback(""), 1200);
+    return () => window.clearTimeout(timer);
+  }, [feedback]);
 
   useEffect(() => {
     if (!gameState) return;
@@ -58,27 +67,63 @@ export default function HomePage() {
   ];
 
   const stageBadge = getStageBadge(currentMonster?.stage);
+  const monsterMotionClass = currentMonster?.stage === "egg" ? "monster-img-alive" : "monster-img-walk-hop";
+
+  const onCompleteFromHome = (taskId: number) => {
+    const result = completeTask(taskId);
+    if (!result || result.alreadyCompleted) return;
+    playSfx("s_Check");
+
+    const fragments = [`EXP +${result.gainedExp}`];
+    if (result.levelUp) fragments.push("LV UP");
+    if (result.evolved) fragments.push("進化");
+    setFeedback(fragments.join(" / "));
+
+    if (result.nextState.birthEventPending && !result.nextState.hasCompletedInitialBirth) {
+      window.setTimeout(() => {
+        router.push("/birth-event");
+      }, 220);
+    }
+  };
 
   return (
     <main className="page-shell page-home">
       <div className="title-panel">ホーム</div>
+      {feedback && <div className="toast">{feedback}</div>}
 
       <section className="card decorated-card">
         <div className="monster-wrap">
-          <img src={getMonsterImage(currentMonster?.monsterId)} alt={currentMonster?.name ?? "monster"} className="monster-img" />
+          <img src={getMonsterImage(currentMonster?.monsterId)} alt={currentMonster?.name ?? "monster"} className={`monster-img ${monsterMotionClass}`} />
         </div>
         {stageBadge && (
           <div className="badge-wrap">
             <img src={stageBadge} alt="stage" className="badge-img" />
           </div>
         )}
-        <div>現在のモンスター: {currentMonster?.name ?? "-"}</div>
-        <div>Lv: {gameState.currentMonsterLevel}</div>
-        <div>
-          EXP: {progress.current} / {progress.required}
+        <div className="status-panel">
+          <div className="status-row">
+            <span>現在のモンスター</span>
+            <strong>{currentMonster?.name ?? "-"}</strong>
+          </div>
+          <div className="status-row">
+            <span>Lv</span>
+            <strong>{gameState.currentMonsterLevel}</strong>
+          </div>
+          <div className="status-row">
+            <span>EXP</span>
+            <strong>
+              {progress.current} / {progress.required}
+            </strong>
+          </div>
+          <div className="status-row">
+            <span>今日のEXP</span>
+            <strong>{gameState.todayExp}</strong>
+          </div>
+          <div className="status-row">
+            <span>連続ログイン</span>
+            <strong>{gameState.streakDays}日</strong>
+          </div>
         </div>
-        <div>今日のEXP: {gameState.todayExp}</div>
-        <div>連続ログイン: {gameState.streakDays}日</div>
       </section>
 
       <section className="card decorated-card">
@@ -107,11 +152,26 @@ export default function HomePage() {
             <div>今日の有効タスクはすべて達成済みです。</div>
           </div>
         ) : (
-          <ul>
+          <ul className="quest-list">
             {remainingTasks.slice(0, 3).map((task) => (
-              <li key={task.taskId}>{task.name}</li>
+              <li key={task.taskId} className="quest-item row">
+                <span className="row-tight">
+                  <img src="/img/icon/icon_egg_01.png" alt="quest" className="quest-icon" />
+                  <span>{task.name}</span>
+                </span>
+                <button className="quest-btn quest-btn-primary quest-btn-check" onClick={() => onCompleteFromHome(task.taskId)}>
+                  達成
+                </button>
+              </li>
             ))}
           </ul>
+        )}
+        {remainingTasks.length > 0 && (
+          <div className="task-section-cta">
+            <Link href="/tasks" className="quest-btn quest-btn-primary">
+              タスク画面でチェックする
+            </Link>
+          </div>
         )}
       </section>
 

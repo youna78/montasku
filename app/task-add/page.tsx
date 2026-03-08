@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
+import { playSfx } from "@/lib/game/sfx";
 import { getTaskLimitInfo } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 
@@ -49,6 +50,7 @@ export default function TaskAddPage() {
       }
 
       if (result.added) {
+        playSfx("s_add");
         setMessage("タスクを追加しました。");
         return;
       }
@@ -81,7 +83,7 @@ export default function TaskAddPage() {
         </div>
         {isAtMaxTasks && <div>上限に達しているため追加できません。</div>}
         <div className="settings-links rpg-link-grid">
-          <Link href="/task-settings" className="ui-link-button ui-link-secondary">
+          <Link href="/task-settings" className="ui-link-button quest-btn quest-btn-secondary">
             タスク設定へ戻る
           </Link>
         </div>
@@ -105,7 +107,7 @@ export default function TaskAddPage() {
                     <small>{task.category}</small>
                   </div>
                 </div>
-                <button className="primary" onClick={() => onAddTask(task.taskId)} disabled={isAtMaxTasks}>
+                <button className="quest-btn quest-btn-primary" onClick={() => onAddTask(task.taskId)} disabled={isAtMaxTasks}>
                   追加
                 </button>
               </li>

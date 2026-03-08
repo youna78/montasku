@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
+import { playSfx } from "@/lib/game/sfx";
 import { getTaskLimitInfo } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 import type { TaskMaster } from "@/types/master";
@@ -43,6 +44,7 @@ export default function TaskRemovePage() {
       return;
     }
     if (result.removed) {
+      playSfx("s_delete");
       setMessage("タスクを削除しました");
       return;
     }
@@ -63,7 +65,7 @@ export default function TaskRemovePage() {
         </div>
         <div>最低必要数: {limits.min}</div>
         <div className="settings-links rpg-link-grid">
-          <Link href="/task-settings" className="ui-link-button ui-link-secondary">
+          <Link href="/task-settings" className="ui-link-button quest-btn quest-btn-secondary">
             タスク設定へ戻る
           </Link>
         </div>
@@ -82,7 +84,7 @@ export default function TaskRemovePage() {
                   {index + 1}. {task.name}
                 </span>
               </div>
-              <button className="primary" onClick={() => onRemoveTask(task.taskId)} disabled={limits.current <= limits.min}>
+              <button className="quest-btn quest-btn-primary" onClick={() => onRemoveTask(task.taskId)} disabled={limits.current <= limits.min}>
                 削除
               </button>
             </li>
