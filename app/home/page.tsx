@@ -8,6 +8,7 @@ import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage, getStageBadge } from "@/lib/game/assets";
 import { playSfx } from "@/lib/game/sfx";
 import { progressToNextLevel } from "@/lib/game/state";
+import { resolveLevelFromExp } from "@/lib/game/leveling";
 import { useGame } from "@/lib/game/useGame";
 
 function toPercent(value: number, total: number): number {
@@ -17,7 +18,7 @@ function toPercent(value: number, total: number): number {
 
 export default function HomePage() {
   const router = useRouter();
-  const { tasks, monsters, gameState, isLoading, completeTask } = useGame();
+  const { tasks, monsters, levelingRows, gameState, isLoading, completeTask } = useGame();
   const [feedback, setFeedback] = useState("");
 
   useEffect(() => {
@@ -52,7 +53,8 @@ export default function HomePage() {
     .filter((task): task is NonNullable<typeof task> => Boolean(task))
     .filter((task) => !gameState.completedTaskIdsToday.includes(task.taskId));
 
-  const progress = progressToNextLevel(gameState.currentMonsterLevel, gameState.currentMonsterExp);
+  const progress = progressToNextLevel(gameState.currentMonsterLevel, gameState.currentMonsterExp, levelingRows);
+  const growthStage = resolveLevelFromExp(gameState.currentMonsterExp, levelingRows).stage;
   const totalAttr =
     gameState.attributeTotals.power +
     gameState.attributeTotals.heal +
@@ -66,8 +68,8 @@ export default function HomePage() {
     { key: "create", label: "Create", value: gameState.attributeTotals.create, className: "bar-create" }
   ];
 
-  const stageBadge = getStageBadge(currentMonster?.stage);
-  const monsterMotionClass = currentMonster?.stage === "egg" ? "monster-img-alive" : "monster-img-walk-hop";
+  const stageBadge = getStageBadge(growthStage);
+  const monsterMotionClass = growthStage === "egg" ? "monster-img-alive" : "monster-img-walk-hop";
 
   const onCompleteFromHome = (taskId: number) => {
     const result = completeTask(taskId);
@@ -112,7 +114,7 @@ export default function HomePage() {
           <div className="status-row">
             <span>EXP</span>
             <strong>
-              {progress.current} / {progress.required}
+              {progress.required > 0 ? `${progress.current} / ${progress.required}` : "MAX"}
             </strong>
           </div>
           <div className="status-row">

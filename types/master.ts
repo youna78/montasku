@@ -8,7 +8,7 @@ export type MonsterAttribute =
   | "none"
   | "special";
 
-export type MonsterStage = "egg" | "baby" | "child" | "adult" | "final";
+export type MonsterStage = "egg" | "baby" | "child" | "adult" | "final" | "end";
 
 export type TaskMaster = {
   taskId: number;
@@ -50,4 +50,11 @@ export type NavigationFlow = {
   extraCondition?: string;
   priority: number;
   notes?: string;
+};
+
+export type LevelingMaster = {
+  level: number;
+  cumulativeExp: number;
+  stage: MonsterStage;
+  event?: string;
 };

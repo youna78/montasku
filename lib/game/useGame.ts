@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { loadLevelingMaster } from "@/lib/csv/levelingMaster";
 import { loadMonstersMaster } from "@/lib/csv/monstersMaster";
 import { loadTasksMaster } from "@/lib/csv/tasksMaster";
 import {
@@ -18,11 +19,12 @@ import {
   type ReorderTaskResult
 } from "@/lib/game/state";
 import type { GameState } from "@/types/game";
-import type { MonsterMaster, TaskMaster } from "@/types/master";
+import type { LevelingMaster, MonsterMaster, TaskMaster } from "@/types/master";
 
 type UseGameResult = {
   tasks: TaskMaster[];
   monsters: MonsterMaster[];
+  levelingRows: LevelingMaster[];
   gameState: GameState | null;
   isLoading: boolean;
   completeTask: (taskId: number) => CompleteTaskResult | null;
@@ -36,6 +38,7 @@ type UseGameResult = {
 export function useGame(): UseGameResult {
   const [tasks, setTasks] = useState<TaskMaster[]>([]);
   const [monsters, setMonsters] = useState<MonsterMaster[]>([]);
+  const [levelingRows, setLevelingRows] = useState<LevelingMaster[]>([]);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const gameStateRef = useRef<GameState | null>(null);
@@ -44,9 +47,11 @@ export function useGame(): UseGameResult {
     async function init() {
       try {
         const loadedTasks = await loadTasksMaster();
-        const loadedState = loadGameState(loadedTasks);
+        const loadedLeveling = await loadLevelingMaster();
+        const loadedState = loadGameState(loadedTasks, loadedLeveling);
 
         setTasks(loadedTasks);
+        setLevelingRows(loadedLeveling);
         setGameState(loadedState);
         gameStateRef.current = loadedState;
 
@@ -62,6 +67,7 @@ export function useGame(): UseGameResult {
         const fallbackState = loadGameState([]);
         setTasks([]);
         setMonsters([]);
+        setLevelingRows([]);
         setGameState(fallbackState);
         gameStateRef.current = fallbackState;
       } finally {
@@ -91,11 +97,11 @@ export function useGame(): UseGameResult {
       const task = tasks.find((t) => t.taskId === taskId);
       if (!task) return null;
 
-      const result = runCompleteTask({ state: current, task, monsters });
+      const result = runCompleteTask({ state: current, task, monsters, levelingRows });
       commitState(result.nextState);
       return result;
     },
-    [commitState, monsters, tasks]
+    [commitState, monsters, tasks, levelingRows]
   );
 
   const addTask = useCallback(
@@ -143,5 +149,5 @@ export function useGame(): UseGameResult {
     commitState(runStartTutorialFlow(current));
   }, [commitState]);
 
-  return { tasks, monsters, gameState, isLoading, completeTask, addTask, removeTask, moveTask, startTutorialFlow, finishBirthEvent };
+  return { tasks, monsters, levelingRows, gameState, isLoading, completeTask, addTask, removeTask, moveTask, startTutorialFlow, finishBirthEvent };
 }

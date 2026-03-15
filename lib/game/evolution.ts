@@ -33,22 +33,18 @@ export function evaluateEvolution({ gameState, monsters }: EvolutionContext): nu
   const attr = dominantAttribute(gameState.attributeTotals);
   const lv = gameState.currentMonsterLevel;
 
-  if (current.stage === "egg" && lv >= 5) {
-    return resolveBirthMonsterId(gameState.attributeTotals, monsters);
-  }
-
-  if (current.stage === "baby" && lv >= 20) {
-    const map = { heal: "ミニフェアリー", power: "プチドラ", knowledge: "プチビースト", create: "ミニスピリット" };
+  if (current.stage === "baby" && lv >= 8) {
+    const map = { heal: "ミニフェアリー", power: "プチドラ", knowledge: "プチビースト", create: "ミニスピリット" } as const;
     return monsters.find((m) => m.name === map[attr])?.monsterId ?? null;
   }
 
-  if (current.stage === "child" && lv >= 40) {
-    const map = { heal: "アークフェアリー", power: "ドラゴン", knowledge: "ウィザードビースト", create: "アートゴーレム" };
+  if (current.stage === "child" && lv >= 16) {
+    const map = { heal: "アークフェアリー", power: "ドラゴン", knowledge: "ウィザードビースト", create: "アートゴーレム" } as const;
     return monsters.find((m) => m.name === map[attr])?.monsterId ?? null;
   }
 
-  if (current.stage === "adult" && lv >= 70) {
-    const map = { heal: "セラフィム", power: "アークドラゴン", knowledge: "アークメイジ", create: "クリエイター" };
+  if (current.stage === "adult" && lv >= 30) {
+    const map = { heal: "セラフィム", power: "アークドラゴン", knowledge: "アークメイジ", create: "クリエイター" } as const;
     return monsters.find((m) => m.name === map[attr])?.monsterId ?? null;
   }
 

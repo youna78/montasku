@@ -1,6 +1,7 @@
 import type { GameState } from "@/types/game";
-import type { MonsterMaster, TaskMaster } from "@/types/master";
+import type { LevelingMaster, MonsterMaster, TaskMaster } from "@/types/master";
 import { evaluateEvolution, resolveBirthMonsterId } from "./evolution";
+import { getFallbackLevelingMaster, getLevelProgress, normalizeLevelingMaster, resolveLevelFromExp } from "./leveling";
 
 const STORAGE_KEY = "habit-monster-mvp-state";
 const MIN_ACTIVE_TASKS = 3;
@@ -93,8 +94,36 @@ function todayLocalDate(): string {
   return `${year}-${month}-${day}`;
 }
 
-function expForNextLevel(level: number): number {
+function parseLocalDateString(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const monthIndex = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  const date = new Date(year, monthIndex, day, 12, 0, 0, 0);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function diffDays(fromDate: string, toDate: string): number | null {
+  const from = parseLocalDateString(fromDate);
+  const to = parseLocalDateString(toDate);
+  if (!from || !to) return null;
+
+  const millisecondsPerDay = 1000 * 60 * 60 * 24;
+  return Math.round((to.getTime() - from.getTime()) / millisecondsPerDay);
+}
+
+function legacyExpForNextLevel(level: number): number {
   return 20 + Math.max(0, level - 1) * 5;
+}
+
+function legacyTotalExp(level: number, currentExp: number): number {
+  let total = Math.max(0, currentExp);
+  for (let currentLevel = 1; currentLevel < level; currentLevel += 1) {
+    total += legacyExpForNextLevel(currentLevel);
+  }
+  return total;
 }
 
 export function buildInitialState(tasks: TaskMaster[]): GameState {
@@ -112,7 +141,7 @@ export function buildInitialState(tasks: TaskMaster[]): GameState {
     currentMonsterLevel: 1,
     currentMonsterExp: 0,
     todayExp: 0,
-    streakDays: 0,
+    streakDays: 1,
     attributeTotals: {
       power: 0,
       heal: 0,
@@ -131,8 +160,13 @@ export function buildInitialState(tasks: TaskMaster[]): GameState {
   };
 }
 
-function normalizeState(parsed: Partial<GameState>, tasks: TaskMaster[]): GameState {
+function normalizeState(
+  parsed: Partial<GameState>,
+  tasks: TaskMaster[],
+  levelingRows: LevelingMaster[]
+): GameState {
   const initial = buildInitialState(tasks);
+  const table = normalizeLevelingMaster(levelingRows);
 
   const hasCompletedInitialBirth =
     typeof parsed.hasCompletedInitialBirth === "boolean"
@@ -141,10 +175,19 @@ function normalizeState(parsed: Partial<GameState>, tasks: TaskMaster[]): GameSt
 
   const rawDiscovered = Array.isArray(parsed.discoveredMonsterIds) ? parsed.discoveredMonsterIds : [];
   const normalizedActiveTasks = normalizeActiveTasks(parsed.activeTasks, initial.activeTasks);
+  const parsedLevel = typeof parsed.currentMonsterLevel === "number" ? parsed.currentMonsterLevel : initial.currentMonsterLevel;
+  const parsedExp = typeof parsed.currentMonsterExp === "number" ? parsed.currentMonsterExp : initial.currentMonsterExp;
+  const totalExp =
+    parsedLevel > 1 && parsedExp < legacyExpForNextLevel(parsedLevel)
+      ? legacyTotalExp(parsedLevel, parsedExp)
+      : parsedExp;
+  const resolvedLevel = resolveLevelFromExp(totalExp, table);
 
   return {
     ...initial,
     ...parsed,
+    currentMonsterLevel: resolvedLevel.level,
+    currentMonsterExp: totalExp,
     attributeTotals: {
       ...initial.attributeTotals,
       ...(parsed.attributeTotals ?? {})
@@ -173,10 +216,14 @@ function applyDailyReset(state: GameState): GameState {
   const today = todayLocalDate();
   if (state.lastPlayedDate === today) return state;
 
+  const dayDiff = diffDays(state.lastPlayedDate, today);
+  const nextStreakDays = dayDiff === 1 ? Math.max(1, state.streakDays) + 1 : 1;
+
   return {
     ...state,
     todayExp: 0,
     completedTaskIdsToday: [],
+    streakDays: nextStreakDays,
     lastPlayedDate: today
   };
 }
@@ -186,7 +233,10 @@ export function saveGameState(state: GameState): void {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-export function loadGameState(tasks: TaskMaster[]): GameState {
+export function loadGameState(
+  tasks: TaskMaster[],
+  levelingRows: LevelingMaster[] = getFallbackLevelingMaster()
+): GameState {
   if (typeof window === "undefined") return buildInitialState(tasks);
 
   const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -198,7 +248,7 @@ export function loadGameState(tasks: TaskMaster[]): GameState {
 
   try {
     const parsed = JSON.parse(raw) as Partial<GameState>;
-    const normalized = normalizeState(parsed, tasks);
+    const normalized = normalizeState(parsed, tasks, levelingRows);
     const resetApplied = applyDailyReset(normalized);
     saveGameState(resetApplied);
     return resetApplied;
@@ -209,19 +259,19 @@ export function loadGameState(tasks: TaskMaster[]): GameState {
   }
 }
 
-function applyExpAndAttributes(state: GameState, task: TaskMaster): GameState {
-  let level = state.currentMonsterLevel;
-  let exp = state.currentMonsterExp + task.baseExp;
-
-  while (exp >= expForNextLevel(level)) {
-    exp -= expForNextLevel(level);
-    level += 1;
-  }
+function applyExpAndAttributes(
+  state: GameState,
+  task: TaskMaster,
+  levelingRows: LevelingMaster[]
+): GameState {
+  const table = normalizeLevelingMaster(levelingRows);
+  const totalExp = state.currentMonsterExp + task.baseExp;
+  const resolvedLevel = resolveLevelFromExp(totalExp, table);
 
   return {
     ...state,
-    currentMonsterLevel: level,
-    currentMonsterExp: exp,
+    currentMonsterLevel: resolvedLevel.level,
+    currentMonsterExp: totalExp,
     todayExp: state.todayExp + task.baseExp,
     attributeTotals: {
       power: state.attributeTotals.power + task.power,
@@ -259,8 +309,9 @@ export function completeTask(params: {
   state: GameState;
   task: TaskMaster;
   monsters: MonsterMaster[];
+  levelingRows: LevelingMaster[];
 }): CompleteTaskResult {
-  const { state, task, monsters } = params;
+  const { state, task, monsters, levelingRows } = params;
 
   if (state.completedTaskIdsToday.includes(task.taskId)) {
     return {
@@ -276,10 +327,11 @@ export function completeTask(params: {
   const previousLevel = state.currentMonsterLevel;
   const previousMonsterId = state.currentMonsterId;
 
-  let nextState = applyExpAndAttributes(state, task);
+  let nextState = applyExpAndAttributes(state, task, levelingRows);
   nextState = applyInitialBirthProgress(nextState, monsters);
+  const didLevelUp = nextState.currentMonsterLevel > previousLevel;
 
-  if (nextState.hasCompletedInitialBirth) {
+  if (nextState.hasCompletedInitialBirth && didLevelUp) {
     const nextMonsterId = evaluateEvolution({ gameState: nextState, monsters });
     if (nextMonsterId && nextMonsterId !== nextState.currentMonsterId) {
       nextState = {
@@ -301,7 +353,7 @@ export function completeTask(params: {
     },
     alreadyCompleted: false,
     evolved: nextState.currentMonsterId !== previousMonsterId,
-    levelUp: nextState.currentMonsterLevel > previousLevel
+    levelUp: didLevelUp
   };
 }
 
@@ -420,9 +472,10 @@ export function getInitialRoute(state: GameState): "/tutorial" | "/tasks" | "/bi
   return "/home";
 }
 
-export function progressToNextLevel(level: number, exp: number): { current: number; required: number } {
-  return {
-    current: exp,
-    required: expForNextLevel(level)
-  };
+export function progressToNextLevel(
+  level: number,
+  totalExp: number,
+  levelingRows: LevelingMaster[] = getFallbackLevelingMaster()
+): { current: number; required: number; currentTotal: number; nextTotal: number | null } {
+  return getLevelProgress(level, totalExp, levelingRows);
 }
