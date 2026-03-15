@@ -14,7 +14,11 @@ export default function BirthEventPage() {
 
   useEffect(() => {
     if (!gameState) return;
-    if (!gameState.birthEventPending || gameState.hasCompletedInitialBirth) {
+    if (gameState.endEventPending) {
+      router.replace("/end-event");
+      return;
+    }
+    if (!gameState.birthEventPending) {
       router.replace("/home");
     }
   }, [gameState, router]);

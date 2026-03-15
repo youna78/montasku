@@ -13,15 +13,19 @@ export default function TutorialEggPage() {
 
   useEffect(() => {
     if (!gameState) return;
-    if (gameState.birthEventPending && !gameState.hasCompletedInitialBirth) {
+    if (gameState.endEventPending) {
+      router.replace("/end-event");
+      return;
+    }
+    if (gameState.birthEventPending) {
       router.replace("/birth-event");
       return;
     }
-    if (!gameState.isInTutorialFlow && !gameState.hasCompletedInitialBirth) {
+    if (!gameState.isInTutorialFlow && !gameState.hasSeenTutorial) {
       router.replace("/tutorial");
       return;
     }
-    if (gameState.hasCompletedInitialBirth) {
+    if (gameState.hasSeenTutorial) {
       router.replace("/home");
     }
   }, [gameState, router]);

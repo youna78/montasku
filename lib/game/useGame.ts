@@ -7,6 +7,7 @@ import { loadTasksMaster } from "@/lib/csv/tasksMaster";
 import {
   addTaskToActive,
   completeTask as runCompleteTask,
+  finishEndEvent as runFinishEndEvent,
   finishBirthEvent as runFinishBirthEvent,
   loadGameState,
   moveTaskInActive,
@@ -33,6 +34,7 @@ type UseGameResult = {
   moveTask: (taskId: number, direction: "up" | "down") => ReorderTaskResult | null;
   startTutorialFlow: () => void;
   finishBirthEvent: () => void;
+  finishEndEvent: () => void;
 };
 
 export function useGame(): UseGameResult {
@@ -143,11 +145,17 @@ export function useGame(): UseGameResult {
     commitState(runFinishBirthEvent(current));
   }, [commitState]);
 
+  const finishEndEvent = useCallback(() => {
+    const current = gameStateRef.current;
+    if (!current) return;
+    commitState(runFinishEndEvent(current));
+  }, [commitState]);
+
   const startTutorialFlow = useCallback(() => {
     const current = gameStateRef.current;
     if (!current) return;
     commitState(runStartTutorialFlow(current));
   }, [commitState]);
 
-  return { tasks, monsters, levelingRows, gameState, isLoading, completeTask, addTask, removeTask, moveTask, startTutorialFlow, finishBirthEvent };
+  return { tasks, monsters, levelingRows, gameState, isLoading, completeTask, addTask, removeTask, moveTask, startTutorialFlow, finishBirthEvent, finishEndEvent };
 }

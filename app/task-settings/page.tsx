@@ -15,11 +15,15 @@ export default function TaskSettingsPage() {
 
   useEffect(() => {
     if (!gameState) return;
-    if (gameState.birthEventPending && !gameState.hasCompletedInitialBirth) {
+    if (gameState.endEventPending) {
+      router.replace("/end-event");
+      return;
+    }
+    if (gameState.birthEventPending) {
       router.replace("/birth-event");
       return;
     }
-    if (!gameState.hasCompletedInitialBirth) {
+    if (!gameState.hasSeenTutorial) {
       router.replace("/tutorial");
     }
   }, [gameState, router]);

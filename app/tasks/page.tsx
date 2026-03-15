@@ -22,11 +22,15 @@ export default function TasksPage() {
 
   useEffect(() => {
     if (!gameState) return;
-    if (gameState.birthEventPending && !gameState.hasCompletedInitialBirth) {
+    if (gameState.endEventPending) {
+      router.replace("/end-event");
+      return;
+    }
+    if (gameState.birthEventPending) {
       router.replace("/birth-event");
       return;
     }
-    if (!gameState.hasCompletedInitialBirth && !gameState.isInTutorialFlow) {
+    if (!gameState.hasSeenTutorial && !gameState.isInTutorialFlow) {
       router.replace("/tutorial");
     }
   }, [gameState, router]);
@@ -49,9 +53,17 @@ export default function TasksPage() {
     const fragments = [`EXP +${result.gainedExp}`];
     if (result.levelUp) fragments.push("LV UP");
     if (result.evolved) fragments.push("進化");
+    if (result.nextState.endEventPending) fragments.push("お別れ");
     setFeedback(fragments.join(" / "));
 
-    if (result.nextState.birthEventPending && !result.nextState.hasCompletedInitialBirth) {
+    if (result.nextState.endEventPending) {
+      window.setTimeout(() => {
+        router.push("/end-event");
+      }, 220);
+      return;
+    }
+
+    if (result.nextState.birthEventPending) {
       window.setTimeout(() => {
         router.push("/birth-event");
       }, 220);

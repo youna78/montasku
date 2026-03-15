@@ -1,0 +1,9 @@
+asset_id,category,screen,usage,recommended_w,recommended_h,format,priority,notes
+letter_item_01,item,end-event|home|letter,手紙アイテム本体,1024,1024,png,high,現在の配置パスは /public/img/letter/letter_item_01.png
+letter_open_01,item,end-event|letter,開いた手紙表示,1024,1024,png,medium,本文演出用。無ければ letter_item_01 のみでも可
+egg_new_01,monster,end-event|home,次サイクル用の新しい卵,1024,1024,png,high,既存 egg 素材を使うなら新規不要
+farewell_fx_01,effect,end-event,モンスター退場時の光や消失演出,1024,1024,png,medium,白背景不可。透過で重ねる
+sparkle_fx_01,effect,end-event|home,手紙出現時のきらめき,1024,1024,png,medium,1枚を拡大縮小して使えるように
+shadow_ground_01,effect,end-event|home,地面影,1024,1024,png,low,手紙や卵を地面に置いた感じを出す
+end_bg_01,background,end-event,end到達時専用背景,1440,2560,png,medium,既存背景流用なら後回し可
+letter_icon_01,icon,home|nav|notification,手紙到着通知アイコン,1024,1024,png,low,将来ホーム通知導線を作るなら使える

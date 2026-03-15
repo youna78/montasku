@@ -33,6 +33,10 @@ export const TAB_ICON_BY_KEY = {
   settings: "/img/tab/tab_icon_settings_01.png"
 } as const;
 
+export const END_EVENT_ASSET_BY_KEY = {
+  letterItem: "/img/letter/letter_item_01.png"
+} as const;
+
 export function getRarityBadge(rarity?: string): string | null {
   if (rarity === "common") return "/img/badge/rarity_badge_common.png";
   if (rarity === "normal") return "/img/badge/rarity_badge_normal.png";
@@ -53,4 +57,8 @@ export function getStageBadge(stage?: string): string | null {
 export function getMonsterImage(monsterId?: number): string {
   if (!monsterId) return "/img/ui/ui_shadow_01.png";
   return MONSTER_IMAGE_BY_ID[monsterId] ?? "/img/ui/ui_shadow_01.png";
+}
+
+export function getLetterItemImage(): string {
+  return END_EVENT_ASSET_BY_KEY.letterItem;
 }

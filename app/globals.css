@@ -437,7 +437,12 @@ button:disabled {
   .hatch-scene.phase-crack .hatch-egg,
   .hatch-scene.phase-crack .hatch-smoke,
   .hatch-scene.phase-born .hatch-smoke,
-  .hatch-scene.phase-born .hatch-monster {
+  .hatch-scene.phase-born .hatch-monster,
+  .end-scene.phase-farewell .end-monster,
+  .end-scene.phase-farewell .end-smoke,
+  .end-scene.phase-letter .end-letter,
+  .end-scene.phase-letter .end-smoke,
+  .end-scene.phase-letter .end-egg {
     animation: none;
   }
 }
@@ -560,6 +565,109 @@ button:disabled {
   animation: hatch-pop 0.62s ease-out both;
 }
 
+.end-scene {
+  position: relative;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.end-monster,
+.end-letter,
+.end-egg,
+.end-smoke {
+  position: absolute;
+  object-fit: contain;
+}
+
+.end-monster {
+  width: 132px;
+  height: 132px;
+  opacity: 1;
+  z-index: 3;
+}
+
+.end-letter {
+  width: 180px;
+  height: 180px;
+  opacity: 0;
+  transform: translateY(22px) scale(0.92);
+  z-index: 2;
+}
+
+.end-egg {
+  width: 108px;
+  height: 108px;
+  opacity: 0;
+  transform: translateY(30px) scale(0.9);
+  z-index: 1;
+}
+
+.end-smoke {
+  width: 180px;
+  height: 120px;
+  opacity: 0;
+  z-index: 4;
+}
+
+.end-scene.phase-farewell .end-monster {
+  animation: end-fade-out 0.95s ease-in forwards;
+}
+
+.end-scene.phase-farewell .end-smoke {
+  opacity: 0.72;
+  animation: smoke-burst 0.75s ease-out infinite;
+}
+
+.end-scene.phase-letter .end-letter {
+  opacity: 1;
+  animation: letter-drop 0.55s ease-out both;
+}
+
+.end-scene.phase-letter .end-smoke {
+  opacity: 0.5;
+  animation: smoke-fade 0.6s ease-out both;
+}
+
+.end-scene.phase-letter .end-egg {
+  opacity: 1;
+  animation: new-egg-rise 0.62s ease-out both;
+}
+
+.end-scene.phase-letter .end-letter {
+  transform: translateX(-86px) translateY(0) scale(0.72);
+}
+
+.rpg-dialogue-box {
+  margin: 10px auto 0;
+  max-width: 520px;
+  min-height: 92px;
+  padding: 12px 14px;
+  background:
+    linear-gradient(180deg, rgba(42, 66, 118, 0.96) 0%, rgba(23, 36, 78, 0.96) 100%);
+  border: 3px solid #f5e1a2;
+  box-shadow:
+    inset 0 0 0 2px #4b6dc3,
+    inset 0 0 0 4px #182550,
+    0 4px 0 rgba(14, 20, 47, 0.65);
+  border-radius: 6px;
+}
+
+.rpg-dialogue-text {
+  margin: 0;
+  color: #f8f4df;
+  white-space: pre-line;
+  line-height: 1.8;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  font-family: "Osaka-mono", "Courier New", monospace;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.45);
+}
+
 @keyframes egg-wobble {
   0% { transform: rotate(-4deg); }
   25% { transform: rotate(0deg); }
@@ -590,6 +698,22 @@ button:disabled {
   0% { transform: translateY(20px) scale(0.78); }
   65% { transform: translateY(-8px) scale(1.05); }
   100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes end-fade-out {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-14px) scale(0.82); }
+}
+
+@keyframes letter-drop {
+  0% { opacity: 0; transform: translateY(-22px) scale(0.86) rotate(-4deg); }
+  70% { opacity: 1; transform: translateY(6px) scale(1.02) rotate(2deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+}
+
+@keyframes new-egg-rise {
+  0% { opacity: 0; transform: translateX(86px) translateY(26px) scale(0.7); }
+  100% { opacity: 1; transform: translateX(86px) translateY(0) scale(1); }
 }
 
 .badge-wrap {

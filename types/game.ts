@@ -27,4 +27,6 @@ export type GameState = {
   onboardingCompletedTaskCount: number;
   birthEventPending: boolean;
   hasCompletedInitialBirth: boolean;
+  hasCompletedCurrentBirth: boolean;
+  endEventPending: boolean;
 };

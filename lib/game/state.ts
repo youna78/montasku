@@ -1,7 +1,7 @@
 import type { GameState } from "@/types/game";
 import type { LevelingMaster, MonsterMaster, TaskMaster } from "@/types/master";
 import { evaluateEvolution, resolveBirthMonsterId } from "./evolution";
-import { getFallbackLevelingMaster, getLevelProgress, normalizeLevelingMaster, resolveLevelFromExp } from "./leveling";
+import { getFallbackLevelingMaster, getLevelProgress, isEndLevel, normalizeLevelingMaster, resolveLevelFromExp } from "./leveling";
 
 const STORAGE_KEY = "habit-monster-mvp-state";
 const MIN_ACTIVE_TASKS = 3;
@@ -38,6 +38,8 @@ export type ReorderTaskResult = {
   moved: boolean;
   reason?: "not_found" | "boundary";
 };
+
+export type FinishEndEventResult = GameState;
 
 function uniqueNumbers(values: number[]): number[] {
   return [...new Set(values.filter((v) => Number.isFinite(v)))];
@@ -156,7 +158,9 @@ export function buildInitialState(tasks: TaskMaster[]): GameState {
     isInTutorialFlow: false,
     onboardingCompletedTaskCount: 0,
     birthEventPending: false,
-    hasCompletedInitialBirth: false
+    hasCompletedInitialBirth: false,
+    hasCompletedCurrentBirth: false,
+    endEventPending: false
   };
 }
 
@@ -168,13 +172,6 @@ function normalizeState(
   const initial = buildInitialState(tasks);
   const table = normalizeLevelingMaster(levelingRows);
 
-  const hasCompletedInitialBirth =
-    typeof parsed.hasCompletedInitialBirth === "boolean"
-      ? parsed.hasCompletedInitialBirth
-      : Number(parsed.currentMonsterId ?? initial.currentMonsterId) !== 1;
-
-  const rawDiscovered = Array.isArray(parsed.discoveredMonsterIds) ? parsed.discoveredMonsterIds : [];
-  const normalizedActiveTasks = normalizeActiveTasks(parsed.activeTasks, initial.activeTasks);
   const parsedLevel = typeof parsed.currentMonsterLevel === "number" ? parsed.currentMonsterLevel : initial.currentMonsterLevel;
   const parsedExp = typeof parsed.currentMonsterExp === "number" ? parsed.currentMonsterExp : initial.currentMonsterExp;
   const totalExp =
@@ -182,6 +179,20 @@ function normalizeState(
       ? legacyTotalExp(parsedLevel, parsedExp)
       : parsedExp;
   const resolvedLevel = resolveLevelFromExp(totalExp, table);
+  const hasCompletedInitialBirth =
+    typeof parsed.hasCompletedInitialBirth === "boolean"
+      ? parsed.hasCompletedInitialBirth
+      : Number(parsed.currentMonsterId ?? initial.currentMonsterId) !== 1;
+  const hasCompletedCurrentBirth =
+    typeof parsed.hasCompletedCurrentBirth === "boolean"
+      ? parsed.hasCompletedCurrentBirth
+      : hasCompletedInitialBirth && Number(parsed.currentMonsterId ?? initial.currentMonsterId) !== 1;
+  const shouldQueueEndEvent =
+    isEndLevel(resolvedLevel.level, table) &&
+    hasCompletedCurrentBirth &&
+    Number(parsed.currentMonsterId ?? initial.currentMonsterId) !== 1;
+  const rawDiscovered = Array.isArray(parsed.discoveredMonsterIds) ? parsed.discoveredMonsterIds : [];
+  const normalizedActiveTasks = normalizeActiveTasks(parsed.activeTasks, initial.activeTasks);
 
   return {
     ...initial,
@@ -208,7 +219,9 @@ function normalizeState(
           ? 3
           : 0,
     birthEventPending: typeof parsed.birthEventPending === "boolean" ? parsed.birthEventPending : false,
-    hasCompletedInitialBirth
+    hasCompletedInitialBirth,
+    hasCompletedCurrentBirth,
+    endEventPending: typeof parsed.endEventPending === "boolean" ? parsed.endEventPending : shouldQueueEndEvent
   };
 }
 
@@ -284,7 +297,7 @@ function applyExpAndAttributes(
 }
 
 function applyInitialBirthProgress(state: GameState, monsters: MonsterMaster[]): GameState {
-  if (state.hasCompletedInitialBirth) return state;
+  if (state.hasCompletedCurrentBirth) return state;
 
   const onboardingCompletedTaskCount = state.onboardingCompletedTaskCount + 1;
   if (onboardingCompletedTaskCount < 3) {
@@ -331,7 +344,7 @@ export function completeTask(params: {
   nextState = applyInitialBirthProgress(nextState, monsters);
   const didLevelUp = nextState.currentMonsterLevel > previousLevel;
 
-  if (nextState.hasCompletedInitialBirth && didLevelUp) {
+  if (nextState.hasCompletedCurrentBirth && didLevelUp) {
     const nextMonsterId = evaluateEvolution({ gameState: nextState, monsters });
     if (nextMonsterId && nextMonsterId !== nextState.currentMonsterId) {
       nextState = {
@@ -340,6 +353,13 @@ export function completeTask(params: {
         discoveredMonsterIds: uniqueNumbers([...nextState.discoveredMonsterIds, nextMonsterId])
       };
     }
+  }
+
+  if (nextState.hasCompletedCurrentBirth && didLevelUp && isEndLevel(nextState.currentMonsterLevel, levelingRows)) {
+    nextState = {
+      ...nextState,
+      endEventPending: true
+    };
   }
 
   return {
@@ -450,14 +470,36 @@ export function finishBirthEvent(state: GameState): GameState {
     ...state,
     birthEventPending: false,
     hasCompletedInitialBirth: true,
+    hasCompletedCurrentBirth: true,
     hasSeenTutorial: true,
     isInTutorialFlow: false,
     discoveredMonsterIds: uniqueNumbers([...state.discoveredMonsterIds, state.currentMonsterId])
   };
 }
 
+export function finishEndEvent(state: GameState): FinishEndEventResult {
+  return {
+    ...state,
+    currentMonsterId: 1,
+    currentMonsterLevel: 1,
+    currentMonsterExp: 0,
+    attributeTotals: {
+      power: 0,
+      heal: 0,
+      knowledge: 0,
+      create: 0
+    },
+    onboardingCompletedTaskCount: 0,
+    birthEventPending: false,
+    hasCompletedCurrentBirth: false,
+    endEventPending: false,
+    isInTutorialFlow: false,
+    discoveredMonsterIds: uniqueNumbers([...state.discoveredMonsterIds, 1])
+  };
+}
+
 export function startTutorialFlow(state: GameState): GameState {
-  if (state.hasCompletedInitialBirth) {
+  if (state.hasSeenTutorial) {
     return state;
   }
   return {
@@ -466,9 +508,10 @@ export function startTutorialFlow(state: GameState): GameState {
   };
 }
 
-export function getInitialRoute(state: GameState): "/tutorial" | "/tasks" | "/birth-event" | "/home" {
-  if (state.birthEventPending && !state.hasCompletedInitialBirth) return "/birth-event";
-  if (!state.hasCompletedInitialBirth) return state.isInTutorialFlow ? "/tasks" : "/tutorial";
+export function getInitialRoute(state: GameState): "/tutorial" | "/tasks" | "/birth-event" | "/end-event" | "/home" {
+  if (state.endEventPending) return "/end-event";
+  if (state.birthEventPending) return "/birth-event";
+  if (!state.hasSeenTutorial) return state.isInTutorialFlow ? "/tasks" : "/tutorial";
   return "/home";
 }
 
