@@ -49,7 +49,6 @@ export default function EndEventPage() {
       <div className="title-panel">お別れイベント</div>
       <section className="card decorated-card">
         <div className={`end-scene phase-${phase}`}>
-          <img src={getMonsterImage(currentMonster?.monsterId)} alt={currentMonster?.name ?? "monster"} className="end-monster" />
           <img src="/img/effect/effect_smoke_01.png" alt="smoke" className="end-smoke" />
           <img src={getLetterItemImage()} alt="letter" className="end-letter" />
           <img src={getMonsterImage(1)} alt="new egg" className="end-egg" />

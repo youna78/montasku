@@ -142,14 +142,14 @@ export function useGame(): UseGameResult {
   const finishBirthEvent = useCallback(() => {
     const current = gameStateRef.current;
     if (!current) return;
-    commitState(runFinishBirthEvent(current));
-  }, [commitState]);
+    commitState(runFinishBirthEvent(current, levelingRows));
+  }, [commitState, levelingRows]);
 
   const finishEndEvent = useCallback(() => {
     const current = gameStateRef.current;
     if (!current) return;
-    commitState(runFinishEndEvent(current));
-  }, [commitState]);
+    commitState(runFinishEndEvent(current, monsters));
+  }, [commitState, monsters]);
 
   const startTutorialFlow = useCallback(() => {
     const current = gameStateRef.current;

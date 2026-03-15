@@ -37,6 +37,16 @@ export const END_EVENT_ASSET_BY_KEY = {
   letterItem: "/img/letter/letter_item_01.png"
 } as const;
 
+export const LETTER_ITEM_IMAGES = [
+  "/img/letter/letter_item_01.png",
+  "/img/letter/letter_item_02.png",
+  "/img/letter/letter_item_03.png",
+  "/img/letter/letter_item_04.png",
+  "/img/letter/letter_item_05.png",
+  "/img/letter/letter_item_06.png",
+  "/img/letter/letter_item_07.png"
+] as const;
+
 export function getRarityBadge(rarity?: string): string | null {
   if (rarity === "common") return "/img/badge/rarity_badge_common.png";
   if (rarity === "normal") return "/img/badge/rarity_badge_normal.png";
@@ -59,6 +69,6 @@ export function getMonsterImage(monsterId?: number): string {
   return MONSTER_IMAGE_BY_ID[monsterId] ?? "/img/ui/ui_shadow_01.png";
 }
 
-export function getLetterItemImage(): string {
-  return END_EVENT_ASSET_BY_KEY.letterItem;
+export function getLetterItemImage(imagePath?: string): string {
+  return imagePath ?? END_EVENT_ASSET_BY_KEY.letterItem;
 }

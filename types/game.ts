@@ -11,6 +11,16 @@ export type ActiveTask = {
   enabled: boolean;
 };
 
+export type LetterRecord = {
+  letterId: string;
+  title: string;
+  body: string;
+  imagePath: string;
+  fromMonsterId: number;
+  fromMonsterName: string;
+  obtainedDate: string;
+};
+
 export type GameState = {
   currentMonsterId: number;
   currentMonsterLevel: number;
@@ -21,6 +31,7 @@ export type GameState = {
   completedTaskIdsToday: number[];
   activeTasks: ActiveTask[];
   discoveredMonsterIds: number[];
+  acquiredLetters: LetterRecord[];
   lastPlayedDate: string;
   hasSeenTutorial: boolean;
   isInTutorialFlow: boolean;

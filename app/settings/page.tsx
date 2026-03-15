@@ -42,6 +42,13 @@ export default function SettingsPage() {
       </section>
       <section className="card decorated-card">
         <div className="settings-links centered-actions">
+          <Link href="/letters" className="ui-link-button quest-btn quest-btn-secondary">
+            てがみ
+          </Link>
+        </div>
+      </section>
+      <section className="card decorated-card">
+        <div className="settings-links centered-actions">
           <a href="https://docs.google.com/forms/d/e/1FAIpQLSflbsd5RHq5IBKaTU7k6aIFPJjhk1GINQ0VqSjwSYRFBtUvJA/viewform?usp=publish-editor" target="_blank" rel="noreferrer" className="ui-link-button ui-link-secondary">
             タスク追加リクエスト
           </a>

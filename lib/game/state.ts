@@ -1,7 +1,15 @@
-import type { GameState } from "@/types/game";
+import type { GameState, LetterRecord } from "@/types/game";
 import type { LevelingMaster, MonsterMaster, TaskMaster } from "@/types/master";
+import { LETTER_ITEM_IMAGES } from "./assets";
 import { evaluateEvolution, resolveBirthMonsterId } from "./evolution";
-import { getFallbackLevelingMaster, getLevelProgress, isEndLevel, normalizeLevelingMaster, resolveLevelFromExp } from "./leveling";
+import {
+  getCumulativeExpForLevel,
+  getFallbackLevelingMaster,
+  getLevelProgress,
+  isEndLevel,
+  normalizeLevelingMaster,
+  resolveLevelFromExp
+} from "./leveling";
 
 const STORAGE_KEY = "habit-monster-mvp-state";
 const MIN_ACTIVE_TASKS = 3;
@@ -19,6 +27,8 @@ export type CompleteTaskResult = {
   alreadyCompleted: boolean;
   evolved: boolean;
   levelUp: boolean;
+  previousMonsterId: number;
+  nextMonsterId: number;
 };
 
 export type AddTaskResult = {
@@ -43,6 +53,87 @@ export type FinishEndEventResult = GameState;
 
 function uniqueNumbers(values: number[]): number[] {
   return [...new Set(values.filter((v) => Number.isFinite(v)))];
+}
+
+function normalizeLetters(rawLetters: GameState["acquiredLetters"] | undefined): GameState["acquiredLetters"] {
+  if (!Array.isArray(rawLetters)) return [];
+
+  return rawLetters.reduce<LetterRecord[]>((acc, letter) => {
+    if (
+      !letter ||
+      typeof letter.letterId !== "string" ||
+      typeof letter.title !== "string" ||
+      typeof letter.body !== "string" ||
+      typeof letter.fromMonsterId !== "number" ||
+      typeof letter.fromMonsterName !== "string" ||
+      typeof letter.obtainedDate !== "string"
+    ) {
+      return acc;
+    }
+
+    acc.push({
+      ...letter,
+      imagePath: typeof letter.imagePath === "string" ? letter.imagePath : LETTER_ITEM_IMAGES[0]
+    });
+    return acc;
+  }, []);
+}
+
+const LETTER_TEMPLATES: Array<{ title: string; body: string; imagePath: string }> = [
+  {
+    title: "ありがとうのてがみ",
+    body: "いっしょに すごした じかんは たいせつな たからもの。\nこれからも きみの まいにちを そっと おうえんしているよ。",
+    imagePath: LETTER_ITEM_IMAGES[0]
+  },
+  {
+    title: "げんきでいてね",
+    body: "きょうまで たくさん がんばったね。\nむりしすぎず じぶんの ぺーすで すすんでいってね。",
+    imagePath: LETTER_ITEM_IMAGES[1]
+  },
+  {
+    title: "つぎのぼうけんへ",
+    body: "ここからさきは あたらしい ぼうけんの はじまり。\nきっと また すてきな であいが まっているよ。",
+    imagePath: LETTER_ITEM_IMAGES[2]
+  },
+  {
+    title: "みまもっているよ",
+    body: "はなれていても きみの がんばりは ちゃんと みえているよ。\nこまった ときは ひとやすみして だいじょうぶ。",
+    imagePath: LETTER_ITEM_IMAGES[3]
+  },
+  {
+    title: "ちいさなきろく",
+    body: "きょうの いっぽも あしたの いっぽも ぜんぶ たいせつ。\nすこしずつでも まえに すすめば それで じゅうぶんだよ。",
+    imagePath: LETTER_ITEM_IMAGES[4]
+  },
+  {
+    title: "まほうのことば",
+    body: "よく がんばったね。 えらい。\nそのことばを いつでも じぶんに かけてあげてね。",
+    imagePath: LETTER_ITEM_IMAGES[5]
+  },
+  {
+    title: "またあうひまで",
+    body: "しばらく たびに でるけれど きみのことは わすれないよ。\nつぎの タマゴも きっと すてきに そだっていくはず。",
+    imagePath: LETTER_ITEM_IMAGES[6]
+  }
+];
+
+function pickRandomLetterTemplate(): { title: string; body: string; imagePath: string } {
+  const index = Math.floor(Math.random() * LETTER_TEMPLATES.length);
+  return LETTER_TEMPLATES[index] ?? LETTER_TEMPLATES[0];
+}
+
+function buildFarewellLetter(state: GameState, monster: MonsterMaster | undefined): LetterRecord {
+  const fromMonsterName = monster?.name ?? "モンスター";
+  const template = pickRandomLetterTemplate();
+  return {
+    letterId: `${fromMonsterName}-${state.lastPlayedDate}-${state.currentMonsterExp}`,
+    title: template.title,
+    body: template.body,
+    imagePath: template.imagePath,
+    fromMonsterId: monster?.monsterId ?? state.currentMonsterId,
+    fromMonsterName,
+    obtainedDate: state.lastPlayedDate
+  };
 }
 
 function normalizeActiveTasks(
@@ -153,6 +244,7 @@ export function buildInitialState(tasks: TaskMaster[]): GameState {
     completedTaskIdsToday: [],
     activeTasks,
     discoveredMonsterIds: [1],
+    acquiredLetters: [],
     lastPlayedDate: todayLocalDate(),
     hasSeenTutorial: false,
     isInTutorialFlow: false,
@@ -210,6 +302,7 @@ function normalizeState(
       ...rawDiscovered,
       Number(parsed.currentMonsterId ?? 1)
     ]),
+    acquiredLetters: normalizeLetters(parsed.acquiredLetters),
     hasSeenTutorial: typeof parsed.hasSeenTutorial === "boolean" ? parsed.hasSeenTutorial : hasCompletedInitialBirth,
     isInTutorialFlow: typeof parsed.isInTutorialFlow === "boolean" ? parsed.isInTutorialFlow : false,
     onboardingCompletedTaskCount:
@@ -333,7 +426,9 @@ export function completeTask(params: {
       gainedAttributes: { power: 0, heal: 0, knowledge: 0, create: 0 },
       alreadyCompleted: true,
       evolved: false,
-      levelUp: false
+      levelUp: false,
+      previousMonsterId: state.currentMonsterId,
+      nextMonsterId: state.currentMonsterId
     };
   }
 
@@ -373,7 +468,9 @@ export function completeTask(params: {
     },
     alreadyCompleted: false,
     evolved: nextState.currentMonsterId !== previousMonsterId,
-    levelUp: didLevelUp
+    levelUp: didLevelUp,
+    previousMonsterId,
+    nextMonsterId: nextState.currentMonsterId
   };
 }
 
@@ -465,9 +562,17 @@ export function getTaskLimitInfo(state: GameState): { min: number; max: number; 
   };
 }
 
-export function finishBirthEvent(state: GameState): GameState {
+export function finishBirthEvent(
+  state: GameState,
+  levelingRows: LevelingMaster[] = getFallbackLevelingMaster()
+): GameState {
+  const babyStartExp = getCumulativeExpForLevel(2, levelingRows);
+
   return {
     ...state,
+    currentMonsterLevel: 2,
+    currentMonsterExp: babyStartExp,
+    todayExp: 0,
     birthEventPending: false,
     hasCompletedInitialBirth: true,
     hasCompletedCurrentBirth: true,
@@ -477,7 +582,10 @@ export function finishBirthEvent(state: GameState): GameState {
   };
 }
 
-export function finishEndEvent(state: GameState): FinishEndEventResult {
+export function finishEndEvent(state: GameState, monsters: MonsterMaster[]): FinishEndEventResult {
+  const currentMonster = monsters.find((monster) => monster.monsterId === state.currentMonsterId);
+  const nextLetter = buildFarewellLetter(state, currentMonster);
+
   return {
     ...state,
     currentMonsterId: 1,
@@ -494,7 +602,8 @@ export function finishEndEvent(state: GameState): FinishEndEventResult {
     hasCompletedCurrentBirth: false,
     endEventPending: false,
     isInTutorialFlow: false,
-    discoveredMonsterIds: uniqueNumbers([...state.discoveredMonsterIds, 1])
+    discoveredMonsterIds: uniqueNumbers([...state.discoveredMonsterIds, 1]),
+    acquiredLetters: [...state.acquiredLetters, nextLetter]
   };
 }
 

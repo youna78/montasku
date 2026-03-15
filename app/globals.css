@@ -438,11 +438,16 @@ button:disabled {
   .hatch-scene.phase-crack .hatch-smoke,
   .hatch-scene.phase-born .hatch-smoke,
   .hatch-scene.phase-born .hatch-monster,
-  .end-scene.phase-farewell .end-monster,
   .end-scene.phase-farewell .end-smoke,
   .end-scene.phase-letter .end-letter,
   .end-scene.phase-letter .end-smoke,
-  .end-scene.phase-letter .end-egg {
+  .end-scene.phase-letter .end-egg,
+  .evolution-scene.phase-animating .evolution-monster,
+  .evolution-scene.phase-animating .evolution-smoke,
+  .evolution-scene.phase-animating .evolution-star,
+  .evolution-scene.phase-revealed .evolution-smoke,
+  .evolution-scene.phase-revealed .evolution-star,
+  .evolution-scene.phase-revealed .evolution-monster {
     animation: none;
   }
 }
@@ -568,53 +573,44 @@ button:disabled {
 .end-scene {
   position: relative;
   height: 220px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
-  justify-content: center;
+  justify-items: center;
   margin-bottom: 10px;
   overflow: hidden;
 }
 
-.end-monster,
 .end-letter,
 .end-egg,
 .end-smoke {
-  position: absolute;
   object-fit: contain;
 }
 
-.end-monster {
-  width: 132px;
-  height: 132px;
-  opacity: 1;
-  z-index: 3;
-}
-
 .end-letter {
-  width: 180px;
-  height: 180px;
+  width: 168px;
+  height: 168px;
   opacity: 0;
-  transform: translateY(22px) scale(0.92);
-  z-index: 2;
+  transform: translateY(16px) scale(0.92);
+  z-index: 3;
+  grid-column: 1;
 }
 
 .end-egg {
   width: 108px;
   height: 108px;
   opacity: 0;
-  transform: translateY(30px) scale(0.9);
-  z-index: 1;
+  transform: translateY(22px) scale(0.9);
+  z-index: 3;
+  grid-column: 2;
 }
 
 .end-smoke {
+  position: absolute;
   width: 180px;
   height: 120px;
   opacity: 0;
-  z-index: 4;
-}
-
-.end-scene.phase-farewell .end-monster {
-  animation: end-fade-out 0.95s ease-in forwards;
+  z-index: 2;
 }
 
 .end-scene.phase-farewell .end-smoke {
@@ -638,7 +634,7 @@ button:disabled {
 }
 
 .end-scene.phase-letter .end-letter {
-  transform: translateX(-86px) translateY(0) scale(0.72);
+  transform: translateY(0) scale(0.86);
 }
 
 .rpg-dialogue-box {
@@ -700,11 +696,6 @@ button:disabled {
   100% { transform: translateY(0) scale(1); }
 }
 
-@keyframes end-fade-out {
-  0% { opacity: 1; transform: translateY(0) scale(1); }
-  100% { opacity: 0; transform: translateY(-14px) scale(0.82); }
-}
-
 @keyframes letter-drop {
   0% { opacity: 0; transform: translateY(-22px) scale(0.86) rotate(-4deg); }
   70% { opacity: 1; transform: translateY(6px) scale(1.02) rotate(2deg); }
@@ -712,8 +703,27 @@ button:disabled {
 }
 
 @keyframes new-egg-rise {
-  0% { opacity: 0; transform: translateX(86px) translateY(26px) scale(0.7); }
-  100% { opacity: 1; transform: translateX(86px) translateY(0) scale(1); }
+  0% { opacity: 0; transform: translateY(26px) scale(0.7); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes evolution-pulse {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.12); }
+  70% { transform: scale(0.94); }
+  100% { transform: scale(1.04); }
+}
+
+@keyframes evolution-reveal {
+  0% { transform: scale(0.78); opacity: 0.3; }
+  70% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes evolution-star-burst {
+  0% { transform: scale(0.72) rotate(0deg); opacity: 0.35; }
+  50% { transform: scale(1.05) rotate(12deg); opacity: 1; }
+  100% { transform: scale(0.84) rotate(-10deg); opacity: 0.45; }
 }
 
 .badge-wrap {
@@ -777,6 +787,44 @@ button:disabled {
   width: min(100%, 260px);
   height: auto;
   object-fit: contain;
+}
+
+.letter-list {
+  display: grid;
+  gap: 12px;
+}
+
+.letter-card {
+  border: 2px solid #b79356;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #fff7e6 0%, #f1e0bc 100%);
+  box-shadow: inset 0 0 0 1px #fffdf6, 0 2px 0 rgba(58, 32, 8, 0.16);
+  padding: 12px;
+}
+
+.letter-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.letter-list-icon {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.letter-meta {
+  color: #6b4a21;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.letter-body {
+  margin: 0;
+  white-space: pre-line;
+  line-height: 1.7;
 }
 
 .ui-link-button {
@@ -919,4 +967,101 @@ a.quest-btn[aria-disabled="true"] {
   margin-top: 10px;
   display: flex;
   justify-content: center;
+}
+
+.evolution-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(10, 16, 35, 0.74);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.evolution-panel {
+  width: min(100%, 520px);
+}
+
+.evolution-scene {
+  position: relative;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.evolution-monster {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  position: relative;
+  z-index: 3;
+}
+
+.evolution-smoke {
+  position: absolute;
+  width: 220px;
+  height: 160px;
+  object-fit: contain;
+  opacity: 0;
+  z-index: 2;
+}
+
+.evolution-star {
+  position: absolute;
+  width: 76px;
+  height: 76px;
+  object-fit: contain;
+  opacity: 0;
+  z-index: 4;
+}
+
+.evolution-star.star-a {
+  top: 18px;
+  left: 60px;
+}
+
+.evolution-star.star-b {
+  top: 42px;
+  right: 48px;
+}
+
+.evolution-star.star-c {
+  bottom: 32px;
+  left: 44px;
+}
+
+.evolution-star.star-d {
+  bottom: 18px;
+  right: 68px;
+}
+
+.evolution-scene.phase-animating .evolution-monster {
+  animation: evolution-pulse 1.15s ease-in-out infinite;
+  filter: drop-shadow(0 0 18px rgba(255, 247, 161, 0.9));
+}
+
+.evolution-scene.phase-animating .evolution-smoke,
+.evolution-scene.phase-revealed .evolution-smoke {
+  opacity: 0.72;
+  animation: smoke-burst 0.75s ease-out infinite;
+}
+
+.evolution-scene.phase-animating .evolution-star,
+.evolution-scene.phase-revealed .evolution-star {
+  opacity: 1;
+  animation: evolution-star-burst 0.9s ease-in-out infinite;
+}
+
+.evolution-scene.phase-revealed .evolution-monster {
+  animation: evolution-reveal 0.5s ease-out both;
+  filter: drop-shadow(0 0 16px rgba(173, 241, 255, 0.95));
+}
+
+.evolution-dialogue {
+  margin-top: 0;
 }

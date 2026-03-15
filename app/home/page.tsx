@@ -4,12 +4,20 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
+import { EvolutionOverlay } from "@/components/common/EvolutionOverlay";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage, getStageBadge } from "@/lib/game/assets";
 import { playSfx } from "@/lib/game/sfx";
 import { progressToNextLevel } from "@/lib/game/state";
 import { resolveLevelFromExp } from "@/lib/game/leveling";
 import { useGame } from "@/lib/game/useGame";
+
+type EvolutionScene = {
+  previousMonsterName: string;
+  nextMonsterName: string;
+  previousMonsterId: number;
+  nextMonsterId: number;
+};
 
 function toPercent(value: number, total: number): number {
   if (total <= 0) return 0;
@@ -20,6 +28,7 @@ export default function HomePage() {
   const router = useRouter();
   const { tasks, monsters, levelingRows, gameState, isLoading, completeTask } = useGame();
   const [feedback, setFeedback] = useState("");
+  const [evolutionScene, setEvolutionScene] = useState<EvolutionScene | null>(null);
 
   useEffect(() => {
     if (!feedback) return;
@@ -97,6 +106,18 @@ export default function HomePage() {
       window.setTimeout(() => {
         router.push("/birth-event");
       }, 220);
+      return;
+    }
+
+    if (result.evolved) {
+      const previousMonster = monsters.find((monster) => monster.monsterId === result.previousMonsterId);
+      const nextMonster = monsters.find((monster) => monster.monsterId === result.nextMonsterId);
+      setEvolutionScene({
+        previousMonsterName: previousMonster?.name ?? "モンスター",
+        nextMonsterName: nextMonster?.name ?? "モンスター",
+        previousMonsterId: result.previousMonsterId,
+        nextMonsterId: result.nextMonsterId
+      });
     }
   };
 
@@ -191,6 +212,15 @@ export default function HomePage() {
 
       <DevDebugPanel gameState={gameState} monsters={monsters} />
       <BottomNav />
+      {evolutionScene && (
+        <EvolutionOverlay
+          previousMonsterName={evolutionScene.previousMonsterName}
+          nextMonsterName={evolutionScene.nextMonsterName}
+          previousMonsterId={evolutionScene.previousMonsterId}
+          nextMonsterId={evolutionScene.nextMonsterId}
+          onClose={() => setEvolutionScene(null)}
+        />
+      )}
     </main>
   );
 }

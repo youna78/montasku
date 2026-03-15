@@ -3,16 +3,25 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
+import { EvolutionOverlay } from "@/components/common/EvolutionOverlay";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { ATTRIBUTE_ICON_BY_KEY } from "@/lib/game/assets";
 import { playSfx } from "@/lib/game/sfx";
 import { useGame } from "@/lib/game/useGame";
 import type { TaskMaster } from "@/types/master";
 
+type EvolutionScene = {
+  previousMonsterName: string;
+  nextMonsterName: string;
+  previousMonsterId: number;
+  nextMonsterId: number;
+};
+
 export default function TasksPage() {
   const router = useRouter();
   const { tasks, monsters, gameState, isLoading, completeTask } = useGame();
   const [feedback, setFeedback] = useState<string>("");
+  const [evolutionScene, setEvolutionScene] = useState<EvolutionScene | null>(null);
 
   useEffect(() => {
     if (!feedback) return;
@@ -67,6 +76,18 @@ export default function TasksPage() {
       window.setTimeout(() => {
         router.push("/birth-event");
       }, 220);
+      return;
+    }
+
+    if (result.evolved) {
+      const previousMonster = monsters.find((monster) => monster.monsterId === result.previousMonsterId);
+      const nextMonster = monsters.find((monster) => monster.monsterId === result.nextMonsterId);
+      setEvolutionScene({
+        previousMonsterName: previousMonster?.name ?? "モンスター",
+        nextMonsterName: nextMonster?.name ?? "モンスター",
+        previousMonsterId: result.previousMonsterId,
+        nextMonsterId: result.nextMonsterId
+      });
     }
   };
 
@@ -117,6 +138,15 @@ export default function TasksPage() {
 
       <DevDebugPanel gameState={gameState} monsters={monsters} />
       <BottomNav />
+      {evolutionScene && (
+        <EvolutionOverlay
+          previousMonsterName={evolutionScene.previousMonsterName}
+          nextMonsterName={evolutionScene.nextMonsterName}
+          previousMonsterId={evolutionScene.previousMonsterId}
+          nextMonsterId={evolutionScene.nextMonsterId}
+          onClose={() => setEvolutionScene(null)}
+        />
+      )}
     </main>
   );
 }

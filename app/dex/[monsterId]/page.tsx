@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
@@ -13,7 +13,8 @@ export default function DexDetailPage() {
   const params = useParams<{ monsterId: string }>();
   const { monsters, gameState, isLoading } = useGame();
 
-  const monsterId = useMemo(() => Number(params.monsterId), [params.monsterId]);
+  const monsterIdParam = Array.isArray(params?.monsterId) ? params.monsterId[0] : params?.monsterId;
+  const monsterId = Number(monsterIdParam);
 
   useEffect(() => {
     if (!gameState) return;

@@ -12,7 +12,7 @@ const items = [
 ] as const;
 
 export function BottomNav() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
 
   return (
     <nav className="bottom-nav">
