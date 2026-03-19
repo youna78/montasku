@@ -11,6 +11,7 @@ import {
   finishBirthEvent as runFinishBirthEvent,
   loadGameState,
   moveTaskInActive,
+  reconcileMonsterProgress,
   removeTaskFromActive,
   saveGameState,
   startTutorialFlow as runStartTutorialFlow,
@@ -59,7 +60,17 @@ export function useGame(): UseGameResult {
 
         try {
           const loadedMonsters = await loadMonstersMaster();
+          const reconciledState = reconcileMonsterProgress({
+            state: loadedState,
+            monsters: loadedMonsters,
+            levelingRows: loadedLeveling
+          });
           setMonsters(loadedMonsters);
+          if (reconciledState !== loadedState) {
+            setGameState(reconciledState);
+            gameStateRef.current = reconciledState;
+            saveGameState(reconciledState);
+          }
         } catch (monsterError) {
           console.error("[useGame] failed to load monsters CSV", monsterError);
           setMonsters([]);

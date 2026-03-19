@@ -314,7 +314,7 @@ function normalizeState(
     birthEventPending: typeof parsed.birthEventPending === "boolean" ? parsed.birthEventPending : false,
     hasCompletedInitialBirth,
     hasCompletedCurrentBirth,
-    endEventPending: typeof parsed.endEventPending === "boolean" ? parsed.endEventPending : shouldQueueEndEvent
+    endEventPending: typeof parsed.endEventPending === "boolean" ? parsed.endEventPending || shouldQueueEndEvent : shouldQueueEndEvent
   };
 }
 
@@ -408,6 +408,39 @@ function applyInitialBirthProgress(state: GameState, monsters: MonsterMaster[]):
     currentMonsterId: birthMonsterId,
     discoveredMonsterIds: uniqueNumbers([...state.discoveredMonsterIds, birthMonsterId])
   };
+}
+
+export function reconcileMonsterProgress(params: {
+  state: GameState;
+  monsters: MonsterMaster[];
+  levelingRows: LevelingMaster[];
+}): GameState {
+  const { state, monsters, levelingRows } = params;
+  let nextState = state;
+
+  if (nextState.hasCompletedCurrentBirth) {
+    while (true) {
+      const nextMonsterId = evaluateEvolution({ gameState: nextState, monsters });
+      if (!nextMonsterId || nextMonsterId === nextState.currentMonsterId) {
+        break;
+      }
+
+      nextState = {
+        ...nextState,
+        currentMonsterId: nextMonsterId,
+        discoveredMonsterIds: uniqueNumbers([...nextState.discoveredMonsterIds, nextMonsterId])
+      };
+    }
+  }
+
+  if (nextState.hasCompletedCurrentBirth && isEndLevel(nextState.currentMonsterLevel, levelingRows) && nextState.currentMonsterId !== 1) {
+    nextState = {
+      ...nextState,
+      endEventPending: true
+    };
+  }
+
+  return nextState;
 }
 
 // Complete-task state update is centralized here.

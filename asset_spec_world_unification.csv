@@ -1,0 +1,55 @@
+asset_id,current_path,category,screen,usage,recommended_w,recommended_h,format,priority,notes
+bg_main_field_01,/img/background/bg_main_01.png,background,home|tasks|settings,通常画面の共通背景,1440,2560,png,high,SFC風の草原や村外れ。昼基調で統一
+bg_tutorial_story_01,/img/background/bg_tutorial_01.png,background,tutorial|tutorial-egg,初回導線用背景,1440,2560,png,high,少し神秘的で柔らかい導入画面
+bg_birth_event_01,/img/background/birth-event.png,background,birth-event,孵化イベント専用背景,1440,2560,png,high,卵誕生に集中できる明るい演出背景
+bg_dex_archive_01,/img/background/dex_dex_detail.png,background,dex|dex_detail,図鑑系背景,1440,2560,png,medium,書庫や古文書っぽい世界観に寄せる
+bg_end_event_01,/img/background/deinner.png,background,end-event,お別れイベント背景,1440,2560,png,medium,少し静かで感傷的な雰囲気
+bg_home_morning_01,/img/background/morning.png,background,home,朝ホーム差分背景,1440,2560,png,low,時間帯演出を強めるなら使用
+bg_home_night_01,/img/background/night.png,background,home,夜ホーム差分背景,1440,2560,png,low,時間帯演出を強めるなら使用
+logo_title_main_01,/img/branding/logo_title_01.png,branding,tutorial|home,ゲームロゴ,1536,1024,png,high,SFC RPG風タイトルロゴ
+logo_title_sub_01,/img/branding/logo_title_02.png,branding,tutorial|home,ロゴ差分または短縮版,1536,1024,png,medium,イベントやサブ画面用の差分があると便利
+panel_title_wood_01,/img/ui_frame/panel_title_01.png,ui_frame,all,画面タイトル帯,900,180,png,high,木板や真鍮で統一すると世界観が締まる
+panel_title_wood_long_01,/img/ui_frame/panel_title_02.png,ui_frame,all,横長タイトル帯,1024,180,png,medium,長文タイトルやサブ見出し用
+frame_window_01,/img/ui_frame/frame_card_01.png,ui_frame,home|tasks|dex|settings|letters,情報ウィンドウ枠,960,640,png,high,SFC/GBA風の会話ウィンドウ・メニュー枠
+frame_progress_01,/img/ui_frame/ui_progress_frame_01.png,ui_frame,home,EXPバー枠,720,120,png,medium,数値とバーが見やすいピクセル枠
+frame_attr_power_01,/img/ui_frame/ui_attr_bar_frame_06.png,ui_frame,home,Power属性バー枠,1510,150,png,medium,4属性のフレームトーンを揃える
+frame_attr_heal_01,/img/ui_frame/ui_attr_bar_frame_07.png,ui_frame,home,Heal属性バー枠,1510,150,png,medium,4属性のフレームトーンを揃える
+frame_attr_knowledge_01,/img/ui_frame/ui_attr_bar_frame_08.png,ui_frame,home,Knowledge属性バー枠,1510,150,png,medium,4属性のフレームトーンを揃える
+frame_attr_create_01,/img/ui_frame/ui_attr_bar_frame_09.png,ui_frame,home,Create属性バー枠,1510,150,png,medium,4属性のフレームトーンを揃える
+btn_primary_rpg_01,/img/button/button_bluestart.png,button,all,主要アクションボタン,360,120,png,high,開始・NEXT・決定など共通利用
+btn_secondary_rpg_01,/img/button/btn_secondary_02.png,button,all,戻る・設定用サブボタン,360,120,png,high,主要ボタンと同系統で色違い推奨
+btn_secondary_rpg_02,/img/button/btn_secondary_03.png,button,settings|task-settings,補助操作ボタン,360,120,png,medium,削除や別導線など用途分け用
+tab_home_01,/img/tab/tab_icon_home_01.png,tab,all(下タブ),ホームアイコン,140,140,png,high,4タブの線幅と彩度を統一
+tab_tasks_01,/img/tab/tab_icon_tasks_01.png,tab,all(下タブ),タスクアイコン,140,140,png,high,4タブの線幅と彩度を統一
+tab_dex_01,/img/tab/tab_icon_dex_01.png,tab,all(下タブ),図鑑アイコン,140,140,png,high,4タブの線幅と彩度を統一
+tab_settings_01,/img/tab/tab_icon_settings_01.png,tab,all(下タブ),設定アイコン,140,140,png,high,4タブの線幅と彩度を統一
+icon_attr_power_01,/img/icon/icon_power_01.png,icon,home|tasks,Power属性アイコン,160,160,png,high,4属性で同じタッチに統一
+icon_attr_heal_01,/img/icon/icon_heal_01.png,icon,home|tasks,Heal属性アイコン,160,160,png,high,4属性で同じタッチに統一
+icon_attr_knowledge_01,/img/icon/icon_knowledge_01.png,icon,home|tasks,Knowledge属性アイコン,160,160,png,high,4属性で同じタッチに統一
+icon_attr_create_01,/img/icon/icon_create_01.png,icon,home|tasks,Create属性アイコン,160,160,png,high,4属性で同じタッチに統一
+icon_quest_egg_01,/img/icon/icon_egg_01.png,icon,home|tasks|task-settings,クエスト行頭アイコン,160,160,png,medium,ミニ卵やクエスト勲章でも可
+monster_egg_01,/img/monster/1_egg.png,monster,tutorial-egg|birth-event|home|dex_detail,卵本体,1024,1024,png,high,全イベントの基準になるので最優先
+monster_baby_heal_01,/img/monster/2_pinkslime.png,monster,home|dex|events,ピンクスライム,1024,1024,png,high,baby群は同じ縮尺と影で統一
+monster_baby_power_01,/img/monster/3_blueslime.png,monster,home|dex|events,ブルースライム,1024,1024,png,high,baby群は同じ縮尺と影で統一
+monster_baby_knowledge_01,/img/monster/4_greenslime.png,monster,home|dex|events,グリーンスライム,1024,1024,png,high,baby群は同じ縮尺と影で統一
+monster_baby_create_01,/img/monster/5_purpleslime.png,monster,home|dex|events,パープルスライム,1024,1024,png,high,baby群は同じ縮尺と影で統一
+monster_child_set_01,/img/monster/6_minifairy.png ほか,monster,home|dex|events,child段階モンスター4種,1024,1024,png,medium,6-9番を同一タッチで揃える
+monster_adult_set_01,/img/monster/10_arcfairy.png ほか,monster,home|dex|events,adult段階モンスター4種,1024,1024,png,medium,10-13番を同一タッチで揃える
+monster_final_set_01,/img/monster/14_seraphim.png ほか,monster,home|dex|end-event,final段階モンスター4種,1024,1024,png,medium,14-17番を同一タッチで揃える
+badge_stage_egg_01,/img/badge/stage_badge_egg.png,badge,home|dex_detail,成長段階バッジ egg,320,220,png,medium,5段階で意匠統一
+badge_stage_baby_01,/img/badge/stage_badge_baby.png,badge,home|dex_detail,成長段階バッジ baby,320,220,png,medium,5段階で意匠統一
+badge_stage_child_01,/img/badge/stage_badge_child.png,badge,home|dex_detail,成長段階バッジ child,320,220,png,medium,5段階で意匠統一
+badge_stage_adult_01,/img/badge/stage_badge_adult.png,badge,home|dex_detail,成長段階バッジ adult,320,220,png,medium,5段階で意匠統一
+badge_stage_final_01,/img/badge/stage_badge_final.png,badge,home|dex_detail,成長段階バッジ final,320,220,png,medium,5段階で意匠統一
+badge_rarity_set_01,/img/badge/rarity_badge_common.png ほか,badge,dex|dex_detail,レアリティバッジ4種,460,120,png,medium,common〜ultraで統一
+fx_smoke_01,/img/effect/effect_smoke_01.png,effect,birth-event|evolution|end-event,煙エフェクト,512,512,png,high,透過で使いやすい発光寄りの煙
+fx_star_set_01,/img/effect/effect_star_01.png ほか,effect,evolution|tasks|birth-event,星エフェクト4種,256,256,png,medium,光り方を同系統に揃える
+fx_exp_pop_01,/img/effect/effect_exp_pop_01.png,effect,tasks|home,EXP獲得演出,512,192,png,medium,UI寄りのポップアップ演出
+ui_hatch_symbol_01,/img/ui/ui_egg_symbol_01.png,ui,birth-event,孵化演出用タマゴ記号,512,512,png,medium,卵本体と別役割なら演出特化でOK
+ui_shadow_fallback_01,/img/ui/ui_shadow_01.png,ui,dex|fallback,未取得モンスターや画像欠損用,512,512,png,low,差し替え時の保険
+illust_empty_tasks_01,/img/illustration/empty_state_quests_01.png,illustration,home|tasks,タスク0件時イラスト,720,360,png,low,世界観に合うなら残す
+letter_item_set_01,/img/letter/letter_item_01.png ほか,item,end-event|letters,手紙画像7種,1024,1024,png,medium,差分を増やすなら同じテンプレで色替えでも可
+sound_check_01,/sound/s_Check.mp3,sound,tasks|home,タスク完了SE,mp3,,medium,効果音。画像ではないが世界観統一に重要
+sound_add_01,/sound/s_add.mp3,sound,task-add,タスク追加SE,mp3,,low,効果音。画像ではないが世界観統一に重要
+sound_delete_01,/sound/s_delete.mp3,sound,task-remove,タスク削除SE,mp3,,low,効果音。画像ではないが世界観統一に重要
+sound_reorder_01,/sound/irekae.mp3,sound,task-reorder,並び替えSE,mp3,,low,効果音。画像ではないが世界観統一に重要
