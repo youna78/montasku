@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
@@ -7,6 +8,7 @@ import { EvolutionOverlay } from "@/components/common/EvolutionOverlay";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { ATTRIBUTE_ICON_BY_KEY } from "@/lib/game/assets";
 import { playSfx } from "@/lib/game/sfx";
+import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 import type { TaskMaster } from "@/types/master";
 
@@ -37,6 +39,10 @@ export default function TasksPage() {
     }
     if (gameState.birthEventPending) {
       router.replace("/birth-event");
+      return;
+    }
+    if (shouldRouteToDailyReview(gameState)) {
+      router.replace("/daily-review");
       return;
     }
     if (!gameState.hasSeenTutorial && !gameState.isInTutorialFlow) {
@@ -96,6 +102,19 @@ export default function TasksPage() {
       <div className="title-panel">タスク</div>
       <section className="card decorated-card quest-heading-card">
         <p>各タスクは1日1回のみ達成できます。</p>
+      </section>
+      <section className="card decorated-card">
+        <div className="task-global-menu">
+          <Link href="/task-add" className="ui-link-button task-global-menu-button task-global-menu-button-primary">
+            追加
+          </Link>
+          <Link href="/task-remove" className="ui-link-button task-global-menu-button task-global-menu-button-secondary">
+            削除
+          </Link>
+          <Link href="/task-reorder" className="ui-link-button task-global-menu-button task-global-menu-button-accent">
+            入れ替え
+          </Link>
+        </div>
       </section>
 
       {feedback && <div className="toast">{feedback}</div>}

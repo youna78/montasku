@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import "./globals.css";
+
+const dotGothic16 = localFont({
+  src: "../DotGothic16/DotGothic16-Regular.ttf",
+  variable: "--font-dot-gothic16",
+  display: "swap"
+});
 
 export const metadata: Metadata = {
   title: "Habit Monster MVP",
@@ -9,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="ja">
+    <html lang="ja" className={dotGothic16.variable}>
       <body>{children}</body>
     </html>
   );

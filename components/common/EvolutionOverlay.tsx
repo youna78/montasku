@@ -44,11 +44,11 @@ export function EvolutionOverlay({
             alt={phase === "revealed" ? nextMonsterName : previousMonsterName}
             className="evolution-monster"
           />
-          <img src="/img/effect/effect_smoke_01.png" alt="smoke" className="evolution-smoke" />
-          <img src="/img/effect/effect_star_01.png" alt="star" className="evolution-star star-a" />
-          <img src="/img/effect/effect_star_02.png" alt="star" className="evolution-star star-b" />
-          <img src="/img/effect/effect_star_03.png" alt="star" className="evolution-star star-c" />
-          <img src="/img/effect/effect_star_04.png" alt="star" className="evolution-star star-d" />
+          <img src="/img/effect/fx_smoke_01.png" alt="smoke" className="evolution-smoke" />
+          <img src="/img/effect/fx_star_set_01.png" alt="star" className="evolution-star star-a" />
+          <img src="/img/effect/fx_star_set_02.png" alt="star" className="evolution-star star-b" />
+          <img src="/img/effect/fx_star_set_03.png" alt="star" className="evolution-star star-c" />
+          <img src="/img/effect/fx_star_set_04.png" alt="star" className="evolution-star star-d" />
         </div>
         <div className="rpg-dialogue-box evolution-dialogue">
           <p className="rpg-dialogue-text">

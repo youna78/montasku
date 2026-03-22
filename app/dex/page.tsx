@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getMonsterImage, getRarityBadge } from "@/lib/game/assets";
+import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 
 export default function DexPage() {
@@ -20,6 +21,10 @@ export default function DexPage() {
     }
     if (gameState.birthEventPending) {
       router.replace("/birth-event");
+      return;
+    }
+    if (shouldRouteToDailyReview(gameState)) {
+      router.replace("/daily-review");
       return;
     }
     if (!gameState.hasSeenTutorial) {
@@ -42,7 +47,7 @@ export default function DexPage() {
             <div key={monster.monsterId} className="dex-row">
               <span>#{monster.monsterId}</span>
               <img
-                src={unlocked ? getMonsterImage(monster.monsterId) : "/img/ui/ui_shadow_01.png"}
+                src={unlocked ? getMonsterImage(monster.monsterId) : "/img/ui/ui_shadow_fallback_01.png"}
                 alt={unlocked ? monster.name : "unknown"}
                 className="dex-monster-thumb"
               />

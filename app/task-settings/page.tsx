@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
-import { getTaskLimitInfo } from "@/lib/game/state";
+import { getTaskLimitInfo, shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 import type { TaskMaster } from "@/types/master";
 
@@ -21,6 +21,10 @@ export default function TaskSettingsPage() {
     }
     if (gameState.birthEventPending) {
       router.replace("/birth-event");
+      return;
+    }
+    if (shouldRouteToDailyReview(gameState)) {
+      router.replace("/daily-review");
       return;
     }
     if (!gameState.hasSeenTutorial) {
@@ -54,7 +58,7 @@ export default function TaskSettingsPage() {
         <ul className="quest-list">
           {activeTasks.map((task, index) => (
             <li key={task.taskId} className="quest-item">
-              <img src="/img/icon/icon_egg_01.png" alt="quest" className="quest-icon" />
+              <img src="/img/icon/icon_quest_task_01.png" alt="quest" className="quest-icon" />
               <span>
                 {index + 1}. {task.name}
               </span>

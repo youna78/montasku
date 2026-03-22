@@ -1,4 +1,4 @@
-import type { GameState, LetterRecord } from "@/types/game";
+import type { GameState, LetterRecord, PendingDailyReview } from "@/types/game";
 import type { LevelingMaster, MonsterMaster, TaskMaster } from "@/types/master";
 import { LETTER_ITEM_IMAGES } from "./assets";
 import { evaluateEvolution, resolveBirthMonsterId } from "./evolution";
@@ -51,8 +51,41 @@ export type ReorderTaskResult = {
 
 export type FinishEndEventResult = GameState;
 
+export type DailyReviewResolveResult = {
+  nextState: GameState;
+  resolved: boolean;
+  rewarded: boolean;
+  gainedExp: number;
+  gainedAttributes: {
+    power: number;
+    heal: number;
+    knowledge: number;
+    create: number;
+  };
+  evolved: boolean;
+  levelUp: boolean;
+  previousMonsterId: number;
+  nextMonsterId: number;
+};
+
 function uniqueNumbers(values: number[]): number[] {
   return [...new Set(values.filter((v) => Number.isFinite(v)))];
+}
+
+function normalizePendingDailyReview(rawReview: GameState["pendingDailyReview"] | undefined): GameState["pendingDailyReview"] {
+  if (!rawReview || typeof rawReview !== "object") return null;
+  if (typeof rawReview.targetDate !== "string") return null;
+
+  const taskIds = uniqueNumbers(Array.isArray(rawReview.taskIds) ? rawReview.taskIds : []);
+  if (taskIds.length === 0) return null;
+
+  return {
+    targetDate: rawReview.targetDate,
+    taskIds,
+    resolvedTaskIds: uniqueNumbers(Array.isArray(rawReview.resolvedTaskIds) ? rawReview.resolvedTaskIds : []),
+    rewardedTaskIds: uniqueNumbers(Array.isArray(rawReview.rewardedTaskIds) ? rawReview.rewardedTaskIds : []),
+    skippedAt: typeof rawReview.skippedAt === "string" ? rawReview.skippedAt : undefined
+  };
 }
 
 function normalizeLetters(rawLetters: GameState["acquiredLetters"] | undefined): GameState["acquiredLetters"] {
@@ -252,7 +285,8 @@ export function buildInitialState(tasks: TaskMaster[]): GameState {
     birthEventPending: false,
     hasCompletedInitialBirth: false,
     hasCompletedCurrentBirth: false,
-    endEventPending: false
+    endEventPending: false,
+    pendingDailyReview: null
   };
 }
 
@@ -285,6 +319,7 @@ function normalizeState(
     Number(parsed.currentMonsterId ?? initial.currentMonsterId) !== 1;
   const rawDiscovered = Array.isArray(parsed.discoveredMonsterIds) ? parsed.discoveredMonsterIds : [];
   const normalizedActiveTasks = normalizeActiveTasks(parsed.activeTasks, initial.activeTasks);
+  const normalizedPendingDailyReview = normalizePendingDailyReview(parsed.pendingDailyReview);
 
   return {
     ...initial,
@@ -314,7 +349,29 @@ function normalizeState(
     birthEventPending: typeof parsed.birthEventPending === "boolean" ? parsed.birthEventPending : false,
     hasCompletedInitialBirth,
     hasCompletedCurrentBirth,
-    endEventPending: typeof parsed.endEventPending === "boolean" ? parsed.endEventPending || shouldQueueEndEvent : shouldQueueEndEvent
+    endEventPending: typeof parsed.endEventPending === "boolean" ? parsed.endEventPending || shouldQueueEndEvent : shouldQueueEndEvent,
+    pendingDailyReview: normalizedPendingDailyReview
+  };
+}
+
+function buildPendingDailyReview(state: GameState): PendingDailyReview | null {
+  if (!state.hasSeenTutorial || state.isInTutorialFlow || !state.hasCompletedCurrentBirth) {
+    return null;
+  }
+
+  const activeTaskIds = state.activeTasks
+    .filter((task) => task.enabled)
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((task) => task.taskId);
+  const taskIds = activeTaskIds.filter((taskId) => !state.completedTaskIdsToday.includes(taskId));
+
+  if (taskIds.length === 0) return null;
+
+  return {
+    targetDate: state.lastPlayedDate,
+    taskIds,
+    resolvedTaskIds: [],
+    rewardedTaskIds: []
   };
 }
 
@@ -324,13 +381,15 @@ function applyDailyReset(state: GameState): GameState {
 
   const dayDiff = diffDays(state.lastPlayedDate, today);
   const nextStreakDays = dayDiff === 1 ? Math.max(1, state.streakDays) + 1 : 1;
+  const pendingDailyReview = buildPendingDailyReview(state);
 
   return {
     ...state,
     todayExp: 0,
     completedTaskIdsToday: [],
     streakDays: nextStreakDays,
-    lastPlayedDate: today
+    lastPlayedDate: today,
+    pendingDailyReview
   };
 }
 
@@ -368,24 +427,30 @@ export function loadGameState(
 function applyExpAndAttributes(
   state: GameState,
   task: TaskMaster,
-  levelingRows: LevelingMaster[]
+  levelingRows: LevelingMaster[],
+  options?: {
+    includeTodayExp?: boolean;
+    markCompletedToday?: boolean;
+  }
 ): GameState {
   const table = normalizeLevelingMaster(levelingRows);
   const totalExp = state.currentMonsterExp + task.baseExp;
   const resolvedLevel = resolveLevelFromExp(totalExp, table);
+  const includeTodayExp = options?.includeTodayExp ?? true;
+  const markCompletedToday = options?.markCompletedToday ?? true;
 
   return {
     ...state,
     currentMonsterLevel: resolvedLevel.level,
     currentMonsterExp: totalExp,
-    todayExp: state.todayExp + task.baseExp,
+    todayExp: includeTodayExp ? state.todayExp + task.baseExp : state.todayExp,
     attributeTotals: {
       power: state.attributeTotals.power + task.power,
       heal: state.attributeTotals.heal + task.heal,
       knowledge: state.attributeTotals.knowledge + task.knowledge,
       create: state.attributeTotals.create + task.create
     },
-    completedTaskIdsToday: [...state.completedTaskIdsToday, task.taskId]
+    completedTaskIdsToday: markCompletedToday ? [...state.completedTaskIdsToday, task.taskId] : state.completedTaskIdsToday
   };
 }
 
@@ -443,6 +508,41 @@ export function reconcileMonsterProgress(params: {
   return nextState;
 }
 
+function applyEvolutionAndEndChecks(
+  state: GameState,
+  previousLevel: number,
+  previousMonsterId: number,
+  monsters: MonsterMaster[],
+  levelingRows: LevelingMaster[]
+): { nextState: GameState; levelUp: boolean; evolved: boolean } {
+  let nextState = state;
+  const didLevelUp = nextState.currentMonsterLevel > previousLevel;
+
+  if (nextState.hasCompletedCurrentBirth && didLevelUp) {
+    const nextMonsterId = evaluateEvolution({ gameState: nextState, monsters });
+    if (nextMonsterId && nextMonsterId !== nextState.currentMonsterId) {
+      nextState = {
+        ...nextState,
+        currentMonsterId: nextMonsterId,
+        discoveredMonsterIds: uniqueNumbers([...nextState.discoveredMonsterIds, nextMonsterId])
+      };
+    }
+  }
+
+  if (nextState.hasCompletedCurrentBirth && didLevelUp && isEndLevel(nextState.currentMonsterLevel, levelingRows)) {
+    nextState = {
+      ...nextState,
+      endEventPending: true
+    };
+  }
+
+  return {
+    nextState,
+    levelUp: didLevelUp,
+    evolved: nextState.currentMonsterId !== previousMonsterId
+  };
+}
+
 // Complete-task state update is centralized here.
 export function completeTask(params: {
   state: GameState;
@@ -470,25 +570,8 @@ export function completeTask(params: {
 
   let nextState = applyExpAndAttributes(state, task, levelingRows);
   nextState = applyInitialBirthProgress(nextState, monsters);
-  const didLevelUp = nextState.currentMonsterLevel > previousLevel;
-
-  if (nextState.hasCompletedCurrentBirth && didLevelUp) {
-    const nextMonsterId = evaluateEvolution({ gameState: nextState, monsters });
-    if (nextMonsterId && nextMonsterId !== nextState.currentMonsterId) {
-      nextState = {
-        ...nextState,
-        currentMonsterId: nextMonsterId,
-        discoveredMonsterIds: uniqueNumbers([...nextState.discoveredMonsterIds, nextMonsterId])
-      };
-    }
-  }
-
-  if (nextState.hasCompletedCurrentBirth && didLevelUp && isEndLevel(nextState.currentMonsterLevel, levelingRows)) {
-    nextState = {
-      ...nextState,
-      endEventPending: true
-    };
-  }
+  const progressResult = applyEvolutionAndEndChecks(nextState, previousLevel, previousMonsterId, monsters, levelingRows);
+  nextState = progressResult.nextState;
 
   return {
     nextState,
@@ -500,8 +583,89 @@ export function completeTask(params: {
       create: task.create
     },
     alreadyCompleted: false,
-    evolved: nextState.currentMonsterId !== previousMonsterId,
-    levelUp: didLevelUp,
+    evolved: progressResult.evolved,
+    levelUp: progressResult.levelUp,
+    previousMonsterId,
+    nextMonsterId: nextState.currentMonsterId
+  };
+}
+
+export function resolveDailyReviewTask(params: {
+  state: GameState;
+  task: TaskMaster;
+  didComplete: boolean;
+  monsters: MonsterMaster[];
+  levelingRows: LevelingMaster[];
+}): DailyReviewResolveResult {
+  const { state, task, didComplete, monsters, levelingRows } = params;
+  const pending = state.pendingDailyReview;
+
+  if (!pending || !pending.taskIds.includes(task.taskId) || pending.resolvedTaskIds.includes(task.taskId)) {
+    return {
+      nextState: state,
+      resolved: false,
+      rewarded: false,
+      gainedExp: 0,
+      gainedAttributes: { power: 0, heal: 0, knowledge: 0, create: 0 },
+      evolved: false,
+      levelUp: false,
+      previousMonsterId: state.currentMonsterId,
+      nextMonsterId: state.currentMonsterId
+    };
+  }
+
+  const previousLevel = state.currentMonsterLevel;
+  const previousMonsterId = state.currentMonsterId;
+  let nextState: GameState = {
+    ...state,
+    pendingDailyReview: {
+      ...pending,
+      resolvedTaskIds: uniqueNumbers([...pending.resolvedTaskIds, task.taskId])
+    }
+  };
+
+  if (!didComplete) {
+    return {
+      nextState,
+      resolved: true,
+      rewarded: false,
+      gainedExp: 0,
+      gainedAttributes: { power: 0, heal: 0, knowledge: 0, create: 0 },
+      evolved: false,
+      levelUp: false,
+      previousMonsterId,
+      nextMonsterId: nextState.currentMonsterId
+    };
+  }
+
+  nextState = applyExpAndAttributes(nextState, task, levelingRows, {
+    includeTodayExp: false,
+    markCompletedToday: false
+  });
+  const progressResult = applyEvolutionAndEndChecks(nextState, previousLevel, previousMonsterId, monsters, levelingRows);
+  nextState = {
+    ...progressResult.nextState,
+    pendingDailyReview: progressResult.nextState.pendingDailyReview
+      ? {
+          ...progressResult.nextState.pendingDailyReview,
+          rewardedTaskIds: uniqueNumbers([...progressResult.nextState.pendingDailyReview.rewardedTaskIds, task.taskId])
+        }
+      : progressResult.nextState.pendingDailyReview
+  };
+
+  return {
+    nextState,
+    resolved: true,
+    rewarded: true,
+    gainedExp: task.baseExp,
+    gainedAttributes: {
+      power: task.power,
+      heal: task.heal,
+      knowledge: task.knowledge,
+      create: task.create
+    },
+    evolved: progressResult.evolved,
+    levelUp: progressResult.levelUp,
     previousMonsterId,
     nextMonsterId: nextState.currentMonsterId
   };
@@ -635,6 +799,7 @@ export function finishEndEvent(state: GameState, monsters: MonsterMaster[]): Fin
     hasCompletedCurrentBirth: false,
     endEventPending: false,
     isInTutorialFlow: false,
+    pendingDailyReview: null,
     discoveredMonsterIds: uniqueNumbers([...state.discoveredMonsterIds, 1]),
     acquiredLetters: [...state.acquiredLetters, nextLetter]
   };
@@ -650,9 +815,33 @@ export function startTutorialFlow(state: GameState): GameState {
   };
 }
 
-export function getInitialRoute(state: GameState): "/tutorial" | "/tasks" | "/birth-event" | "/end-event" | "/home" {
+export function shouldRouteToDailyReview(state: GameState): boolean {
+  return Boolean(state.pendingDailyReview && !state.pendingDailyReview.skippedAt && state.hasSeenTutorial && !state.isInTutorialFlow);
+}
+
+export function skipDailyReview(state: GameState): GameState {
+  if (!state.pendingDailyReview) return state;
+  return {
+    ...state,
+    pendingDailyReview: {
+      ...state.pendingDailyReview,
+      skippedAt: todayLocalDate()
+    }
+  };
+}
+
+export function finishDailyReview(state: GameState): GameState {
+  if (!state.pendingDailyReview) return state;
+  return {
+    ...state,
+    pendingDailyReview: null
+  };
+}
+
+export function getInitialRoute(state: GameState): "/tutorial" | "/tasks" | "/birth-event" | "/end-event" | "/daily-review" | "/home" {
   if (state.endEventPending) return "/end-event";
   if (state.birthEventPending) return "/birth-event";
+  if (shouldRouteToDailyReview(state)) return "/daily-review";
   if (!state.hasSeenTutorial) return state.isInTutorialFlow ? "/tasks" : "/tutorial";
   return "/home";
 }

@@ -8,7 +8,7 @@ import { EvolutionOverlay } from "@/components/common/EvolutionOverlay";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage, getStageBadge } from "@/lib/game/assets";
 import { playSfx } from "@/lib/game/sfx";
-import { progressToNextLevel } from "@/lib/game/state";
+import { progressToNextLevel, shouldRouteToDailyReview } from "@/lib/game/state";
 import { resolveLevelFromExp } from "@/lib/game/leveling";
 import { useGame } from "@/lib/game/useGame";
 
@@ -44,6 +44,10 @@ export default function HomePage() {
     }
     if (gameState.birthEventPending) {
       router.replace("/birth-event");
+      return;
+    }
+    if (shouldRouteToDailyReview(gameState)) {
+      router.replace("/daily-review");
       return;
     }
     if (!gameState.hasSeenTutorial) {
@@ -183,7 +187,7 @@ export default function HomePage() {
         <h2>未達成タスク (最大3件)</h2>
         {remainingTasks.length === 0 ? (
           <div className="empty-quests-wrap">
-            <img src="/img/illustration/empty_state_quests_01.png" alt="all done" className="empty-quests-img" />
+            <img src="/img/illustration/illust_empty_tasks_01.png" alt="all done" className="empty-quests-img" />
             <div>今日の有効タスクはすべて達成済みです。</div>
           </div>
         ) : (
@@ -191,7 +195,7 @@ export default function HomePage() {
             {remainingTasks.slice(0, 3).map((task) => (
               <li key={task.taskId} className="quest-item row">
                 <span className="row-tight">
-                  <img src="/img/icon/icon_egg_01.png" alt="quest" className="quest-icon" />
+                  <img src="/img/icon/icon_quest_task_01.png" alt="quest" className="quest-icon" />
                   <span>{task.name}</span>
                 </span>
                 <button className="quest-btn quest-btn-primary quest-btn-check" onClick={() => onCompleteFromHome(task.taskId)}>

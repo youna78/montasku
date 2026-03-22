@@ -9,14 +9,18 @@ import {
   completeTask as runCompleteTask,
   finishEndEvent as runFinishEndEvent,
   finishBirthEvent as runFinishBirthEvent,
+  finishDailyReview as runFinishDailyReview,
   loadGameState,
   moveTaskInActive,
   reconcileMonsterProgress,
+  resolveDailyReviewTask as runResolveDailyReviewTask,
   removeTaskFromActive,
   saveGameState,
+  skipDailyReview as runSkipDailyReview,
   startTutorialFlow as runStartTutorialFlow,
   type AddTaskResult,
   type CompleteTaskResult,
+  type DailyReviewResolveResult,
   type RemoveTaskResult,
   type ReorderTaskResult
 } from "@/lib/game/state";
@@ -33,6 +37,9 @@ type UseGameResult = {
   addTask: (taskId: number) => AddTaskResult | null;
   removeTask: (taskId: number) => RemoveTaskResult | null;
   moveTask: (taskId: number, direction: "up" | "down") => ReorderTaskResult | null;
+  resolveDailyReviewTask: (taskId: number, didComplete: boolean) => DailyReviewResolveResult | null;
+  skipDailyReview: () => void;
+  finishDailyReview: () => void;
   startTutorialFlow: () => void;
   finishBirthEvent: () => void;
   finishEndEvent: () => void;
@@ -150,6 +157,38 @@ export function useGame(): UseGameResult {
     [commitState]
   );
 
+  const resolveDailyReviewTask = useCallback(
+    (taskId: number, didComplete: boolean): DailyReviewResolveResult | null => {
+      const current = gameStateRef.current;
+      if (!current) return null;
+      const task = tasks.find((t) => t.taskId === taskId);
+      if (!task) return null;
+
+      const result = runResolveDailyReviewTask({
+        state: current,
+        task,
+        didComplete,
+        monsters,
+        levelingRows
+      });
+      commitState(result.nextState);
+      return result;
+    },
+    [commitState, monsters, tasks, levelingRows]
+  );
+
+  const skipDailyReview = useCallback(() => {
+    const current = gameStateRef.current;
+    if (!current) return;
+    commitState(runSkipDailyReview(current));
+  }, [commitState]);
+
+  const finishDailyReview = useCallback(() => {
+    const current = gameStateRef.current;
+    if (!current) return;
+    commitState(runFinishDailyReview(current));
+  }, [commitState]);
+
   const finishBirthEvent = useCallback(() => {
     const current = gameStateRef.current;
     if (!current) return;
@@ -168,5 +207,21 @@ export function useGame(): UseGameResult {
     commitState(runStartTutorialFlow(current));
   }, [commitState]);
 
-  return { tasks, monsters, levelingRows, gameState, isLoading, completeTask, addTask, removeTask, moveTask, startTutorialFlow, finishBirthEvent, finishEndEvent };
+  return {
+    tasks,
+    monsters,
+    levelingRows,
+    gameState,
+    isLoading,
+    completeTask,
+    addTask,
+    removeTask,
+    moveTask,
+    resolveDailyReviewTask,
+    skipDailyReview,
+    finishDailyReview,
+    startTutorialFlow,
+    finishBirthEvent,
+    finishEndEvent
+  };
 }

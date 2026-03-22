@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getMonsterImage, getRarityBadge, getStageBadge } from "@/lib/game/assets";
+import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 
 export default function DexDetailPage() {
@@ -24,6 +25,10 @@ export default function DexDetailPage() {
     }
     if (gameState.birthEventPending) {
       router.replace("/birth-event");
+      return;
+    }
+    if (shouldRouteToDailyReview(gameState)) {
+      router.replace("/daily-review");
       return;
     }
     if (!gameState.hasSeenTutorial) {

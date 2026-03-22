@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { playSfx } from "@/lib/game/sfx";
-import { getTaskLimitInfo } from "@/lib/game/state";
+import { getTaskLimitInfo, shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 
 export default function TaskAddPage() {
@@ -23,6 +23,10 @@ export default function TaskAddPage() {
     }
     if (gameState.birthEventPending) {
       router.replace("/birth-event");
+      return;
+    }
+    if (shouldRouteToDailyReview(gameState)) {
+      router.replace("/daily-review");
       return;
     }
     if (!gameState.hasSeenTutorial) {
@@ -105,7 +109,7 @@ export default function TaskAddPage() {
             {addableTasks.map((task) => (
               <li className="row quest-item task-row" key={task.taskId}>
                 <div className="row-tight">
-                  <img src="/img/icon/icon_egg_01.png" alt="quest" className="quest-icon" />
+                  <img src="/img/icon/icon_quest_task_01.png" alt="quest" className="quest-icon" />
                   <div>
                     <div>{task.name}</div>
                     <small>{task.category}</small>

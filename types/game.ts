@@ -21,6 +21,14 @@ export type LetterRecord = {
   obtainedDate: string;
 };
 
+export type PendingDailyReview = {
+  targetDate: string;
+  taskIds: number[];
+  resolvedTaskIds: number[];
+  rewardedTaskIds: number[];
+  skippedAt?: string;
+};
+
 export type GameState = {
   currentMonsterId: number;
   currentMonsterLevel: number;
@@ -40,4 +48,5 @@ export type GameState = {
   hasCompletedInitialBirth: boolean;
   hasCompletedCurrentBirth: boolean;
   endEventPending: boolean;
+  pendingDailyReview: PendingDailyReview | null;
 };

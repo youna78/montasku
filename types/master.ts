@@ -1,4 +1,4 @@
-export type TaskCategory = "健康" | "生活" | "成長" | "メンタル";
+export type TaskCategory = "健康" | "生活" | "成長" | "メンタル" | "創作";
 
 export type MonsterAttribute =
   | "power"

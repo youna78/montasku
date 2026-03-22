@@ -32,7 +32,7 @@ export default function TutorialPage() {
   return (
     <main className="page-shell page-tutorial">
       <div className="logo-wrap logo-wrap-tutorial">
-        <img src="/img/branding/logo_title_01.png" alt="title" className="logo-title" />
+        <img src="/img/branding/logo_title_main_01.png" alt="title" className="logo-title" />
       </div>
       <section className="card decorated-card">
         <div className="title-panel small">チュートリアル</div>
