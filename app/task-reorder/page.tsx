@@ -66,6 +66,22 @@ export default function TaskReorderPage() {
   return (
     <main className="page-shell">
       <div className="title-panel">タスク並び替え</div>
+      <section className="card decorated-card">
+        <div className="task-global-menu">
+          <Link href="/task-add" className="ui-link-button task-global-menu-button task-global-menu-button-primary">
+            追加
+          </Link>
+          <Link href="/task-remove" className="ui-link-button task-global-menu-button task-global-menu-button-secondary">
+            削除
+          </Link>
+          <span
+            className="ui-link-button task-global-menu-button task-global-menu-button-accent task-global-menu-button-active task-global-menu-button-current"
+            aria-current="page"
+          >
+            並び替え
+          </span>
+        </div>
+      </section>
 
       <section className="card decorated-card">
         <div>

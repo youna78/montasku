@@ -83,6 +83,22 @@ export default function TaskAddPage() {
   return (
     <main className="page-shell">
       <div className="title-panel">タスク追加</div>
+      <section className="card decorated-card">
+        <div className="task-global-menu">
+          <span
+            className="ui-link-button task-global-menu-button task-global-menu-button-primary task-global-menu-button-active task-global-menu-button-current"
+            aria-current="page"
+          >
+            追加
+          </span>
+          <Link href="/task-remove" className="ui-link-button task-global-menu-button task-global-menu-button-secondary">
+            削除
+          </Link>
+          <Link href="/task-reorder" className="ui-link-button task-global-menu-button task-global-menu-button-accent">
+            並び替え
+          </Link>
+        </div>
+      </section>
 
       <section className="card decorated-card">
         <p>公式タスク一覧から追加できます。</p>
@@ -116,7 +132,7 @@ export default function TaskAddPage() {
                   </div>
                 </div>
                 <button className="quest-btn quest-btn-primary" onClick={() => onAddTask(task.taskId)} disabled={isAtMaxTasks}>
-                  追加
+                  このタスクを追加
                 </button>
               </li>
             ))}

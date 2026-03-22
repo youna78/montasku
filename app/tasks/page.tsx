@@ -112,7 +112,7 @@ export default function TasksPage() {
             削除
           </Link>
           <Link href="/task-reorder" className="ui-link-button task-global-menu-button task-global-menu-button-accent">
-            入れ替え
+            並び替え
           </Link>
         </div>
       </section>

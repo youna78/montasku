@@ -47,6 +47,20 @@ export default function TaskSettingsPage() {
     <main className="page-shell">
       <div className="title-panel">タスク設定</div>
       <section className="card decorated-card">
+        <div className="task-global-menu">
+          <Link href="/task-add" className="ui-link-button task-global-menu-button task-global-menu-button-primary">
+            追加
+          </Link>
+          <Link href="/task-remove" className="ui-link-button task-global-menu-button task-global-menu-button-secondary">
+            削除
+          </Link>
+          <Link href="/task-reorder" className="ui-link-button task-global-menu-button task-global-menu-button-accent">
+            並び替え
+          </Link>
+        </div>
+      </section>
+
+      <section className="card decorated-card">
         <div>
           タスク数: {limits.current} / {limits.max}
         </div>
@@ -68,11 +82,16 @@ export default function TaskSettingsPage() {
       </section>
 
       <section className="card decorated-card">
-        <p>タスクは公式タスクから選択して追加できます。</p>
-        <div className="settings-links rpg-link-grid centered-actions">
-          <Link href="/task-add" className="ui-link-button quest-btn quest-btn-secondary">タスクを追加へ</Link>
-          <Link href="/task-remove" className="ui-link-button quest-btn quest-btn-secondary">タスク削除へ</Link>
-          <Link href="/task-reorder" className="ui-link-button quest-btn quest-btn-secondary">タスク並び替えへ</Link>
+        <div className="task-global-menu section-bottom-action">
+          <Link href="/task-add" className="ui-link-button task-global-menu-button task-global-menu-button-primary">
+            追加
+          </Link>
+          <Link href="/task-remove" className="ui-link-button task-global-menu-button task-global-menu-button-secondary">
+            削除
+          </Link>
+          <Link href="/task-reorder" className="ui-link-button task-global-menu-button task-global-menu-button-accent">
+            並び替え
+          </Link>
         </div>
       </section>
 

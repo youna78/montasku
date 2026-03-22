@@ -66,6 +66,22 @@ export default function TaskRemovePage() {
   return (
     <main className="page-shell">
       <div className="title-panel">タスク削除</div>
+      <section className="card decorated-card">
+        <div className="task-global-menu">
+          <Link href="/task-add" className="ui-link-button task-global-menu-button task-global-menu-button-primary">
+            追加
+          </Link>
+          <span
+            className="ui-link-button task-global-menu-button task-global-menu-button-secondary task-global-menu-button-active task-global-menu-button-current"
+            aria-current="page"
+          >
+            削除
+          </span>
+          <Link href="/task-reorder" className="ui-link-button task-global-menu-button task-global-menu-button-accent">
+            並び替え
+          </Link>
+        </div>
+      </section>
 
       <section className="card decorated-card">
         <div>
