@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { GuestLoginPrompt } from "@/components/auth/GuestLoginPrompt";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { PageViewTracker } from "@/components/analytics/PageViewTracker";
 import "./globals.css";
 
 const dotGothic16 = localFont({
@@ -16,11 +18,19 @@ export const metadata: Metadata = {
   description: "Task-based monster growth MVP"
 };
 
+const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ja" className={dotGothic16.variable}>
       <body>
+        {gaMeasurementId ? <GoogleAnalytics measurementId={gaMeasurementId} /> : null}
         <AuthProvider>
+          {gaMeasurementId ? (
+            <Suspense fallback={null}>
+              <PageViewTracker measurementId={gaMeasurementId} />
+            </Suspense>
+          ) : null}
           {children}
           <GuestLoginPrompt />
         </AuthProvider>

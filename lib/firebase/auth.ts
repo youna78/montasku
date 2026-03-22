@@ -2,11 +2,13 @@ import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   browserLocalPersistence,
+  getRedirectResult,
   getAuth,
   sendEmailVerification,
   sendPasswordResetEmail,
   setPersistence,
   signInWithEmailAndPassword,
+  signInWithRedirect,
   signInWithPopup,
   signOut
 } from "firebase/auth";
@@ -34,6 +36,21 @@ export async function signInWithGooglePopup() {
   });
 
   return signInWithPopup(getFirebaseAuth(), provider);
+}
+
+export async function signInWithGoogleRedirect() {
+  await ensurePersistence();
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({
+    prompt: "select_account"
+  });
+
+  return signInWithRedirect(getFirebaseAuth(), provider);
+}
+
+export async function consumeGoogleRedirectResult() {
+  await ensurePersistence();
+  return getRedirectResult(getFirebaseAuth());
 }
 
 export async function signInWithEmail(email: string, password: string) {

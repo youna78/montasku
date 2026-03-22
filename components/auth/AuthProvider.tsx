@@ -3,9 +3,11 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { onAuthStateChanged, reload, type User } from "firebase/auth";
 import {
+  consumeGoogleRedirectResult,
   sendResetPasswordEmail,
   sendVerificationEmail,
   signInWithEmail,
+  signInWithGoogleRedirect,
   signInWithGooglePopup,
   signOutFirebase,
   signUpWithEmail,
@@ -65,9 +67,22 @@ function toAuthErrorMessage(error: unknown, fallback: string): string {
       return "メールアドレスまたはパスワードが正しくありません。";
     case "auth/popup-closed-by-user":
       return "ログインがキャンセルされました。";
+    case "auth/popup-blocked":
+    case "auth/cancelled-popup-request":
+      return "ポップアップでログインできませんでした。もう一度お試しください。";
+    case "auth/unauthorized-domain":
+      return "このドメインは Firebase の承認済みドメインに登録されていません。";
     default:
       return fallback;
   }
+}
+
+function shouldUseRedirect() {
+  if (typeof window === "undefined") return false;
+  const userAgent = window.navigator.userAgent.toLowerCase();
+  const isTouchDevice = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
+
+  return /iphone|ipad|ipod|android/.test(userAgent) || isTouchDevice;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -98,6 +113,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       return;
     }
+
+    void (async () => {
+      try {
+        await consumeGoogleRedirectResult();
+      } catch (error) {
+        console.error("[auth] consume redirect result failed", error);
+        setErrorMessage(toAuthErrorMessage(error, "Googleログインに失敗しました。"));
+      }
+    })();
 
     const unsubscribe = onAuthStateChanged(getFirebaseAuth(), (nextUser) => {
       setIsLoading(true);
@@ -146,6 +170,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setShowDailyPrompt(false);
           setErrorMessage("");
           setInfoMessage("");
+          if (shouldUseRedirect()) {
+            await signInWithGoogleRedirect();
+            return true;
+          }
+
           await signInWithGooglePopup();
           return true;
         } catch (error) {
