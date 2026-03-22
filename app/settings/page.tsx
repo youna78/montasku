@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { AuthCard } from "@/components/auth/AuthCard";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
@@ -38,6 +39,7 @@ export default function SettingsPage() {
   return (
     <main className="page-shell">
       <div className="title-panel">設定</div>
+      <AuthCard />
       <section className="card decorated-card">
         <div className="settings-menu-grid centered-actions">
           <Link href="/task-settings" className="ui-link-button settings-menu-button settings-menu-button-primary">

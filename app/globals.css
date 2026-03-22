@@ -610,6 +610,155 @@ button:disabled {
   color: var(--muted);
 }
 
+.auth-card-stack {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.auth-card-title {
+  margin-top: 0;
+  margin-bottom: 12px;
+  text-align: center;
+  font-family: var(--font-dot-gothic16), "Osaka-mono", "MS Gothic", "Courier New", monospace;
+  font-size: 28px;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+}
+
+.auth-card-message {
+  margin: 0;
+  color: var(--muted);
+}
+
+.auth-card-message-centered {
+  text-align: center;
+}
+
+.auth-card-user {
+  display: grid;
+  gap: 6px;
+}
+
+.auth-divider {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.auth-mode-toggle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: min(100%, 420px);
+}
+
+.auth-mode-button {
+  width: 100%;
+}
+
+.auth-form-grid {
+  display: grid;
+  gap: 10px;
+  width: min(100%, 420px);
+}
+
+.auth-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 2px solid #8f6b34;
+  border-radius: 6px;
+  background: rgba(255, 249, 232, 0.95);
+  color: var(--text);
+  font-family: "Osaka-mono", "MS Gothic", "Courier New", monospace;
+}
+
+.auth-card-button {
+  width: min(100%, 320px);
+  justify-self: center;
+}
+
+.auth-card-uid {
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.auth-card-error {
+  margin-top: 10px;
+  color: #8a1e1e;
+  font-size: 13px;
+  text-align: center;
+}
+
+.auth-card-info {
+  margin-top: 10px;
+  color: #1f5c2b;
+  font-size: 13px;
+  text-align: center;
+}
+
+.auth-card-subnote {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.auth-prompt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(8, 12, 28, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.auth-prompt-card {
+  width: min(100%, 520px);
+}
+
+.auth-prompt-card h2 {
+  margin-top: 0;
+  text-align: center;
+}
+
+.auth-prompt-message {
+  margin: 0;
+  text-align: center;
+}
+
+.auth-prompt-actions {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.auth-email-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 81;
+  background: rgba(8, 12, 28, 0.74);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.auth-email-modal-card {
+  width: min(100%, 480px);
+}
+
+.auth-email-modal-title {
+  margin-top: 0;
+  margin-bottom: 16px;
+  text-align: center;
+  font-family: var(--font-dot-gothic16), "Osaka-mono", "MS Gothic", "Courier New", monospace;
+}
+
 .review-task-item {
   flex-direction: column;
   align-items: stretch;

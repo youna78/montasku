@@ -424,6 +424,17 @@ export function loadGameState(
   }
 }
 
+export function hydrateGameState(
+  parsed: Partial<GameState> | null | undefined,
+  tasks: TaskMaster[],
+  levelingRows: LevelingMaster[] = getFallbackLevelingMaster()
+): GameState {
+  const normalized = normalizeState(parsed ?? {}, tasks, levelingRows);
+  const resetApplied = applyDailyReset(normalized);
+  saveGameState(resetApplied);
+  return resetApplied;
+}
+
 function applyExpAndAttributes(
   state: GameState,
   task: TaskMaster,

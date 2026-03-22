@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
+import { AuthProvider } from "@/components/auth/AuthProvider";
+import { GuestLoginPrompt } from "@/components/auth/GuestLoginPrompt";
 import "./globals.css";
 
 const dotGothic16 = localFont({
@@ -17,7 +19,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ja" className={dotGothic16.variable}>
-      <body>{children}</body>
+      <body>
+        <AuthProvider>
+          {children}
+          <GuestLoginPrompt />
+        </AuthProvider>
+      </body>
     </html>
   );
 }

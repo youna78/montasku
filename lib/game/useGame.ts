@@ -1,15 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { loadLevelingMaster } from "@/lib/csv/levelingMaster";
 import { loadMonstersMaster } from "@/lib/csv/monstersMaster";
 import { loadTasksMaster } from "@/lib/csv/tasksMaster";
+import { loadCloudGameState, saveCloudGameState } from "@/lib/game/cloudState";
 import {
   addTaskToActive,
   completeTask as runCompleteTask,
   finishEndEvent as runFinishEndEvent,
   finishBirthEvent as runFinishBirthEvent,
   finishDailyReview as runFinishDailyReview,
+  hydrateGameState,
   loadGameState,
   moveTaskInActive,
   reconcileMonsterProgress,
@@ -46,6 +49,7 @@ type UseGameResult = {
 };
 
 export function useGame(): UseGameResult {
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [tasks, setTasks] = useState<TaskMaster[]>([]);
   const [monsters, setMonsters] = useState<MonsterMaster[]>([]);
   const [levelingRows, setLevelingRows] = useState<LevelingMaster[]>([]);
@@ -54,11 +58,23 @@ export function useGame(): UseGameResult {
   const gameStateRef = useRef<GameState | null>(null);
 
   useEffect(() => {
+    if (isAuthLoading) return;
+
     async function init() {
       try {
         const loadedTasks = await loadTasksMaster();
         const loadedLeveling = await loadLevelingMaster();
-        const loadedState = loadGameState(loadedTasks, loadedLeveling);
+        const localState = loadGameState(loadedTasks, loadedLeveling);
+        let loadedState = localState;
+
+        if (user) {
+          const cloudState = await loadCloudGameState(user.uid);
+          if (cloudState) {
+            loadedState = hydrateGameState(cloudState, loadedTasks, loadedLeveling);
+          } else {
+            await saveCloudGameState(user.uid, localState, { migratedFromLocal: true });
+          }
+        }
 
         setTasks(loadedTasks);
         setLevelingRows(loadedLeveling);
@@ -99,7 +115,7 @@ export function useGame(): UseGameResult {
       console.error("[useGame] unexpected init error", unexpectedError);
       setIsLoading(false);
     });
-  }, []);
+  }, [isAuthLoading, user]);
   useEffect(() => {
     gameStateRef.current = gameState;
   }, [gameState]);
@@ -108,7 +124,12 @@ export function useGame(): UseGameResult {
     gameStateRef.current = next;
     setGameState(next);
     saveGameState(next);
-  }, []);
+    if (user) {
+      void saveCloudGameState(user.uid, next).catch((error) => {
+        console.error("[useGame] failed to save cloud game state", error);
+      });
+    }
+  }, [user]);
 
   const completeTask = useCallback(
     (taskId: number): CompleteTaskResult | null => {
