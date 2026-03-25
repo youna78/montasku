@@ -58,6 +58,22 @@ export default function SettingsPage() {
           </a>
         </div>
       </section>
+      <section className="card decorated-card">
+        <div className="settings-menu-grid centered-actions">
+          <Link href="/privacy" className="ui-link-button settings-menu-button settings-menu-button-neutral">
+            プライバシーポリシー
+          </Link>
+          <Link href="/terms" className="ui-link-button settings-menu-button settings-menu-button-neutral">
+            利用規約
+          </Link>
+          <Link href="/contact" className="ui-link-button settings-menu-button settings-menu-button-neutral">
+            お問い合わせ
+          </Link>
+          <Link href="/commerce" className="ui-link-button settings-menu-button settings-menu-button-neutral">
+            特定商取引法に基づく表記
+          </Link>
+        </div>
+      </section>
       <DevDebugPanel gameState={gameState} monsters={monsters} />
       <BottomNav />
     </main>

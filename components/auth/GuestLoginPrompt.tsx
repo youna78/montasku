@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useAuth } from "./AuthProvider";
 
@@ -76,6 +77,19 @@ export function GuestLoginPrompt() {
       <div className="card decorated-card auth-prompt-card">
         <h2 id="guest-login-title">Googleログイン</h2>
         <p className="auth-prompt-message">ゲストのまま遊べますが、Google ログインすると今後別の端末でも遊べます</p>
+        <div className="auth-privacy-note auth-privacy-note-compact">
+          <p>Googleでログインすると、氏名、メールアドレス、ユーザーIDを取得します。</p>
+          <p>ログイン機能、データ保存、機種変更時の引き継ぎに利用します。</p>
+          <p>
+            詳しくは
+            {" "}
+            <Link href="/privacy" className="auth-inline-link" onClick={dismissDailyPrompt}>
+              プライバシーポリシー
+            </Link>
+            {" "}
+            をご確認ください。
+          </p>
+        </div>
         <div className="auth-prompt-actions">
           <button className="quest-btn quest-btn-primary auth-card-button" onClick={() => void signInWithGoogle()}>
             Googleでログイン

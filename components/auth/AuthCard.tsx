@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useAuth } from "./AuthProvider";
 
@@ -85,6 +86,23 @@ export function AuthCard() {
           <p className="auth-card-message auth-card-message-centered">
             ゲストのまま遊べますが、Google ログインすると今後別の端末でも遊べます
           </p>
+          <div className="auth-privacy-note">
+            <p>
+              Googleでログインすると、アカウント識別のために氏名、メールアドレス、ユーザーIDを取得します。
+            </p>
+            <p>
+              取得した情報は、ログイン機能の提供、データ保存、機種変更時の引き継ぎのために利用します。
+            </p>
+            <p>
+              詳しくは
+              {" "}
+              <Link href="/privacy" className="auth-inline-link">
+                プライバシーポリシー
+              </Link>
+              {" "}
+              をご確認ください。
+            </p>
+          </div>
           <button className="quest-btn quest-btn-primary auth-card-button" onClick={() => void signInWithGoogle()}>
             Googleでログイン
           </button>
