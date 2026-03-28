@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
+import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { playSfx } from "@/lib/game/sfx";
 import { getTaskLimitInfo, shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
@@ -81,7 +82,10 @@ export default function TaskAddPage() {
   }
 
   return (
-    <main className="page-shell">
+    <main
+      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
+    >
       <div className="title-panel">タスク追加</div>
       <section className="card decorated-card">
         <div className="task-global-menu">

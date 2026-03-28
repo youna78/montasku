@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getLetterItemImage, getMonsterImage } from "@/lib/game/assets";
+import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 
@@ -37,7 +38,10 @@ export default function LettersPage() {
   }
 
   return (
-    <main className="page-shell">
+    <main
+      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
+    >
       <div className="title-panel">てがみ</div>
       <section className="card decorated-card">
         {gameState.acquiredLetters.length === 0 ? (

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
+import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 
@@ -37,13 +38,22 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="page-shell">
+    <main
+      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
+    >
       <div className="title-panel">設定</div>
       <AuthCard />
       <section className="card decorated-card">
         <div className="settings-menu-grid centered-actions">
           <Link href="/task-settings" className="ui-link-button settings-menu-button settings-menu-button-primary">
             タスク設定へ
+          </Link>
+          <Link href="/shop" className="ui-link-button settings-menu-button settings-menu-button-neutral">
+            ショップ
+          </Link>
+          <Link href="/inventory" className="ui-link-button settings-menu-button settings-menu-button-neutral">
+            持ち物
           </Link>
           <Link href="/letters" className="ui-link-button settings-menu-button settings-menu-button-secondary">
             てがみ

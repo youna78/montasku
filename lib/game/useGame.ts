@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { trackEvent } from "@/lib/analytics/gtag";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { loadLevelingMaster } from "@/lib/csv/levelingMaster";
 import { loadMonstersMaster } from "@/lib/csv/monstersMaster";
@@ -9,6 +10,8 @@ import { loadCloudGameState, saveCloudGameState } from "@/lib/game/cloudState";
 import {
   addTaskToActive,
   completeTask as runCompleteTask,
+  equipBackground as runEquipBackground,
+  equipFrame as runEquipFrame,
   finishEndEvent as runFinishEndEvent,
   finishBirthEvent as runFinishBirthEvent,
   finishDailyReview as runFinishDailyReview,
@@ -18,13 +21,18 @@ import {
   reconcileMonsterProgress,
   resolveDailyReviewTask as runResolveDailyReviewTask,
   removeTaskFromActive,
+  purchaseBackgroundItem as runPurchaseBackgroundItem,
+  purchaseFrameItem as runPurchaseFrameItem,
   saveGameState,
   skipDailyReview as runSkipDailyReview,
   startTutorialFlow as runStartTutorialFlow,
   type AddTaskResult,
   type CompleteTaskResult,
   type DailyReviewResolveResult,
+  type EquipBackgroundResult,
+  type EquipFrameResult,
   type RemoveTaskResult,
+  type PurchaseShopItemResult,
   type ReorderTaskResult
 } from "@/lib/game/state";
 import type { GameState } from "@/types/game";
@@ -40,6 +48,10 @@ type UseGameResult = {
   addTask: (taskId: number) => AddTaskResult | null;
   removeTask: (taskId: number) => RemoveTaskResult | null;
   moveTask: (taskId: number, direction: "up" | "down") => ReorderTaskResult | null;
+  purchaseBackground: (backgroundId: string, price: number) => PurchaseShopItemResult | null;
+  equipBackground: (backgroundId: string) => EquipBackgroundResult | null;
+  purchaseFrame: (frameId: string, price: number) => PurchaseShopItemResult | null;
+  equipFrame: (frameId: string) => EquipFrameResult | null;
   resolveDailyReviewTask: (taskId: number, didComplete: boolean) => DailyReviewResolveResult | null;
   skipDailyReview: () => void;
   finishDailyReview: () => void;
@@ -120,6 +132,21 @@ export function useGame(): UseGameResult {
     gameStateRef.current = gameState;
   }, [gameState]);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || !gameState) return;
+    if (!gameState.lastLoginBonusDate || gameState.lastLoginBonusDate !== gameState.lastPlayedDate) return;
+    if (gameState.lastLoginBonusCoins <= 0) return;
+
+    const storageKey = `montasku-login-bonus-tracked:${gameState.lastLoginBonusDate}`;
+    if (window.sessionStorage.getItem(storageKey)) return;
+
+    trackEvent("coin_earned", {
+      source: "daily_login_bonus",
+      amount: gameState.lastLoginBonusCoins
+    });
+    window.sessionStorage.setItem(storageKey, "1");
+  }, [gameState]);
+
   const commitState = useCallback((next: GameState) => {
     gameStateRef.current = next;
     setGameState(next);
@@ -172,6 +199,50 @@ export function useGame(): UseGameResult {
       const current = gameStateRef.current;
       if (!current) return null;
       const result = moveTaskInActive(current, taskId, direction);
+      commitState(result.nextState);
+      return result;
+    },
+    [commitState]
+  );
+
+  const purchaseBackground = useCallback(
+    (backgroundId: string, price: number): PurchaseShopItemResult | null => {
+      const current = gameStateRef.current;
+      if (!current) return null;
+      const result = runPurchaseBackgroundItem(current, backgroundId, price);
+      commitState(result.nextState);
+      return result;
+    },
+    [commitState]
+  );
+
+  const equipBackground = useCallback(
+    (backgroundId: string): EquipBackgroundResult | null => {
+      const current = gameStateRef.current;
+      if (!current) return null;
+      const result = runEquipBackground(current, backgroundId);
+      commitState(result.nextState);
+      return result;
+    },
+    [commitState]
+  );
+
+  const purchaseFrame = useCallback(
+    (frameId: string, price: number): PurchaseShopItemResult | null => {
+      const current = gameStateRef.current;
+      if (!current) return null;
+      const result = runPurchaseFrameItem(current, frameId, price);
+      commitState(result.nextState);
+      return result;
+    },
+    [commitState]
+  );
+
+  const equipFrame = useCallback(
+    (frameId: string): EquipFrameResult | null => {
+      const current = gameStateRef.current;
+      if (!current) return null;
+      const result = runEquipFrame(current, frameId);
       commitState(result.nextState);
       return result;
     },
@@ -238,6 +309,10 @@ export function useGame(): UseGameResult {
     addTask,
     removeTask,
     moveTask,
+    purchaseBackground,
+    equipBackground,
+    purchaseFrame,
+    equipFrame,
     resolveDailyReviewTask,
     skipDailyReview,
     finishDailyReview,

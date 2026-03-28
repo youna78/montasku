@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { EvolutionOverlay } from "@/components/common/EvolutionOverlay";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
+import { trackEvent } from "@/lib/analytics/gtag";
 import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage, getStageBadge } from "@/lib/game/assets";
+import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { playSfx } from "@/lib/game/sfx";
 import { progressToNextLevel, shouldRouteToDailyReview } from "@/lib/game/state";
 import { resolveLevelFromExp } from "@/lib/game/leveling";
@@ -93,7 +95,12 @@ export default function HomePage() {
     if (!result || result.alreadyCompleted) return;
     playSfx("s_Check");
 
-    const fragments = [`EXP +${result.gainedExp}`];
+    const fragments = [`EXP +${result.gainedExp}`, `コイン +${result.gainedFreeCoins}`];
+    trackEvent("coin_earned", {
+      source: "task_complete",
+      amount: result.gainedFreeCoins,
+      task_id: taskId
+    });
     if (result.levelUp) fragments.push("LV UP");
     if (result.evolved) fragments.push("進化");
     if (result.nextState.endEventPending) fragments.push("お別れ");
@@ -126,13 +133,19 @@ export default function HomePage() {
   };
 
   return (
-    <main className="page-shell page-home">
+    <main
+      className={`page-shell page-home ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
+    >
       <div className="title-panel">ホーム</div>
       {feedback && <div className="toast">{feedback}</div>}
 
       <section className="card decorated-card">
-        <div className="monster-wrap">
-          <img src={getMonsterImage(currentMonster?.monsterId)} alt={currentMonster?.name ?? "monster"} className={`monster-img ${monsterMotionClass}`} />
+        <div className="monster-stage" style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}>
+          <div className="monster-stage-overlay" />
+          <div className="monster-wrap">
+            <img src={getMonsterImage(currentMonster?.monsterId)} alt={currentMonster?.name ?? "monster"} className={`monster-img ${monsterMotionClass}`} />
+          </div>
         </div>
         {stageBadge && (
           <div className="badge-wrap">
@@ -154,6 +167,16 @@ export default function HomePage() {
               {progress.required > 0 ? `${progress.current} / ${progress.required}` : "MAX"}
             </strong>
           </div>
+          <div className="status-row">
+            <span>無料コイン</span>
+            <strong>{gameState.freeCoins}</strong>
+          </div>
+          {gameState.lastLoginBonusDate === gameState.lastPlayedDate && gameState.lastLoginBonusCoins > 0 && (
+            <div className="status-row">
+              <span>ログインボーナス</span>
+              <strong>+{gameState.lastLoginBonusCoins}</strong>
+            </div>
+          )}
           <div className="status-row">
             <span>今日のEXP</span>
             <strong>{gameState.todayExp}</strong>

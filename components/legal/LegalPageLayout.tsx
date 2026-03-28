@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
+import { useGame } from "@/lib/game/useGame";
 
 type LegalLink = {
   href: string;
@@ -19,8 +23,13 @@ const legalLinks: LegalLink[] = [
 ];
 
 export function LegalPageLayout({ title, children }: LegalPageLayoutProps) {
+  const { gameState } = useGame();
+
   return (
-    <main className="page-shell page-home">
+    <main
+      className={`page-shell page-home ${gameState ? getFrameThemeClass(gameState.selectedFrameId) : ""}`}
+      style={gameState ? { backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` } : undefined}
+    >
       <div className="title-panel">{title}</div>
 
       <section className="card decorated-card legal-card">

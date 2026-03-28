@@ -33,6 +33,13 @@ export type GameState = {
   currentMonsterId: number;
   currentMonsterLevel: number;
   currentMonsterExp: number;
+  freeCoins: number;
+  ownedBackgroundIds: string[];
+  selectedBackgroundId: string;
+  ownedFrameIds: string[];
+  selectedFrameId: string;
+  lastLoginBonusDate: string | null;
+  lastLoginBonusCoins: number;
   todayExp: number;
   streakDays: number;
   attributeTotals: AttributeTotals;

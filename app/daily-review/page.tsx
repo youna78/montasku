@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
+import { trackEvent } from "@/lib/analytics/gtag";
+import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { getInitialRoute } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 
@@ -47,7 +49,12 @@ export default function DailyReviewPage() {
       return;
     }
 
-    const fragments = [`EXP +${result.gainedExp}`];
+    const fragments = [`EXP +${result.gainedExp}`, `コイン +${result.gainedFreeCoins}`];
+    trackEvent("coin_earned", {
+      source: "daily_review",
+      amount: result.gainedFreeCoins,
+      task_id: taskId
+    });
     if (result.levelUp) fragments.push("LV UP");
     if (result.evolved) fragments.push("進化");
     if (result.nextState.endEventPending) fragments.push("お別れ");
@@ -69,7 +76,10 @@ export default function DailyReviewPage() {
   };
 
   return (
-    <main className="page-shell">
+    <main
+      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
+    >
       <div className="title-panel">きのうのふりかえり</div>
       <section className="card decorated-card quest-heading-card">
         <p>{pending.targetDate} の未確認タスクです。できたかどうかを振り返りましょう。</p>

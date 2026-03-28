@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
+import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { getTaskLimitInfo, shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 import type { TaskMaster } from "@/types/master";
@@ -44,7 +45,10 @@ export default function TaskSettingsPage() {
     .filter((task): task is TaskMaster => Boolean(task));
 
   return (
-    <main className="page-shell">
+    <main
+      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
+    >
       <div className="title-panel">タスク設定</div>
       <section className="card decorated-card">
         <div className="task-global-menu">

@@ -14,10 +14,13 @@ import {
 const STORAGE_KEY = "habit-monster-mvp-state";
 const MIN_ACTIVE_TASKS = 3;
 const MAX_ACTIVE_TASKS = 15;
+const FREE_COINS_PER_TASK = 2;
+const FREE_COINS_PER_DAILY_LOGIN = 3;
 
 export type CompleteTaskResult = {
   nextState: GameState;
   gainedExp: number;
+  gainedFreeCoins: number;
   gainedAttributes: {
     power: number;
     heal: number;
@@ -49,6 +52,24 @@ export type ReorderTaskResult = {
   reason?: "not_found" | "boundary";
 };
 
+export type PurchaseShopItemResult = {
+  nextState: GameState;
+  purchased: boolean;
+  reason?: "already_owned" | "insufficient_coins";
+};
+
+export type EquipBackgroundResult = {
+  nextState: GameState;
+  equipped: boolean;
+  reason?: "not_owned" | "already_equipped";
+};
+
+export type EquipFrameResult = {
+  nextState: GameState;
+  equipped: boolean;
+  reason?: "not_owned" | "already_equipped";
+};
+
 export type FinishEndEventResult = GameState;
 
 export type DailyReviewResolveResult = {
@@ -56,6 +77,7 @@ export type DailyReviewResolveResult = {
   resolved: boolean;
   rewarded: boolean;
   gainedExp: number;
+  gainedFreeCoins: number;
   gainedAttributes: {
     power: number;
     heal: number;
@@ -70,6 +92,10 @@ export type DailyReviewResolveResult = {
 
 function uniqueNumbers(values: number[]): number[] {
   return [...new Set(values.filter((v) => Number.isFinite(v)))];
+}
+
+function uniqueStrings(values: string[]): string[] {
+  return [...new Set(values.filter((value) => typeof value === "string" && value.length > 0))];
 }
 
 function normalizePendingDailyReview(rawReview: GameState["pendingDailyReview"] | undefined): GameState["pendingDailyReview"] {
@@ -266,6 +292,13 @@ export function buildInitialState(tasks: TaskMaster[]): GameState {
     currentMonsterId: 1,
     currentMonsterLevel: 1,
     currentMonsterExp: 0,
+    freeCoins: 0,
+    ownedBackgroundIds: ["home_morning"],
+    selectedBackgroundId: "home_morning",
+    ownedFrameIds: ["classic_gold"],
+    selectedFrameId: "classic_gold",
+    lastLoginBonusDate: null,
+    lastLoginBonusCoins: 0,
     todayExp: 0,
     streakDays: 1,
     attributeTotals: {
@@ -320,12 +353,31 @@ function normalizeState(
   const rawDiscovered = Array.isArray(parsed.discoveredMonsterIds) ? parsed.discoveredMonsterIds : [];
   const normalizedActiveTasks = normalizeActiveTasks(parsed.activeTasks, initial.activeTasks);
   const normalizedPendingDailyReview = normalizePendingDailyReview(parsed.pendingDailyReview);
+  const ownedBackgroundIds = uniqueStrings(
+    Array.isArray(parsed.ownedBackgroundIds) ? parsed.ownedBackgroundIds : initial.ownedBackgroundIds
+  );
+  const selectedBackgroundId =
+    typeof parsed.selectedBackgroundId === "string" && ownedBackgroundIds.includes(parsed.selectedBackgroundId)
+      ? parsed.selectedBackgroundId
+      : ownedBackgroundIds[0] ?? initial.selectedBackgroundId;
+  const ownedFrameIds = uniqueStrings(Array.isArray(parsed.ownedFrameIds) ? parsed.ownedFrameIds : initial.ownedFrameIds);
+  const selectedFrameId =
+    typeof parsed.selectedFrameId === "string" && ownedFrameIds.includes(parsed.selectedFrameId)
+      ? parsed.selectedFrameId
+      : ownedFrameIds[0] ?? initial.selectedFrameId;
 
   return {
     ...initial,
     ...parsed,
     currentMonsterLevel: resolvedLevel.level,
     currentMonsterExp: totalExp,
+    freeCoins: typeof parsed.freeCoins === "number" ? Math.max(0, parsed.freeCoins) : initial.freeCoins,
+    ownedBackgroundIds: ownedBackgroundIds.length > 0 ? ownedBackgroundIds : initial.ownedBackgroundIds,
+    selectedBackgroundId,
+    ownedFrameIds: ownedFrameIds.length > 0 ? ownedFrameIds : initial.ownedFrameIds,
+    selectedFrameId,
+    lastLoginBonusDate: typeof parsed.lastLoginBonusDate === "string" ? parsed.lastLoginBonusDate : initial.lastLoginBonusDate,
+    lastLoginBonusCoins: typeof parsed.lastLoginBonusCoins === "number" ? Math.max(0, parsed.lastLoginBonusCoins) : initial.lastLoginBonusCoins,
     attributeTotals: {
       ...initial.attributeTotals,
       ...(parsed.attributeTotals ?? {})
@@ -382,13 +434,17 @@ function applyDailyReset(state: GameState): GameState {
   const dayDiff = diffDays(state.lastPlayedDate, today);
   const nextStreakDays = dayDiff === 1 ? Math.max(1, state.streakDays) + 1 : 1;
   const pendingDailyReview = buildPendingDailyReview(state);
+  const loginBonusCoins = FREE_COINS_PER_DAILY_LOGIN;
 
   return {
     ...state,
+    freeCoins: state.freeCoins + loginBonusCoins,
     todayExp: 0,
     completedTaskIdsToday: [],
     streakDays: nextStreakDays,
     lastPlayedDate: today,
+    lastLoginBonusDate: today,
+    lastLoginBonusCoins: loginBonusCoins,
     pendingDailyReview
   };
 }
@@ -454,6 +510,7 @@ function applyExpAndAttributes(
     ...state,
     currentMonsterLevel: resolvedLevel.level,
     currentMonsterExp: totalExp,
+    freeCoins: state.freeCoins + FREE_COINS_PER_TASK,
     todayExp: includeTodayExp ? state.todayExp + task.baseExp : state.todayExp,
     attributeTotals: {
       power: state.attributeTotals.power + task.power,
@@ -567,6 +624,7 @@ export function completeTask(params: {
     return {
       nextState: state,
       gainedExp: 0,
+      gainedFreeCoins: 0,
       gainedAttributes: { power: 0, heal: 0, knowledge: 0, create: 0 },
       alreadyCompleted: true,
       evolved: false,
@@ -587,6 +645,7 @@ export function completeTask(params: {
   return {
     nextState,
     gainedExp: task.baseExp,
+    gainedFreeCoins: FREE_COINS_PER_TASK,
     gainedAttributes: {
       power: task.power,
       heal: task.heal,
@@ -617,6 +676,7 @@ export function resolveDailyReviewTask(params: {
       resolved: false,
       rewarded: false,
       gainedExp: 0,
+      gainedFreeCoins: 0,
       gainedAttributes: { power: 0, heal: 0, knowledge: 0, create: 0 },
       evolved: false,
       levelUp: false,
@@ -641,6 +701,7 @@ export function resolveDailyReviewTask(params: {
       resolved: true,
       rewarded: false,
       gainedExp: 0,
+      gainedFreeCoins: 0,
       gainedAttributes: { power: 0, heal: 0, knowledge: 0, create: 0 },
       evolved: false,
       levelUp: false,
@@ -669,6 +730,7 @@ export function resolveDailyReviewTask(params: {
     resolved: true,
     rewarded: true,
     gainedExp: task.baseExp,
+    gainedFreeCoins: FREE_COINS_PER_TASK,
     gainedAttributes: {
       power: task.power,
       heal: task.heal,
@@ -759,6 +821,80 @@ export function moveTaskInActive(
       activeTasks: reindexed
     },
     moved: true
+  };
+}
+
+export function purchaseBackgroundItem(state: GameState, backgroundId: string, price: number): PurchaseShopItemResult {
+  if (state.ownedBackgroundIds.includes(backgroundId)) {
+    return { nextState: state, purchased: false, reason: "already_owned" };
+  }
+
+  if (state.freeCoins < price) {
+    return { nextState: state, purchased: false, reason: "insufficient_coins" };
+  }
+
+  return {
+    nextState: {
+      ...state,
+      freeCoins: state.freeCoins - price,
+      ownedBackgroundIds: uniqueStrings([...state.ownedBackgroundIds, backgroundId])
+    },
+    purchased: true
+  };
+}
+
+export function purchaseFrameItem(state: GameState, frameId: string, price: number): PurchaseShopItemResult {
+  if (state.ownedFrameIds.includes(frameId)) {
+    return { nextState: state, purchased: false, reason: "already_owned" };
+  }
+
+  if (state.freeCoins < price) {
+    return { nextState: state, purchased: false, reason: "insufficient_coins" };
+  }
+
+  return {
+    nextState: {
+      ...state,
+      freeCoins: state.freeCoins - price,
+      ownedFrameIds: uniqueStrings([...state.ownedFrameIds, frameId])
+    },
+    purchased: true
+  };
+}
+
+export function equipBackground(state: GameState, backgroundId: string): EquipBackgroundResult {
+  if (!state.ownedBackgroundIds.includes(backgroundId)) {
+    return { nextState: state, equipped: false, reason: "not_owned" };
+  }
+
+  if (state.selectedBackgroundId === backgroundId) {
+    return { nextState: state, equipped: false, reason: "already_equipped" };
+  }
+
+  return {
+    nextState: {
+      ...state,
+      selectedBackgroundId: backgroundId
+    },
+    equipped: true
+  };
+}
+
+export function equipFrame(state: GameState, frameId: string): EquipFrameResult {
+  if (!state.ownedFrameIds.includes(frameId)) {
+    return { nextState: state, equipped: false, reason: "not_owned" };
+  }
+
+  if (state.selectedFrameId === frameId) {
+    return { nextState: state, equipped: false, reason: "already_equipped" };
+  }
+
+  return {
+    nextState: {
+      ...state,
+      selectedFrameId: frameId
+    },
+    equipped: true
   };
 }
 
