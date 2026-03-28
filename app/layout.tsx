@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import Script from "next/script";
 import { Suspense, type ReactNode } from "react";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { GuestLoginPrompt } from "@/components/auth/GuestLoginPrompt";
@@ -25,12 +24,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ja" className={dotGothic16.variable}>
       <body>
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2764076693225531"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
         {gaMeasurementId ? <GoogleAnalytics measurementId={gaMeasurementId} /> : null}
         <AuthProvider>
           {gaMeasurementId ? (
