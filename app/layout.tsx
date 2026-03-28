@@ -23,6 +23,13 @@ const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ja" className={dotGothic16.variable}>
+      <head>
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2764076693225531"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body>
         {gaMeasurementId ? <GoogleAnalytics measurementId={gaMeasurementId} /> : null}
         <AuthProvider>
