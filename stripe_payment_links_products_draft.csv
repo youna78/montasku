@@ -1,0 +1,7 @@
+product_id,display_name,payment_link_url,payment_link_id,product_type,platform_scope,payment_provider,price_jpy,paid_coins_granted,bonus_paid_coins,total_paid_coins,status,fulfillment_type,inventory_bonus_ids,notes
+paid_coin_pack_small,モンタコイン 120枚,https://buy.stripe.com/test_28E6oG5Y65jz7XndbP7Zu00,plink_1TGE57B1dcN8XHrWZ8PuBb7i,coin_pack,web,stripe_payment_link,100,100,20,120,confirmed,server_after_payment,[],最小価格帯の導線
+paid_coin_pack_medium,モンタコイン 380枚,https://buy.stripe.com/test_eVqaEW9aieU9cdDc7L7Zu01,plink_1TGE8GB1dcN8XHrW2fO8r1PN,coin_pack,web,stripe_payment_link,300,300,80,380,confirmed,server_after_payment,[],少しお得に感じる定番パック
+paid_coin_pack_large,モンタコイン 700枚,https://buy.stripe.com/test_dRmdR89aieU991r4Fj7Zu02,plink_1TGE9AB1dcN8XHrWjGjcY4yn,coin_pack,web,stripe_payment_link,600,600,100,700,confirmed,server_after_payment,[],継続ユーザー向け
+paid_coin_pack_xlarge,モンタコイン 1600枚,https://buy.stripe.com/test_cNi6oG5Y6bHX4Lb1t77Zu03,plink_1TGE9wB1dcN8XHrWT0uFL5bW,coin_pack,web,stripe_payment_link,1000,1000,600,1600,confirmed,server_after_payment,[],イベントや大型購入向け
+starter_bundle_boost_01,スターターバンドル（ブースト付き）,https://buy.stripe.com/test_8x2cN4fyG9zP4Lb8Vz7Zu04,plink_1TGEAnB1dcN8XHrW15jTJho2,bundle,web,stripe_payment_link,500,500,200,700,confirmed,server_after_payment,[limited_booster_starter_01],初回向けブースト同梱バンドル
+seasonal_bundle_spring_01,春イベント応援パック,https://buy.stripe.com/test_aFa00i9aibHXb9z6Nr7Zu05,plink_1TGEBrB1dcN8XHrW50Zd5ICM,bundle,web,stripe_payment_link,500,500,140,640,draft,server_after_payment,"[spring_frame_01,spring_bg_01]",イベント開始時のみ active にする想定

@@ -34,6 +34,7 @@ export type GameState = {
   currentMonsterLevel: number;
   currentMonsterExp: number;
   freeCoins: number;
+  paidCoinBalance: number;
   ownedBackgroundIds: string[];
   selectedBackgroundId: string;
   ownedFrameIds: string[];

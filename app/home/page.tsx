@@ -171,6 +171,10 @@ export default function HomePage() {
             <span>無料コイン</span>
             <strong>{gameState.freeCoins}</strong>
           </div>
+          <div className="status-row">
+            <span>モンタコイン</span>
+            <strong>{gameState.paidCoinBalance}</strong>
+          </div>
           {gameState.lastLoginBonusDate === gameState.lastPlayedDate && gameState.lastLoginBonusCoins > 0 && (
             <div className="status-row">
               <span>ログインボーナス</span>

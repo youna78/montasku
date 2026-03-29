@@ -1,0 +1,49 @@
+domain,path_template,entity_type,field_key,field_type,required,example,purpose,notes
+account,users/{uid},document,userId,string,yes,uid_abc123,ユーザー識別,既存 users/{uid} を継続利用
+account,users/{uid},document,displayName,string,no,Monta User,表示名,Google/メール認証どちらでも保持
+account,users/{uid},document,email,string,no,user@example.com,連絡先兼ログイン識別,既存 users/{uid} を継続利用
+account,users/{uid},document,createdAt,timestamp,yes,2026-03-29T10:00:00Z,作成日時,既存 users/{uid} を継続利用
+account,users/{uid},document,updatedAt,timestamp,yes,2026-03-29T10:00:00Z,更新日時,既存 users/{uid} を継続利用
+wallet,users/{uid}/wallet/summary,document,schemaVersion,number,yes,1,将来の移行管理,最小実装では 1 固定
+wallet,users/{uid}/wallet/summary,document,freeCoinBalance,number,yes,42,無料コイン残高,既存 freeCoins から将来分離予定
+wallet,users/{uid}/wallet/summary,document,paidCoinBalance,number,yes,120,有料コイン残高,Web は Stripe / アプリは IAP で加算
+wallet,users/{uid}/wallet/summary,document,lifetimeFreeCoinsEarned,number,yes,310,累計無料コイン獲得量,分析と不正調査用
+wallet,users/{uid}/wallet/summary,document,lifetimePaidCoinsPurchased,number,yes,650,累計有料コイン購入量,課金分析用
+wallet,users/{uid}/wallet/summary,document,lifetimeCoinsSpent,number,yes,98,累計消費コイン量,無料/有料合算の初期案
+wallet,users/{uid}/wallet/summary,document,lastCoinGrantAt,timestamp,no,2026-03-29T10:05:00Z,直近コイン付与時刻,重複付与の調査に便利
+wallet,users/{uid}/wallet/summary,document,lastCoinSpendAt,timestamp,no,2026-03-29T10:10:00Z,直近コイン消費時刻,購入履歴との照合用
+wallet,users/{uid}/wallet/summary,document,createdAt,timestamp,yes,2026-03-29T10:00:00Z,作成日時,users/{uid} 作成時に同時生成でも可
+wallet,users/{uid}/wallet/summary,document,updatedAt,timestamp,yes,2026-03-29T10:10:00Z,更新日時,残高更新のたびに更新
+inventory,users/{uid}/inventory/profile,document,schemaVersion,number,yes,1,将来の移行管理,最小実装では 1 固定
+inventory,users/{uid}/inventory/profile,document,ownedBackgroundIds,array<string>,yes,"[home_morning,home_night]",所持背景ID一覧,既存 ownedBackgroundIds を将来ここへ移行
+inventory,users/{uid}/inventory/profile,document,selectedBackgroundId,string,yes,home_night,現在装備中背景,既存 selectedBackgroundId を将来ここへ移行
+inventory,users/{uid}/inventory/profile,document,ownedFrameIds,array<string>,yes,"[classic_gold,sky_crystal]",所持フレームID一覧,既存 ownedFrameIds を将来ここへ移行
+inventory,users/{uid}/inventory/profile,document,selectedFrameId,string,yes,sky_crystal,現在装備中フレーム,既存 selectedFrameId を将来ここへ移行
+inventory,users/{uid}/inventory/profile,document,ownedDecorationIds,array<string>,no,"[spring_flower_01]",将来のデコ素材所持一覧,初期は空配列で可
+inventory,users/{uid}/inventory/profile,document,ownedBoosterIds,array<string>,no,"[exp_boost_20_1h]",将来の所持ブースター一覧,消耗品なら別コレクション化でも可
+inventory,users/{uid}/inventory/profile,document,createdAt,timestamp,yes,2026-03-29T10:00:00Z,作成日時,初回同期時に生成
+inventory,users/{uid}/inventory/profile,document,updatedAt,timestamp,yes,2026-03-29T10:10:00Z,更新日時,装備変更や購入時に更新
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,purchaseId,string,yes,web_plink_20260329_001,購入履歴ID,ドキュメントIDと一致させる想定
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,platform,string,yes,web,購入元プラットフォーム,将来 ios / android を追加
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,channel,string,yes,stripe_payment_link,購入チャネル,将来 app_store / play_billing を追加
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,status,string,yes,fulfilled,支払い/付与状態,pending paid fulfilled refunded failed の管理を想定
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,productId,string,yes,paid_coin_pack_small,商品ID,Stripe 商品一覧CSVと対応させる
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,productType,string,yes,coin_pack,商品種別,coin_pack bundle premium_item を想定
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,quantity,number,yes,1,購入数量,通常は 1 固定
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,grantedPaidCoins,number,yes,50,付与した有料コイン数,付与漏れ/重複防止用
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,grantedItemIds,array<string>,no,"[spring_frame_01]",購入で同時付与したアイテム,コインパックのみなら空配列
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,currency,string,yes,JPY,課金通貨,日本円を想定
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,amountTotalMinor,number,yes,120,決済金額の最小単位,JPY なら円表記のままでも運用可
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,stripePaymentLinkId,string,no,plink_123,Stripe Payment Link ID,Web課金時のみ保存
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,stripeCheckoutSessionId,string,no,cs_test_123,Stripe Checkout Session ID,重複反映防止の主キー候補
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,idempotencyKey,string,no,web_plink_20260329_001,付与重複防止キー,Webhook導入時に必須
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,purchasedAt,timestamp,yes,2026-03-29T10:15:00Z,購入成立時刻,Stripe 完了時刻を保存
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,fulfilledAt,timestamp,no,2026-03-29T10:15:02Z,コイン付与完了時刻,購入と付与の差分追跡用
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,createdAt,timestamp,yes,2026-03-29T10:15:00Z,作成日時,ドキュメント生成時に設定
+purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,updatedAt,timestamp,yes,2026-03-29T10:15:02Z,更新日時,状態変更時に更新
+rules,users/{uid}/wallet/summary,policy,access,string,yes,owner_only,読み書き権限,本人のみ read/write
+rules,users/{uid}/inventory/profile,policy,access,string,yes,owner_only,読み書き権限,本人のみ read/write
+rules,users/{uid}/purchaseHistory/{purchaseId},policy,access,string,yes,owner_read_server_write,読み書き権限,本人 read のみ / write は webhook 経由推奨
+migration,users/{uid}/game/state,policy,source,string,yes,legacy_game_state,既存データ元,現在の game/state を維持しつつ段階移行
+migration,users/{uid}/wallet/summary,policy,phase,string,yes,phase_1_split,導入フェーズ,freeCoins を gameState と二重管理しない切替時に使用
+migration,users/{uid}/inventory/profile,policy,phase,string,yes,phase_1_split,導入フェーズ,背景/フレームを gameState から移行する時の目印

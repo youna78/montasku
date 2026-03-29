@@ -23,6 +23,7 @@ export function DevDebugPanel({ gameState, monsters }: Props) {
       <div>currentMonsterLevel: {gameState.currentMonsterLevel}</div>
       <div>currentMonsterExp: {gameState.currentMonsterExp}</div>
       <div>freeCoins: {gameState.freeCoins}</div>
+      <div>paidCoinBalance: {gameState.paidCoinBalance}</div>
       <div>selectedBackgroundId: {gameState.selectedBackgroundId}</div>
       <div>selectedFrameId: {gameState.selectedFrameId}</div>
       <div>todayExp: {gameState.todayExp}</div>

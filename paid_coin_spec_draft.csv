@@ -1,0 +1,32 @@
+section,item_key,label,current_proposal,decision_needed,notes
+currency,paid_coin_name,有料通貨名,モンタコイン,no,無料コインと表示名を分離
+currency,free_coin_name,無料通貨名,フリーコイン,no,既存実装済み
+currency,shared_balance_web_app,Web版とアプリ版で残高を共通にするか,yes,no,購入経路は別でも wallet は共通残高想定
+currency,expiry,有料コインの有効期限,なし,no,原則なしを推奨
+currency,transferability,ユーザー間譲渡,不可,no,不正防止のため不可推奨
+acquisition,web_payment_method,Web版の課金手段,Stripe Payment Links,no,最小実装はリンク決済で開始
+acquisition,app_payment_method,アプリ版の課金手段,App Store / Google Play 課金,no,アプリ化時に必須
+acquisition,coin_pack_small,小パック案,100円 / 120モンタコイン,no,最小価格帯の叩き台
+acquisition,coin_pack_medium,中パック案,300円 / 380モンタコイン,no,少しお得に感じる比率
+acquisition,coin_pack_large,大パック案,600円 / 700モンタコイン,no,継続購入向け
+acquisition,coin_pack_xlarge,特大パック案,1000円 / 1600モンタコイン,no,イベント時の大型購入向け
+usage,paid_only_items,有料限定商品の有無,あり,no,限定背景/限定フレーム/おまけ付きバンドルを想定
+usage,mixed_items,無料/有料どちらでも買える商品の有無,あり,no,通常背景や通常フレームの一部を想定
+usage,consumption_priority,両方で買える商品の消費優先順,無料コイン優先,no,ユーザー心理的に自然
+usage,boosters_available,有料コインで買えるブースト,EXP+20%ブースト,no,時間と価格は商品マスタ側で後から詳細化
+usage,cosmetics_available,有料コインで買えるコスメ,イベント背景/イベント背景フレーム/イベント背景デコ,no,有料限定と混在可
+pricing,starter_bundle,初回向けスターターバンドル,500円 / ブーストアイテム + 700モンタコイン,no,有料コイン+ブーストの初回向け案
+pricing,regional_price,日本円以外の地域価格,当面は日本円基準,no,海外展開時に要整理
+wallet,refund_policy,返金時の残高扱い,返金対象購入分を減算,no,残高不足時の扱いを決める必要あり
+wallet,negative_balance,返金後に残高不足になった場合,0未満可否は未定,yes,0未満にしない運用の方が簡単
+wallet,purchase_history_required,購入履歴保持,必須,no,Stripe/IAP と付与の照合に必須
+wallet,idempotency,二重付与防止,必須,no,checkout_session_id などで制御
+legal,commerce_page_update,特商法表記の更新,有料販売開始前に必須,no,販売事業者/価格/支払時期などを明記
+legal,terms_update,利用規約への課金条項追加,有料販売開始前に必須,no,返金/デジタル商品の扱いを明記
+legal,privacy_update,プライバシーポリシーへの決済追記,有料販売開始前に必須,no,Stripe 等の利用を追記
+ops,webhook_needed,Stripe webhook 導入,推奨,yes,最小実装は手動反映でも始められるが本命は webhook
+ops,support_contact,未反映時の問い合わせ導線,お問い合わせページ利用,no,既存 contact 導線を活用
+ops,fraud_monitoring,不正監視,購入履歴と wallet 差分を監視,yes,最低限ログ保存が必要
+ux,display_where,有料コイン表示箇所,ホーム/ショップ/持ち物,no,残高は主要画面で見える方が良い
+ux,purchase_message,購入後の表示,購入完了 + いますぐ使う,no,ショップ導線と合わせて調整
+ux,restore_message,復元説明,アプリ版で追加予定,yes,Web版では購入履歴確認中心で運用可

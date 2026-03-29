@@ -8,6 +8,13 @@ import { loadMonstersMaster } from "@/lib/csv/monstersMaster";
 import { loadTasksMaster } from "@/lib/csv/tasksMaster";
 import { loadCloudGameState, saveCloudGameState } from "@/lib/game/cloudState";
 import {
+  appendCloudPurchaseHistory,
+  loadCloudInventoryProfile,
+  loadCloudWalletSummary,
+  mergeCommerceIntoGameState,
+  saveCloudCommerceState
+} from "@/lib/game/cloudCommerce";
+import {
   addTaskToActive,
   completeTask as runCompleteTask,
   equipBackground as runEquipBackground,
@@ -36,6 +43,7 @@ import {
   type ReorderTaskResult
 } from "@/lib/game/state";
 import type { GameState } from "@/types/game";
+import type { PurchaseHistoryRecord } from "@/types/commerce";
 import type { LevelingMaster, MonsterMaster, TaskMaster } from "@/types/master";
 
 type UseGameResult = {
@@ -69,6 +77,41 @@ export function useGame(): UseGameResult {
   const [isLoading, setIsLoading] = useState(true);
   const gameStateRef = useRef<GameState | null>(null);
 
+  const buildPurchaseHistoryRecord = useCallback(
+    (params: {
+      productId: string;
+      productType: string;
+      grantedItemIds: string[];
+      amountTotalMinor: number;
+      currencyType: PurchaseHistoryRecord["currencyType"];
+    }): PurchaseHistoryRecord => {
+      const purchaseId =
+        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `purchase_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+      return {
+        purchaseId,
+        platform: "web",
+        channel: "in_app_shop",
+        status: "fulfilled",
+        productId: params.productId,
+        productType: params.productType,
+        quantity: 1,
+        grantedPaidCoins: 0,
+        grantedItemIds: params.grantedItemIds,
+        currencyType: params.currencyType,
+        amountTotalMinor: params.amountTotalMinor,
+        purchasedAt: new Date().toISOString(),
+        fulfilledAt: new Date().toISOString(),
+        stripePaymentLinkId: null,
+        stripeCheckoutSessionId: null,
+        idempotencyKey: purchaseId
+      };
+    },
+    []
+  );
+
   useEffect(() => {
     if (isAuthLoading) return;
 
@@ -80,12 +123,19 @@ export function useGame(): UseGameResult {
         let loadedState = localState;
 
         if (user) {
-          const cloudState = await loadCloudGameState(user.uid);
+          const [cloudState, cloudWallet, cloudInventory] = await Promise.all([
+            loadCloudGameState(user.uid),
+            loadCloudWalletSummary(user.uid),
+            loadCloudInventoryProfile(user.uid)
+          ]);
           if (cloudState) {
             loadedState = hydrateGameState(cloudState, loadedTasks, loadedLeveling);
           } else {
             await saveCloudGameState(user.uid, localState, { migratedFromLocal: true });
           }
+
+          loadedState = mergeCommerceIntoGameState(loadedState, cloudWallet, cloudInventory);
+          await saveCloudCommerceState(user.uid, loadedState);
         }
 
         setTasks(loadedTasks);
@@ -155,6 +205,9 @@ export function useGame(): UseGameResult {
       void saveCloudGameState(user.uid, next).catch((error) => {
         console.error("[useGame] failed to save cloud game state", error);
       });
+      void saveCloudCommerceState(user.uid, next).catch((error) => {
+        console.error("[useGame] failed to save cloud commerce state", error);
+      });
     }
   }, [user]);
 
@@ -211,9 +264,21 @@ export function useGame(): UseGameResult {
       if (!current) return null;
       const result = runPurchaseBackgroundItem(current, backgroundId, price);
       commitState(result.nextState);
+      if (user && result.purchased) {
+        const record = buildPurchaseHistoryRecord({
+          productId: backgroundId,
+          productType: "background",
+          grantedItemIds: [backgroundId],
+          amountTotalMinor: price,
+          currencyType: "free_coin"
+        });
+        void appendCloudPurchaseHistory(user.uid, record).catch((error) => {
+          console.error("[useGame] failed to save background purchase history", error);
+        });
+      }
       return result;
     },
-    [commitState]
+    [buildPurchaseHistoryRecord, commitState, user]
   );
 
   const equipBackground = useCallback(
@@ -233,9 +298,21 @@ export function useGame(): UseGameResult {
       if (!current) return null;
       const result = runPurchaseFrameItem(current, frameId, price);
       commitState(result.nextState);
+      if (user && result.purchased) {
+        const record = buildPurchaseHistoryRecord({
+          productId: frameId,
+          productType: "frame",
+          grantedItemIds: [frameId],
+          amountTotalMinor: price,
+          currencyType: "free_coin"
+        });
+        void appendCloudPurchaseHistory(user.uid, record).catch((error) => {
+          console.error("[useGame] failed to save frame purchase history", error);
+        });
+      }
       return result;
     },
-    [commitState]
+    [buildPurchaseHistoryRecord, commitState, user]
   );
 
   const equipFrame = useCallback(
