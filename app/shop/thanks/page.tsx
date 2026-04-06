@@ -18,7 +18,7 @@ export default function ShopThanksPage() {
       className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
       style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
     >
-      <div className="title-panel">購入ありがとうございました</div>
+      <div className="title-panel">購入完了</div>
 
       <section className="card decorated-card legal-page-card">
         <div className="legal-section">
@@ -32,10 +32,10 @@ export default function ShopThanksPage() {
         </div>
 
         <div className="shop-support-links">
-          <Link href="/shop" className="ui-link-button">
+          <Link href="/shop" className="ui-link-button ui-link-secondary">
             ショップへ戻る
           </Link>
-          <Link href="/contact" className="ui-link-button">
+          <Link href="/contact" className="ui-link-button ui-link-secondary">
             お問い合わせ
           </Link>
         </div>

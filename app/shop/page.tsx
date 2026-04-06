@@ -219,7 +219,7 @@ export default function ShopPage() {
                         </button>
                       ) : (
                         <button
-                          className={`quest-btn shop-grid-button ${equipped ? "task-global-menu-button-current" : "task-global-menu-button-secondary"}`}
+                          className={`quest-btn shop-grid-button ${equipped ? "task-global-menu-button-current task-global-menu-button-active" : "task-global-menu-button-secondary"}`}
                           onClick={() => onEquip(item.itemId)}
                         >
                           {equipped ? "そうび中" : "使う"}
@@ -248,7 +248,7 @@ export default function ShopPage() {
                         </button>
                       ) : (
                         <button
-                          className={`quest-btn shop-grid-button ${equipped ? "task-global-menu-button-current" : "task-global-menu-button-secondary"}`}
+                          className={`quest-btn shop-grid-button ${equipped ? "task-global-menu-button-current task-global-menu-button-active" : "task-global-menu-button-secondary"}`}
                           onClick={() => onEquipFrame(item.itemId)}
                         >
                           {equipped ? "そうび中" : "使う"}

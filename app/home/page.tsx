@@ -7,6 +7,7 @@ import { BottomNav } from "@/components/common/BottomNav";
 import { EvolutionOverlay } from "@/components/common/EvolutionOverlay";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { trackEvent } from "@/lib/analytics/gtag";
+import { HOME_ANNOUNCEMENTS } from "@/lib/game/announcements";
 import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage, getStageBadge } from "@/lib/game/assets";
 import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { playSfx } from "@/lib/game/sfx";
@@ -62,6 +63,8 @@ export default function HomePage() {
   }
 
   const currentMonster = monsters.find((m) => m.monsterId === gameState.currentMonsterId);
+  const activeAnnouncements = HOME_ANNOUNCEMENTS.filter((announcement) => announcement.active);
+  const notificationCount = activeAnnouncements.length + (gameState.pendingDailyReview ? 1 : 0);
   const activeTaskIdsInOrder = gameState.activeTasks
     .filter((t) => t.enabled)
     .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -143,6 +146,11 @@ export default function HomePage() {
       <section className="card decorated-card">
         <div className="monster-stage" style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}>
           <div className="monster-stage-overlay" />
+          <Link href="/notifications" className="home-notification-button">
+            <span className="home-notification-icon">!</span>
+            <span className="home-notification-label">おしらせ</span>
+            {notificationCount > 0 && <span className="home-notification-badge">{notificationCount}</span>}
+          </Link>
           <div className="monster-wrap">
             <img src={getMonsterImage(currentMonster?.monsterId)} alt={currentMonster?.name ?? "monster"} className={`monster-img ${monsterMotionClass}`} />
           </div>

@@ -22,7 +22,7 @@ export default function DailyReviewPage() {
 
   useEffect(() => {
     if (!gameState) return;
-    if (!gameState.pendingDailyReview || gameState.pendingDailyReview.skippedAt) {
+    if (!gameState.pendingDailyReview) {
       router.replace(getInitialRoute(gameState));
     }
   }, [gameState, router]);
@@ -32,7 +32,7 @@ export default function DailyReviewPage() {
   }
 
   const pending = gameState.pendingDailyReview;
-  if (!pending || pending.skippedAt) {
+  if (!pending) {
     return <main>Loading...</main>;
   }
 
@@ -83,6 +83,7 @@ export default function DailyReviewPage() {
       <div className="title-panel">きのうのふりかえり</div>
       <section className="card decorated-card quest-heading-card">
         <p>{pending.targetDate} の未確認タスクです。できたかどうかを振り返りましょう。</p>
+        {pending.skippedAt && <p className="review-resume-note">あとでにした確認です。ここから再開できます。</p>}
       </section>
 
       {message && <div className="toast">{message}</div>}
