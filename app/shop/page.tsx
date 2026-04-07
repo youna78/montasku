@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { trackEvent } from "@/lib/analytics/gtag";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
+import { getFirebaseAuth } from "@/lib/firebase/auth";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { getBackgroundImagePath, getFrameThemeClass, SHOP_BACKGROUNDS, SHOP_FRAMES, SHOP_PAID_COIN_ITEMS } from "@/lib/game/shop";
 import { useGame } from "@/lib/game/useGame";
@@ -17,6 +18,7 @@ export default function ShopPage() {
   const [recentPurchase, setRecentPurchase] = useState<{ itemId: string; itemType: "background" | "frame"; title: string } | null>(null);
   const [activeCurrencyTab, setActiveCurrencyTab] = useState<"free" | "paid">("free");
   const [activeFreeCategoryTab, setActiveFreeCategoryTab] = useState<"background" | "frame">("background");
+  const [checkoutItemId, setCheckoutItemId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!message) return;
@@ -116,6 +118,47 @@ export default function ShopPage() {
       return;
     }
     onEquipFrame(recentPurchase.itemId);
+  };
+
+  const onStartPaidCheckout = async (item: (typeof SHOP_PAID_COIN_ITEMS)[number]) => {
+    try {
+      const currentUser = getFirebaseAuth().currentUser;
+      if (!currentUser) {
+        setMessage("ログインすると購入できます");
+        router.push("/settings");
+        return;
+      }
+
+      setCheckoutItemId(item.itemId);
+      const idToken = await currentUser.getIdToken();
+      const response = await fetch("/api/stripe/create-checkout-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ productId: item.itemId })
+      });
+      const payload = (await response.json()) as { url?: string; error?: string };
+
+      if (!response.ok || !payload.url) {
+        setMessage(payload.error ?? "決済ページを開けませんでした");
+        return;
+      }
+
+      trackEvent("begin_checkout", {
+        item_id: item.itemId,
+        item_type: item.productType,
+        value: item.priceJpy,
+        currency: "JPY"
+      });
+      window.location.href = payload.url;
+    } catch (error) {
+      console.error("[shop] failed to start paid checkout", error);
+      setMessage("決済ページを開けませんでした");
+    } finally {
+      setCheckoutItemId(null);
+    }
   };
 
   return (
@@ -269,11 +312,11 @@ export default function ShopPage() {
               <div className="shop-test-callout">
                 <span className="shop-test-callout-badge">テスト中</span>
                 <p>
-                  いまは購入導線のテスト段階です。決済後の自動付与はまだ入っていないため、テスト完了後は
+                  いまは Stripe のテスト決済です。実際の請求は発生しません。決済完了後、モンタコインは自動反映されます。
                   <Link href="/shop/thanks" className="inline-text-link">
-                    購入ありがとうございました
+                    購入完了
                   </Link>
-                  のページに戻る想定です。
+                  ページに戻ったあと、少し待ってから表示をご確認ください。
                 </p>
               </div>
             </div>
@@ -298,22 +341,13 @@ export default function ShopPage() {
                     {item.bonusPaidCoins > 0 ? ` / +${item.bonusPaidCoins} おまけ` : ""}
                   </div>
                 </div>
-                <a
+                <button
                   className="quest-btn shop-grid-button task-global-menu-button-accent"
-                  href={item.paymentLinkUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={() =>
-                    trackEvent("begin_checkout", {
-                      item_id: item.itemId,
-                      item_type: item.productType,
-                      value: item.priceJpy,
-                      currency: "JPY"
-                    })
-                  }
+                  onClick={() => onStartPaidCheckout(item)}
+                  disabled={checkoutItemId === item.itemId}
                 >
-                  Stripe で購入
-                </a>
+                  {checkoutItemId === item.itemId ? "移動中..." : "Stripe で購入"}
+                </button>
               </section>
             ))}
           </section>
@@ -321,7 +355,7 @@ export default function ShopPage() {
           <section className="card decorated-card">
             <div className="shop-support-links">
               <Link href="/shop/thanks" className="ui-link-button ui-link-secondary">
-                購入ありがとうございました
+                購入完了
               </Link>
               <Link href="/commerce" className="ui-link-button ui-link-secondary">
                 特定商取引法に基づく表記

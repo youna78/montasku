@@ -80,8 +80,6 @@ export async function saveCloudWalletSummary(uid: string, state: GameState): Pro
     current && typeof current.lifetimeFreeCoinsEarned === "number" ? current.lifetimeFreeCoinsEarned : state.freeCoins;
   const previousLifetimeSpent =
     current && typeof current.lifetimeCoinsSpent === "number" ? current.lifetimeCoinsSpent : 0;
-  const previousPaidBalance =
-    current && typeof current.paidCoinBalance === "number" ? current.paidCoinBalance : state.paidCoinBalance;
   const previousLifetimePurchased =
     current && typeof current.lifetimePaidCoinsPurchased === "number"
       ? current.lifetimePaidCoinsPurchased
@@ -89,17 +87,18 @@ export async function saveCloudWalletSummary(uid: string, state: GameState): Pro
   const freeCoinDelta = state.freeCoins - previousFreeBalance;
   const gainedCoins = freeCoinDelta > 0 ? freeCoinDelta : 0;
   const spentCoins = freeCoinDelta < 0 ? Math.abs(freeCoinDelta) : 0;
-  const paidCoinDelta = state.paidCoinBalance - previousPaidBalance;
-  const gainedPaidCoins = paidCoinDelta > 0 ? paidCoinDelta : 0;
+  const paidCoinBalance = current && typeof current.paidCoinBalance === "number" ? current.paidCoinBalance : state.paidCoinBalance;
 
   await setDoc(
     ref,
     stripUndefined({
       schemaVersion: COMMERCE_SCHEMA_VERSION,
       freeCoinBalance: state.freeCoins,
-      paidCoinBalance: state.paidCoinBalance,
+      // Paid coins are server-authoritative once Stripe webhook fulfillment is enabled.
+      // Do not let a stale browser state overwrite webhook-granted paid coins.
+      paidCoinBalance,
       lifetimeFreeCoinsEarned: previousLifetimeEarned + gainedCoins,
-      lifetimePaidCoinsPurchased: previousLifetimePurchased + gainedPaidCoins,
+      lifetimePaidCoinsPurchased: previousLifetimePurchased,
       lifetimeCoinsSpent: previousLifetimeSpent + spentCoins,
       lastCoinGrantAt: gainedCoins > 0 ? new Date().toISOString() : current?.lastCoinGrantAt ?? null,
       lastCoinSpendAt: spentCoins > 0 ? new Date().toISOString() : current?.lastCoinSpendAt ?? null,

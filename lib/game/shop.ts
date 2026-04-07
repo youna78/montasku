@@ -157,6 +157,10 @@ export const SHOP_PAID_COIN_ITEMS: ShopPaidCoinItem[] = [
   }
 ];
 
+export function getPaidCoinShopItem(itemId: string): ShopPaidCoinItem | null {
+  return SHOP_PAID_COIN_ITEMS.find((item) => item.itemId === itemId && item.status === "confirmed") ?? null;
+}
+
 export function getBackgroundImagePath(backgroundId: string): string {
   return SHOP_BACKGROUNDS.find((item) => item.itemId === backgroundId)?.imagePath ?? SHOP_BACKGROUNDS[0].imagePath;
 }

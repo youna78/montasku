@@ -32,6 +32,7 @@ export type PurchaseHistoryRecord = {
   currencyType: "free_coin" | "paid_coin" | "jpy";
   amountTotalMinor: number;
   purchasedAt: string;
+  paidAt?: string | null;
   fulfilledAt?: string;
   stripePaymentLinkId?: string | null;
   stripeCheckoutSessionId?: string | null;
