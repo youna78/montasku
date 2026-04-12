@@ -349,7 +349,7 @@ export default function HomePage() {
             <p className="auth-card-copy">
               {activeEvent.description}
               <br />
-              無料で春イベントたまごを1個受け取れます。
+              無料で春の芽吹きたまごを1個受け取れます。
             </p>
             <div className="settings-menu-grid centered-actions">
               <button

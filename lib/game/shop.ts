@@ -44,6 +44,9 @@ export type ShopPaidCoinItem = {
   status: "confirmed" | "draft";
   productType: "coin_pack" | "bundle";
   imagePath: string;
+  grantedItemIds?: string[];
+  grantedBoosterItemIds?: string[];
+  grantedEventEggEventId?: string | null;
 };
 
 export type ShopBoosterItem = {
@@ -349,17 +352,19 @@ export const SHOP_PAID_COIN_ITEMS: ShopPaidCoinItem[] = [
   },
   {
     itemId: "starter_bundle_boost_01",
-    title: "スターターバンドル（ブースト付き）",
-    description: "モンタコイン 700枚分と、初回向けブーストをまとめたバンドルです。",
+    title: "春イベントスターターセット",
+    description: "500モンタコインと 春の芽吹きたまご、EXPブースト 24時間 がついてくる限定セットです。",
     priceJpy: 500,
     paidCoinsGranted: 500,
-    bonusPaidCoins: 200,
-    totalPaidCoins: 700,
+    bonusPaidCoins: 0,
+    totalPaidCoins: 500,
     paymentLinkUrl: "https://buy.stripe.com/test_8x2cN4fyG9zP4Lb8Vz7Zu04",
     paymentLinkId: "plink_1TGEAnB1dcN8XHrW15jTJho2",
     status: "confirmed",
     productType: "bundle",
-    imagePath: "/img/icon/icon_bundle_spring_starter_01.png"
+    imagePath: "/img/icon/icon_bundle_spring_starter_01.png",
+    grantedBoosterItemIds: ["paid_boost_exp_20_24h_01"],
+    grantedEventEggEventId: "spring_easter_2026"
   },
   {
     itemId: "seasonal_bundle_spring_01",
@@ -430,24 +435,15 @@ export const SHOP_PAID_FRAMES: ShopPaidFrameItem[] = [
     price: 400,
     currencyType: "paid_coin",
     previewClassName: "frame-preview-starlight",
-    imagePath: "/img/ui_frame/frame_starlight_01.png"
+    imagePath: "/img/deco_frame/frame_starlight_01.png"
   }
 ];
 
 export const SHOP_PAID_BUNDLES: ShopPaidBundleItem[] = [
   {
-    itemId: "paid_bundle_spring_starter_01",
-    title: "春イベントスターターセット",
-    description: "春風の花畑とさくらフレーム、春の芽吹きたまごが入ったイベント向けセットです。",
-    price: 500,
-    currencyType: "paid_coin",
-    imagePath: "/img/icon/icon_bundle_spring_starter_01.png",
-    bundleType: "spring_starter"
-  },
-  {
     itemId: "paid_bundle_spring_deco_01",
     title: "春のかざりセット",
-    description: "花びら、ピクニックバスケット、花灯りランタンをまとめた春のデコセットです。",
+    description: "ピクニックバスケットと花灯りランタン、春の芽吹きたまごが入った春イベント向けセットです。",
     price: 500,
     currencyType: "paid_coin",
     imagePath: "/img/icon/icon_bundle_spring_deco_01.png",
@@ -491,7 +487,7 @@ export const SHOP_EVERGREEN_FRAMES = SHOP_FRAMES.filter((item) => item.availabil
 export const SHOP_EVENT_FRAMES = SHOP_FRAMES.filter((item) => item.availability === "event_limited");
 export const SHOP_EVERGREEN_DECORATIONS = SHOP_DECORATIONS.filter((item) => item.availability !== "event_limited");
 export const SHOP_EVENT_DECORATIONS = SHOP_DECORATIONS.filter((item) => item.availability === "event_limited");
-export const SHOP_EVENT_BUNDLES = SHOP_PAID_BUNDLES.filter((item) => item.bundleType === "spring_starter" || item.bundleType === "spring_deco");
+export const SHOP_EVENT_BUNDLES = SHOP_PAID_BUNDLES.filter((item) => item.bundleType === "spring_deco");
 export const SHOP_EVERGREEN_BUNDLES = SHOP_PAID_BUNDLES.filter((item) => !SHOP_EVENT_BUNDLES.some((bundle) => bundle.itemId === item.itemId));
 export const SHOP_COMING_SOON_ITEMS: ShopComingSoonItem[] = [];
 

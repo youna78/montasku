@@ -30,6 +30,7 @@ export default function EventShopDetailPage() {
   } = useGame();
   const [message, setMessage] = useState("");
   const [showStartNowConfirm, setShowStartNowConfirm] = useState(false);
+  const [purchaseModal, setPurchaseModal] = useState<{ title: string; lines: string[] } | null>(null);
 
   useEffect(() => {
     if (!message) return;
@@ -119,19 +120,19 @@ export default function EventShopDetailPage() {
       setMessage(result.reason === "already_claimed" ? "無料たまごは受け取り済みです" : "いまは受け取れません");
       return;
     }
-    setMessage("春イベントたまごを受け取りました");
+    setMessage("春の芽吹きたまごを受け取りました");
   };
 
   const onQueueEgg = () => {
     const result = queueEventEgg(eventConfig.eventId);
     if (!result) return;
     if (!result.used) {
-      if (result.reason === "no_egg") setMessage("イベントたまごを持っていません");
+      if (result.reason === "no_egg") setMessage("春の芽吹きたまごを持っていません");
       else if (result.reason === "already_queued") setMessage("次のたまごに予約済みです");
       else setMessage("イベントたまごを予約できませんでした");
       return;
     }
-    setMessage("次のたまごを春イベントたまごに予約しました");
+    setMessage("次のたまごを春の芽吹きたまごに予約しました");
   };
 
   const onForceStartEgg = () => {
@@ -139,9 +140,9 @@ export default function EventShopDetailPage() {
     setShowStartNowConfirm(false);
     if (!result) return;
     if (!result.started) {
-      if (result.reason === "no_egg") setMessage("イベントたまごを持っていません");
-      else if (result.reason === "already_active") setMessage("すでに春イベントたまごを育成中です");
-      else setMessage("春イベントたまごに切り替えできませんでした");
+      if (result.reason === "no_egg") setMessage("春の芽吹きたまごを持っていません");
+      else if (result.reason === "already_active") setMessage("すでに春の芽吹きたまごを育成中です");
+      else setMessage("春の芽吹きたまごに切り替えできませんでした");
       return;
     }
     setMessage("いまのモンスターとお別れして、春の芽吹きたまごに切り替えました");
@@ -170,6 +171,7 @@ export default function EventShopDetailPage() {
       setMessage(result.reason === "already_owned" ? "すでに所持しています" : "モンタコインがたりません");
       return;
     }
+    setPurchaseModal({ title: item.title, lines: [item.title] });
     setMessage(`${item.title} をこうにゅうしました`);
   };
 
@@ -180,6 +182,11 @@ export default function EventShopDetailPage() {
     if (!result.purchased) {
       setMessage(result.reason === "event_not_available" ? "イベント開催中のみ交換できます" : "モンタコインがたりません");
       return;
+    }
+    if (item.itemId === "paid_bundle_spring_deco_01") {
+      setPurchaseModal({ title: item.title, lines: ["ピクニックバスケット", "花灯りランタン", "春の芽吹きたまご"] });
+    } else {
+      setPurchaseModal({ title: item.title, lines: [item.title] });
     }
     setMessage(`${item.title} をこうにゅうしました`);
   };
@@ -229,6 +236,23 @@ export default function EventShopDetailPage() {
         <div className="event-progress-note">{getRemainingDaysLabel(eventConfig)} / 開催中のみ交換できます。</div>
       </section>
 
+      {purchaseModal ? (
+        <section className="card decorated-card">
+          <div className="shop-recent-purchase">
+            <p><strong>{purchaseModal.title}</strong> を購入しました。</p>
+            <p>{purchaseModal.lines.map((line) => `「${line}」`).join(" と ")} を購入しました。もちものページを確認しよう。</p>
+            <div className="task-global-menu">
+              <button className="quest-btn task-global-menu-button task-global-menu-button-primary" onClick={() => router.push("/inventory")}>
+                持ち物を見る
+              </button>
+              <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={() => setPurchaseModal(null)}>
+                とじる
+              </button>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       <section className="card decorated-card">
         <div className="notification-card-head">
           <span className="notification-badge notification-badge-event">イベントたまご</span>
@@ -249,7 +273,7 @@ export default function EventShopDetailPage() {
                 いますぐ卵を育てる
               </button>
             </div>
-            {gameState.queuedEggMonsterId === eventConfig.freeEggMonsterId && <p className="shop-note shop-note-strong">次のたまごに春イベントたまごを予約しています。</p>}
+            {gameState.queuedEggMonsterId === eventConfig.freeEggMonsterId && <p className="shop-note shop-note-strong">次のたまごに春の芽吹きたまごを予約しています。</p>}
           </div>
         </div>
       </section>
@@ -283,6 +307,21 @@ export default function EventShopDetailPage() {
               </section>
             );
           })}
+        </div>
+      </section>
+
+      <section className="card decorated-card">
+        <div className="notification-card-head">
+          <span className="notification-badge notification-badge-event">モンタコイン交換</span>
+          <h2>特別ラインナップ</h2>
+        </div>
+        <p className="shop-note">
+          モンタコインは、Stripe で購入できる有料コインです。必要なときは通常ショップのモンタコインページからチャージできます。
+        </p>
+        <div className="notification-card-actions">
+          <Link href="/shop?currency=paid&category=coin" className="ui-link-button settings-menu-button settings-menu-button-primary">
+            モンタコインを買う
+          </Link>
         </div>
       </section>
 
@@ -419,6 +458,9 @@ export default function EventShopDetailPage() {
         <div className="auth-email-modal-overlay">
           <div className="auth-email-modal-card event-confirm-modal-card">
             <h2 className="auth-email-modal-title">春の芽吹きたまごに切り替える？</h2>
+            <div className="event-confirm-egg-preview">
+              <img src={getMonsterImage(eventConfig.freeEggMonsterId)} alt="春の芽吹きたまご" />
+            </div>
             <p className="shop-note">
               いま育てているモンスターとはお別れして、春の芽吹きたまごから育成を始めます。
             </p>

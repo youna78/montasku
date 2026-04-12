@@ -11,12 +11,8 @@ function maskEmail(email: string | null | undefined): string {
   const [localPart, domain = ""] = email.split("@");
   if (!localPart) return "-";
   const visible = localPart.slice(0, 3);
-  const localMasked = `${visible}${"*".repeat(Math.max(localPart.length - visible.length, 0))}`;
-  const domainParts = domain.split(".");
-  const domainHead = domainParts[0] ?? "";
-  const tld = domainParts.length > 1 ? domainParts[domainParts.length - 1] : "";
-  const maskedDomain = domainHead ? `${"*".repeat(Math.max(domainHead.length, 3))}${tld ? `.${tld}` : ""}` : "****";
-  return `${localMasked}@${maskedDomain}`;
+  const localMasked = `${visible}${"*".repeat(Math.max(localPart.length - visible.length, 5))}`;
+  return localMasked;
 }
 
 export function AuthCard() {

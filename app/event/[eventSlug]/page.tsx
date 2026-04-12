@@ -137,7 +137,7 @@ export default function EventDetailPage() {
       setMessage(result.reason === "already_claimed" ? "無料たまごは受け取り済みです" : "いまは受け取れません");
       return;
     }
-    setMessage("春イベントたまごを受け取りました");
+    setMessage("春の芽吹きたまごを受け取りました");
   };
 
   const onQueueEgg = () => {
@@ -150,7 +150,7 @@ export default function EventDetailPage() {
       return;
     }
 
-    setMessage("次のたまごを春イベントたまごに予約しました");
+    setMessage("次のたまごを春の芽吹きたまごに予約しました");
   };
 
   const onForceStartEgg = () => {
@@ -158,9 +158,9 @@ export default function EventDetailPage() {
     setShowStartNowConfirm(false);
     if (!result) return;
     if (!result.started) {
-      if (result.reason === "no_egg") setMessage("イベントたまごを持っていません");
-      else if (result.reason === "already_active") setMessage("すでに春イベントたまごを育成中です");
-      else setMessage("春イベントたまごに切り替えできませんでした");
+      if (result.reason === "no_egg") setMessage("春の芽吹きたまごを持っていません");
+      else if (result.reason === "already_active") setMessage("すでに春の芽吹きたまごを育成中です");
+      else setMessage("春の芽吹きたまごに切り替えできませんでした");
       return;
     }
     setMessage("いまのモンスターとお別れして、春の芽吹きたまごに切り替えました");
@@ -263,7 +263,7 @@ export default function EventDetailPage() {
                 いますぐ卵を育てる
               </button>
             </div>
-            {gameState.queuedEggMonsterId === eventConfig.freeEggMonsterId && <p className="shop-note shop-note-strong">次のたまごに春イベントたまごを予約しています。</p>}
+            {gameState.queuedEggMonsterId === eventConfig.freeEggMonsterId && <p className="shop-note shop-note-strong">次のたまごに春の芽吹きたまごを予約しています。</p>}
           </div>
         </div>
       </section>
@@ -334,6 +334,9 @@ export default function EventDetailPage() {
         <div className="auth-email-modal-overlay">
           <div className="auth-email-modal-card event-confirm-modal-card">
             <h2 className="auth-email-modal-title">春の芽吹きたまごに切り替える？</h2>
+            <div className="event-confirm-egg-preview">
+              <img src={getMonsterImage(eventConfig.freeEggMonsterId)} alt="春の芽吹きたまご" />
+            </div>
             <p className="shop-note">
               いま育てているモンスターとはお別れして、春の芽吹きたまごから育成を始めます。
             </p>

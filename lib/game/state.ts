@@ -1345,16 +1345,26 @@ export function purchasePaidBundleItem(state: GameState, itemId: string): Purcha
       return { nextState: state, purchased: false, reason: "event_not_available" };
     }
 
+    const eventState = state.eventStates["spring_easter_2026"];
+
     return {
       nextState: {
         ...state,
         paidCoinBalance: state.paidCoinBalance - item.price,
         ownedDecorationIds: uniqueStrings([
           ...state.ownedDecorationIds,
-          "paid_deco_sakura_petals_01",
           "paid_deco_picnic_basket_01",
           "paid_deco_flower_lantern_01"
-        ])
+        ]),
+        eventStates: {
+          ...state.eventStates,
+          spring_easter_2026: {
+            ...eventState,
+            purchasedEggCount: eventState.purchasedEggCount + 1,
+            ownedEggCount: eventState.ownedEggCount + 1,
+            updatedAt: new Date().toISOString()
+          }
+        }
       },
       purchased: true
     };

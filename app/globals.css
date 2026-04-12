@@ -1935,6 +1935,16 @@ a.quest-btn[aria-disabled="true"] {
   margin: 0 auto;
 }
 
+.shop-subtab-row-wide {
+  max-width: 100%;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.shop-paid-subtab-row {
+  max-width: 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .shop-tab-button {
   width: 100%;
   min-height: 48px;
@@ -2011,6 +2021,13 @@ a.quest-btn[aria-disabled="true"] {
   gap: 10px;
   align-content: stretch;
   aspect-ratio: 1 / 1;
+}
+
+.shop-empty-card {
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  text-align: center;
 }
 
 .shop-grid-preview {
@@ -2360,8 +2377,9 @@ a.quest-btn[aria-disabled="true"] {
 .event-hero-image-wrap {
   max-height: 220px;
   aspect-ratio: 2 / 1;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 8px;
   background:
     linear-gradient(180deg, rgba(255, 248, 231, 0.92), rgba(255, 238, 210, 0.92)),
@@ -2377,11 +2395,10 @@ a.quest-btn[aria-disabled="true"] {
 .event-hero-image {
   width: auto;
   max-width: 100%;
-  height: 100%;
+  max-height: 100%;
   margin: 0 auto;
-  justify-self: center;
   object-fit: contain;
-  object-position: center;
+  object-position: center center;
 }
 
 .event-progress-card {
@@ -2441,6 +2458,7 @@ a.quest-btn[aria-disabled="true"] {
   display: grid;
   place-items: center;
   background: transparent;
+  padding: 0;
 }
 
 .event-mission-reward-meta {
@@ -2453,8 +2471,10 @@ a.quest-btn[aria-disabled="true"] {
 }
 
 .event-frame-preview-image {
-  width: 100%;
-  height: 100%;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
   object-fit: contain;
   display: block;
 }
@@ -2576,6 +2596,38 @@ a.quest-btn[aria-disabled="true"] {
 
 .event-confirm-modal-card {
   width: min(92vw, 420px);
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+
+.event-confirm-modal-card .task-global-menu {
+  justify-content: center;
+}
+
+.event-confirm-egg-preview {
+  width: min(54vw, 160px);
+  margin: 0 auto;
+  border-radius: 10px;
+  border: 2px solid #7f5626;
+  background:
+    linear-gradient(180deg, rgba(255, 246, 225, 0.96), rgba(250, 232, 195, 0.96)),
+    repeating-linear-gradient(180deg, rgba(255, 249, 236, 0.68) 0px, rgba(255, 249, 236, 0.68) 6px, rgba(241, 224, 193, 0.76) 6px, rgba(241, 224, 193, 0.76) 12px);
+  padding: 10px;
+}
+
+.event-confirm-egg-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.event-mission-reward-preview-image-only,
+.shop-frame-preview-image-only {
+  display: grid;
+  place-items: center;
+  background: transparent;
+  padding: 0;
 }
 
 .frame-preview-clover,

@@ -210,7 +210,7 @@ export default function InventoryPage() {
           return (
             <section className="card decorated-card" key={item.itemId}>
               <div className="shop-item-card">
-                <div className={`shop-preview shop-frame-preview ${item.previewClassName}`}>
+                <div className={`shop-preview shop-frame-preview ${framePreviewImagePath ? "shop-frame-preview-image-only" : item.previewClassName}`}>
                   {framePreviewImagePath ? <img src={framePreviewImagePath} alt={item.title} className="shop-frame-image" /> : null}
                   {equipped && <span className="equipped-badge">使用中</span>}
                 </div>
@@ -250,7 +250,7 @@ export default function InventoryPage() {
                   className={`quest-btn task-global-menu-button ${active ? "task-global-menu-button-current task-global-menu-button-active" : "task-global-menu-button-accent"}`}
                   onClick={() => onToggleDecoration(item.itemId)}
                 >
-                  {active ? "表示中" : "このデコを使う"}
+                  {active ? "このデコを外す" : "このデコを使う"}
                 </button>
               </div>
             </section>

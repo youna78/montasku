@@ -60,7 +60,10 @@ export async function POST(request: Request) {
         uid: decodedToken.uid,
         productId: item.itemId,
         productType: item.productType,
-        grantedPaidCoins: String(item.totalPaidCoins)
+        grantedPaidCoins: String(item.totalPaidCoins),
+        grantedItemIds: JSON.stringify(item.grantedItemIds ?? []),
+        grantedBoosterItemIds: JSON.stringify(item.grantedBoosterItemIds ?? []),
+        grantedEventEggEventId: item.grantedEventEggEventId ?? ""
       }
     });
 
@@ -76,7 +79,7 @@ export async function POST(request: Request) {
         productType: item.productType,
         quantity: 1,
         grantedPaidCoins: 0,
-        grantedItemIds: [],
+        grantedItemIds: [...(item.grantedItemIds ?? []), ...(item.grantedBoosterItemIds ?? [])],
         currencyType: "jpy",
         amountTotalMinor: item.priceJpy,
         purchasedAt: new Date().toISOString(),
