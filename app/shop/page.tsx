@@ -115,7 +115,10 @@ export default function ShopPage() {
   }, [gameState, router]);
 
   const paidCoinBundles = useMemo(
-    () => SHOP_PAID_COIN_ITEMS.filter((item) => item.status === "confirmed" && item.productType === "bundle"),
+    () =>
+      SHOP_PAID_COIN_ITEMS.filter(
+        (item) => item.status === "confirmed" && item.productType === "bundle" && item.itemId !== "starter_bundle_boost_01"
+      ),
     []
   );
   const paidCoinPacks = useMemo(
@@ -546,7 +549,9 @@ export default function ShopPage() {
             return (
               <section className="card decorated-card shop-grid-card" key={item.itemId}>
                 <div className={`shop-grid-preview shop-frame-preview ${framePreviewImagePath ? "shop-frame-preview-image-only" : item.previewClassName}`}>
-                  <div className="shop-badge-stack"><span className="shop-paid-badge">モンタ</span></div>
+                  {!framePreviewImagePath ? (
+                    <div className="shop-badge-stack"><span className="shop-paid-badge">モンタ</span></div>
+                  ) : null}
                   {framePreviewImagePath ? <img src={framePreviewImagePath} alt={item.title} className="shop-frame-image" /> : null}
                   {equipped && <span className="equipped-badge">使用中</span>}
                 </div>

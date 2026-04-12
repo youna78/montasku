@@ -1,4 +1,5 @@
 import type { CharmAttribute } from "@/types/game";
+import { SHOP_MASTER_BY_ID } from "./shopMaster.generated";
 
 export type ShopBackgroundItem = {
   itemId: string;
@@ -110,6 +111,116 @@ export type ShopComingSoonItem = {
   imagePath?: string;
 };
 
+const SHOP_MASTER_ID_ALIASES: Record<string, string> = {
+  power_charm: "power_charm_01",
+  heal_charm: "heal_charm_01",
+  knowledge_charm: "knowledge_charm_01",
+  create_charm: "create_charm_01",
+  starter_bundle_boost_01: "paid_bundle_spring_starter_01"
+};
+
+function getShopMasterRow(itemId: string) {
+  return SHOP_MASTER_BY_ID[SHOP_MASTER_ID_ALIASES[itemId] ?? itemId] ?? null;
+}
+
+function toNumber(value: string | undefined, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function applyBackgroundMaster<T extends ShopBackgroundItem | ShopPaidBackgroundItem>(item: T): T {
+  const row = getShopMasterRow(item.itemId);
+  if (!row) return item;
+  const price = row.currency_type === "free_coin" ? toNumber(row.price_free_coins, item.price) : toNumber(row.price_monta_coins, item.price);
+  return {
+    ...item,
+    title: row.display_name || item.title,
+    description: row.short_description || item.description,
+    price,
+    imagePath: row.current_path || item.imagePath
+  };
+}
+
+function applyFrameMaster<T extends ShopFrameItem | ShopPaidFrameItem>(item: T): T {
+  const row = getShopMasterRow(item.itemId);
+  if (!row) return item;
+  const price = row.currency_type === "free_coin" ? toNumber(row.price_free_coins, item.price) : toNumber(row.price_monta_coins, item.price);
+  return {
+    ...item,
+    title: row.display_name || item.title,
+    description: row.short_description || item.description,
+    price,
+    imagePath: row.current_path || item.imagePath
+  };
+}
+
+function applyCharmMaster(item: ShopAttributeCharmItem): ShopAttributeCharmItem {
+  const row = getShopMasterRow(item.itemId);
+  if (!row) return item;
+  const uses = Number((row.grant_value.split(":")[1] ?? "").trim());
+  const price = item.currencyType === "free_coin" ? toNumber(row.price_free_coins, item.price) : toNumber(row.price_monta_coins, item.price);
+  return {
+    ...item,
+    title: row.display_name || item.title,
+    description: row.short_description || item.description,
+    price,
+    uses: Number.isFinite(uses) && uses > 0 ? uses : item.uses,
+    iconPath: row.current_path || item.iconPath
+  };
+}
+
+function applyBoosterMaster(item: ShopBoosterItem): ShopBoosterItem {
+  const row = getShopMasterRow(item.itemId);
+  if (!row) return item;
+  const price = item.currencyType === "free_coin" ? toNumber(row.price_free_coins, item.price) : toNumber(row.price_monta_coins, item.price);
+  return {
+    ...item,
+    title: row.display_name || item.title,
+    description: row.short_description || item.description,
+    price,
+    iconPath: row.current_path || item.iconPath
+  };
+}
+
+function applyPaidCoinMaster(item: ShopPaidCoinItem): ShopPaidCoinItem {
+  const row = getShopMasterRow(item.itemId);
+  if (!row) return item;
+  const paidCoins = Number((row.grant_value.match(/paid_coin:(\d+)/)?.[1] ?? row.grant_value).trim());
+  return {
+    ...item,
+    title: row.display_name || item.title,
+    description: row.short_description || item.description,
+    priceJpy: toNumber(row.price_monta_coins, item.priceJpy),
+    paidCoinsGranted: Number.isFinite(paidCoins) ? paidCoins : item.paidCoinsGranted,
+    totalPaidCoins: Number.isFinite(paidCoins) ? paidCoins : item.totalPaidCoins,
+    imagePath: row.current_path || item.imagePath
+  };
+}
+
+function applyDecorationMaster(item: ShopDecorationItem): ShopDecorationItem {
+  const row = getShopMasterRow(item.itemId);
+  if (!row) return item;
+  return {
+    ...item,
+    title: row.display_name || item.title,
+    description: row.short_description || item.description,
+    price: toNumber(row.price_monta_coins, item.price),
+    imagePath: row.current_path || item.imagePath
+  };
+}
+
+function applyBundleMaster(item: ShopPaidBundleItem): ShopPaidBundleItem {
+  const row = getShopMasterRow(item.itemId);
+  if (!row) return item;
+  return {
+    ...item,
+    title: row.display_name || item.title,
+    description: row.short_description || item.description,
+    price: item.currencyType === "paid_coin" ? toNumber(row.price_monta_coins, item.price) : item.price,
+    imagePath: row.current_path || item.imagePath
+  };
+}
+
 export const SHOP_BACKGROUNDS: ShopBackgroundItem[] = [
   {
     itemId: "home_morning",
@@ -155,7 +266,7 @@ export const SHOP_BACKGROUNDS: ShopBackgroundItem[] = [
     imagePath: "/img/background/bg_spring_meadow_01.png",
     availability: "event_limited"
   }
-];
+].map((item) => applyBackgroundMaster(item as ShopBackgroundItem));
 
 export const SHOP_FRAMES: ShopFrameItem[] = [
   {
@@ -197,7 +308,7 @@ export const SHOP_FRAMES: ShopFrameItem[] = [
     imagePath: "/img/deco_frame/frame_sakura_01.png",
     availability: "event_limited"
   }
-];
+].map((item) => applyFrameMaster(item as ShopFrameItem));
 
 export const SHOP_ATTRIBUTE_CHARMS: ShopAttributeCharmItem[] = [
   {
@@ -244,7 +355,7 @@ export const SHOP_ATTRIBUTE_CHARMS: ShopAttributeCharmItem[] = [
     currencyType: "free_coin",
     variant: "free"
   }
-];
+].map((item) => applyCharmMaster(item as ShopAttributeCharmItem));
 
 export const SHOP_PAID_ATTRIBUTE_CHARMS: ShopAttributeCharmItem[] = [
   {
@@ -291,7 +402,7 @@ export const SHOP_PAID_ATTRIBUTE_CHARMS: ShopAttributeCharmItem[] = [
     currencyType: "paid_coin",
     variant: "paid"
   }
-];
+].map((item) => applyCharmMaster(item as ShopAttributeCharmItem));
 
 export const SHOP_PAID_COIN_ITEMS: ShopPaidCoinItem[] = [
   {
@@ -380,7 +491,7 @@ export const SHOP_PAID_COIN_ITEMS: ShopPaidCoinItem[] = [
     productType: "bundle",
     imagePath: "/img/icon/icon_bundle_spring_starter_01.png"
   }
-];
+].map((item) => applyPaidCoinMaster(item as ShopPaidCoinItem));
 
 export const SHOP_BOOSTER_ITEMS: ShopBoosterItem[] = [
   {
@@ -423,7 +534,7 @@ export const SHOP_BOOSTER_ITEMS: ShopBoosterItem[] = [
     durationMinutes: 72 * 60,
     iconPath: "/img/icon/icon_boost_exp_20_3day.png"
   }
-];
+].map((item) => applyBoosterMaster(item as ShopBoosterItem));
 
 export const SHOP_PAID_BACKGROUNDS: ShopPaidBackgroundItem[] = [];
 
@@ -437,7 +548,7 @@ export const SHOP_PAID_FRAMES: ShopPaidFrameItem[] = [
     previewClassName: "frame-preview-starlight",
     imagePath: "/img/deco_frame/frame_starlight_01.png"
   }
-];
+].map((item) => applyFrameMaster(item as ShopPaidFrameItem));
 
 export const SHOP_PAID_BUNDLES: ShopPaidBundleItem[] = [
   {
@@ -449,7 +560,7 @@ export const SHOP_PAID_BUNDLES: ShopPaidBundleItem[] = [
     imagePath: "/img/icon/icon_bundle_spring_deco_01.png",
     bundleType: "spring_deco"
   }
-];
+].map((item) => applyBundleMaster(item as ShopPaidBundleItem));
 
 export const SHOP_DECORATIONS: ShopDecorationItem[] = [
   {
@@ -479,7 +590,7 @@ export const SHOP_DECORATIONS: ShopDecorationItem[] = [
     imagePath: "/img/decoration/deco_flower_lantern_01.png",
     availability: "event_limited"
   }
-];
+].map((item) => applyDecorationMaster(item as ShopDecorationItem));
 
 export const SHOP_EVERGREEN_BACKGROUNDS = SHOP_BACKGROUNDS.filter((item) => item.availability !== "event_limited");
 export const SHOP_EVENT_BACKGROUNDS = SHOP_BACKGROUNDS.filter((item) => item.availability === "event_limited");

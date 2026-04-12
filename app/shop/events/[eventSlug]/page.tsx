@@ -3,16 +3,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { trackEvent } from "@/lib/analytics/gtag";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
+import { getFirebaseAuth } from "@/lib/firebase/auth";
 import { getMonsterImage } from "@/lib/game/assets";
 import { getEventBySlug, getEventStatusLabel, getRemainingDaysLabel, isEventActive, isEventAnnouncementVisible } from "@/lib/game/events";
-import { getBackgroundImagePath, getFrameThemeClass, SHOP_EVENT_BUNDLES, SHOP_EVENT_DECORATIONS } from "@/lib/game/shop";
+import { getBackgroundImagePath, getFrameThemeClass, SHOP_EVENT_BUNDLES, SHOP_EVENT_DECORATIONS, SHOP_PAID_COIN_ITEMS } from "@/lib/game/shop";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 
 export default function EventShopDetailPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const params = useParams<{ eventSlug: string }>();
   const eventSlug = Array.isArray(params?.eventSlug) ? params.eventSlug[0] : params?.eventSlug;
   const eventConfig = eventSlug ? getEventBySlug(eventSlug) : null;
@@ -31,6 +35,7 @@ export default function EventShopDetailPage() {
   const [message, setMessage] = useState("");
   const [showStartNowConfirm, setShowStartNowConfirm] = useState(false);
   const [purchaseModal, setPurchaseModal] = useState<{ title: string; lines: string[] } | null>(null);
+  const [checkoutItemId, setCheckoutItemId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!message) return;
@@ -191,7 +196,49 @@ export default function EventShopDetailPage() {
     setMessage(`${item.title} をこうにゅうしました`);
   };
 
+  const onStartPaidCheckout = async (item: (typeof SHOP_PAID_COIN_ITEMS)[number]) => {
+    try {
+      const currentUser = getFirebaseAuth().currentUser;
+      if (!currentUser) {
+        setMessage("ログインすると購入できます");
+        router.push("/settings");
+        return;
+      }
+
+      setCheckoutItemId(item.itemId);
+      const idToken = await currentUser.getIdToken();
+      const response = await fetch("/api/stripe/create-checkout-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ productId: item.itemId })
+      });
+      const payload = (await response.json()) as { url?: string; error?: string };
+
+      if (!response.ok || !payload.url) {
+        setMessage(payload.error ?? "決済ページを開けませんでした");
+        return;
+      }
+
+      trackEvent("begin_checkout", {
+        item_id: item.itemId,
+        item_type: item.productType,
+        value: item.priceJpy,
+        currency: "JPY"
+      });
+      window.location.href = payload.url;
+    } catch (error) {
+      console.error("[event-shop] failed to start paid checkout", error);
+      setMessage("決済ページを開けませんでした");
+    } finally {
+      setCheckoutItemId(null);
+    }
+  };
+
   const previewMonster = monsters.find((monster) => monster.monsterId === eventConfig.freeEggMonsterId);
+  const starterCheckoutItem = SHOP_PAID_COIN_ITEMS.find((item) => item.itemId === "starter_bundle_boost_01" && item.status === "confirmed") ?? null;
 
   return (
     <main
@@ -323,6 +370,34 @@ export default function EventShopDetailPage() {
             モンタコインを買う
           </Link>
         </div>
+        {starterCheckoutItem ? (
+          <div className="shop-grid shop-grid-single-centered">
+            <section className="card decorated-card shop-grid-card" key={starterCheckoutItem.itemId}>
+              <div className="shop-grid-preview shop-grid-preview-paid">
+                <div className="shop-badge-stack">
+                  <span className="shop-paid-badge">決済</span>
+                  <span className="shop-test-badge">テスト中</span>
+                </div>
+                <img src={starterCheckoutItem.imagePath} alt={starterCheckoutItem.title} className="shop-paid-pack-icon" />
+              </div>
+              <div className="shop-grid-meta">
+                <h2>{starterCheckoutItem.title}</h2>
+                <p>{starterCheckoutItem.description}</p>
+                <div className="shop-grid-description">
+                  500モンタコイン / 春の芽吹きたまご / EXPブースト 24時間
+                </div>
+                <div className="shop-grid-price">{starterCheckoutItem.priceJpy} 円</div>
+              </div>
+              <button
+                className="quest-btn shop-grid-button task-global-menu-button-accent"
+                onClick={() => onStartPaidCheckout(starterCheckoutItem)}
+                disabled={checkoutItemId === starterCheckoutItem.itemId || !user}
+              >
+                {!user ? "ログインで購入可能" : checkoutItemId === starterCheckoutItem.itemId ? "移動中..." : "Stripe で購入"}
+              </button>
+            </section>
+          </div>
+        ) : null}
       </section>
 
       <section className="card decorated-card">
@@ -424,7 +499,9 @@ export default function EventShopDetailPage() {
                 </div>
                 <div className="shop-grid-meta">
                   <h2>{item.title}</h2>
-                  <p>{item.description}</p>
+                  <div className="shop-grid-description">
+                    ピクニックバスケット / 花灯りランタン / 春の芽吹きたまご
+                  </div>
                   <div className="shop-grid-price">{item.price} モンタコイン</div>
                 </div>
                 <button

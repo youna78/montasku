@@ -183,10 +183,9 @@ export function mergeCommerceIntoGameState(
       Array.isArray(inventory.ownedDecorationIds) && inventory.ownedDecorationIds.length > 0
         ? [...new Set(inventory.ownedDecorationIds.filter(Boolean))]
         : nextState.ownedDecorationIds;
-    const selectedDecorationIds =
-      Array.isArray(inventory.selectedDecorationIds) && inventory.selectedDecorationIds.length > 0
-        ? inventory.selectedDecorationIds.filter((itemId): itemId is string => typeof itemId === "string" && ownedDecorationIds.includes(itemId))
-        : nextState.selectedDecorationIds.filter((itemId) => ownedDecorationIds.includes(itemId));
+    const selectedDecorationIds = Array.isArray(inventory.selectedDecorationIds)
+      ? inventory.selectedDecorationIds.filter((itemId): itemId is string => typeof itemId === "string" && ownedDecorationIds.includes(itemId))
+      : nextState.selectedDecorationIds.filter((itemId) => ownedDecorationIds.includes(itemId));
     const ownedCharmItemCounts =
       inventory.ownedCharmItemCounts && typeof inventory.ownedCharmItemCounts === "object"
         ? {

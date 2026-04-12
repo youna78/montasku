@@ -2015,12 +2015,21 @@ a.quest-btn[aria-disabled="true"] {
   gap: 12px;
 }
 
+.shop-grid-single-centered {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+}
+
 .shop-grid-card {
   display: grid;
   grid-template-rows: minmax(92px, 1fr) auto auto;
   gap: 10px;
   align-content: stretch;
   aspect-ratio: 1 / 1;
+}
+
+.shop-grid-single-centered .shop-grid-card {
+  width: min(100%, 260px);
 }
 
 .shop-empty-card {
@@ -2101,6 +2110,13 @@ a.quest-btn[aria-disabled="true"] {
 
 .shop-grid-meta p {
   display: none;
+}
+
+.shop-grid-description {
+  color: #5b4a32;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
 }
 
 .shop-grid-price {
@@ -2628,6 +2644,18 @@ a.quest-btn[aria-disabled="true"] {
   place-items: center;
   background: transparent;
   padding: 0;
+}
+
+.shop-frame-preview-image-only::before {
+  display: none;
+}
+
+.shop-frame-preview-image-only .shop-frame-image {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  margin: 0 auto;
 }
 
 .frame-preview-clover,
