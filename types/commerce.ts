@@ -15,8 +15,11 @@ export type InventoryProfile = {
   selectedBackgroundId: string;
   ownedFrameIds: string[];
   selectedFrameId: string;
+  ownedCharmItemCounts: Record<string, number>;
+  ownedPaidCharmItemCounts: Record<string, number>;
   ownedDecorationIds: string[];
-  ownedBoosterIds: string[];
+  selectedDecorationIds: string[];
+  ownedBoosterItemCounts: Record<string, number>;
 };
 
 export type PurchaseHistoryRecord = {

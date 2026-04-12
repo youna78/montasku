@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getMonsterImage, getRarityBadge, getStageBadge } from "@/lib/game/assets";
+import { isEventMonster } from "@/lib/game/events";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 
@@ -84,6 +85,7 @@ export default function DexDetailPage() {
           {rarityBadge && <img src={rarityBadge} alt="rarity" className="badge-img wide" />}
         </div>
         <h2>{monster?.name}</h2>
+        {monster && isEventMonster(monster.monsterId) && <p className="event-monster-note">春イベント限定モンスター</p>}
         <p>属性: {monster?.attribute}</p>
         <p>{monster?.description}</p>
         <Link href="/dex">図鑑へ戻る</Link>

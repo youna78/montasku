@@ -9,7 +9,8 @@ import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { trackEvent } from "@/lib/analytics/gtag";
 import { HOME_ANNOUNCEMENTS } from "@/lib/game/announcements";
 import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage, getStageBadge } from "@/lib/game/assets";
-import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
+import { getEventStatusLabel, getRemainingDaysLabel, getVisibleHomeEvents, isEventActive } from "@/lib/game/events";
+import { getBackgroundImagePath, getDecorationShopItem, getFrameThemeClass } from "@/lib/game/shop";
 import { playSfx } from "@/lib/game/sfx";
 import { progressToNextLevel, shouldRouteToDailyReview } from "@/lib/game/state";
 import { resolveLevelFromExp } from "@/lib/game/leveling";
@@ -29,9 +30,11 @@ function toPercent(value: number, total: number): number {
 
 export default function HomePage() {
   const router = useRouter();
-  const { tasks, monsters, levelingRows, gameState, isLoading, completeTask } = useGame();
+  const { tasks, monsters, levelingRows, gameState, isLoading, completeTask, markEventIntroPopupSeen } = useGame();
   const [feedback, setFeedback] = useState("");
   const [evolutionScene, setEvolutionScene] = useState<EvolutionScene | null>(null);
+  const [showEventIntro, setShowEventIntro] = useState(false);
+  const [dismissedEventIntroId, setDismissedEventIntroId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!feedback) return;
@@ -58,13 +61,38 @@ export default function HomePage() {
     }
   }, [gameState, router]);
 
+  const visibleEvents = getVisibleHomeEvents();
+  const activeEvent = visibleEvents[0] ?? null;
+  const activeEventState = activeEvent && gameState ? gameState.eventStates[activeEvent.eventId] : null;
+
+  useEffect(() => {
+    if (!gameState) return;
+    if (!activeEvent) return;
+    if (!isEventActive(activeEvent)) return;
+    if (activeEventState?.hasSeenIntroPopup) return;
+    if (dismissedEventIntroId === activeEvent.eventId) return;
+    setShowEventIntro(true);
+  }, [activeEvent, activeEventState?.hasSeenIntroPopup, dismissedEventIntroId, gameState]);
+
+  const dismissEventIntro = (openEventPage: boolean) => {
+    if (!activeEvent) return;
+    setDismissedEventIntroId(activeEvent.eventId);
+    setShowEventIntro(false);
+    window.setTimeout(() => {
+      markEventIntroPopupSeen(activeEvent.eventId);
+      if (openEventPage) {
+        router.push(`/event/${activeEvent.slug}`);
+      }
+    }, 0);
+  };
+
   if (isLoading || !gameState) {
     return <main>Loading...</main>;
   }
 
   const currentMonster = monsters.find((m) => m.monsterId === gameState.currentMonsterId);
   const activeAnnouncements = HOME_ANNOUNCEMENTS.filter((announcement) => announcement.active);
-  const notificationCount = activeAnnouncements.length + (gameState.pendingDailyReview ? 1 : 0);
+  const notificationCount = activeAnnouncements.length + visibleEvents.length + (gameState.pendingDailyReview ? 1 : 0);
   const activeTaskIdsInOrder = gameState.activeTasks
     .filter((t) => t.enabled)
     .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -92,6 +120,9 @@ export default function HomePage() {
 
   const stageBadge = getStageBadge(growthStage);
   const monsterMotionClass = growthStage === "egg" ? "monster-img-alive" : "monster-img-walk-hop";
+  const activeDecorations = gameState.selectedDecorationIds
+    .map((itemId) => getDecorationShopItem(itemId))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
   const onCompleteFromHome = (taskId: number) => {
     const result = completeTask(taskId);
@@ -143,14 +174,48 @@ export default function HomePage() {
       <div className="title-panel">ホーム</div>
       {feedback && <div className="toast">{feedback}</div>}
 
+      {activeEvent && (
+        <Link href={`/event/${activeEvent.slug}`} className="card decorated-card event-banner-card">
+          <div className="event-banner-image-wrap">
+            <img src={activeEvent.heroImagePath} alt={activeEvent.name} className="event-banner-image" />
+          </div>
+          <div className="event-banner-meta">
+            <div className="event-banner-head">
+              <span className="notification-badge notification-badge-event">{getEventStatusLabel(activeEvent)}</span>
+              <span className="event-banner-remaining">{getRemainingDaysLabel(activeEvent)}</span>
+            </div>
+            <strong>{activeEvent.name}</strong>
+            <p>{activeEvent.description}</p>
+          </div>
+        </Link>
+      )}
+
       <section className="card decorated-card">
         <div className="monster-stage" style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}>
           <div className="monster-stage-overlay" />
-          <Link href="/notifications" className="home-notification-button">
-            <span className="home-notification-icon">!</span>
-            <span className="home-notification-label">おしらせ</span>
-            {notificationCount > 0 && <span className="home-notification-badge">{notificationCount}</span>}
-          </Link>
+          <div className="home-stage-actions">
+            <Link href="/notifications" className="home-notification-button">
+              <span className="home-notification-icon">
+                <img src="/img/icon/icon_notification_01.png" alt="" className="home-notification-icon-image" />
+              </span>
+              <span className="home-notification-label">おしらせ</span>
+              {notificationCount > 0 && <span className="home-notification-badge">{notificationCount}</span>}
+            </Link>
+            <Link href="/shop" className="home-notification-button home-shop-shortcut">
+              <span className="home-notification-icon">
+                <img src="/img/icon/icon_shop_01.png" alt="" className="home-notification-icon-image" />
+              </span>
+              <span className="home-notification-label">ショップ</span>
+            </Link>
+          </div>
+          {activeDecorations.map((decoration) => (
+            <div
+              key={decoration.itemId}
+              className={`home-decoration home-decoration-${decoration.itemId}`}
+            >
+              <img src={decoration.imagePath} alt={decoration.title} className="home-decoration-image" />
+            </div>
+          ))}
           <div className="monster-wrap">
             <img src={getMonsterImage(currentMonster?.monsterId)} alt={currentMonster?.name ?? "monster"} className={`monster-img ${monsterMotionClass}`} />
           </div>
@@ -183,6 +248,27 @@ export default function HomePage() {
             <span>モンタコイン</span>
             <strong>{gameState.paidCoinBalance}</strong>
           </div>
+          {gameState.activeAttributeCharm && (
+            <div className="status-row">
+              <span>発動中</span>
+              <strong>{gameState.activeAttributeCharm.name} (あと{gameState.activeAttributeCharm.remainingUses}回)</strong>
+            </div>
+          )}
+          {gameState.activeExpBooster && (
+            <div className="status-row">
+              <span>ブースト</span>
+              <strong>
+                {gameState.activeExpBooster.name} (EXP+{Math.round(gameState.activeExpBooster.boostRate * 100)}% /{" "}
+                {new Date(gameState.activeExpBooster.expiresAt).toLocaleString("ja-JP", {
+                  month: "numeric",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit"
+                })}
+                まで)
+              </strong>
+            </div>
+          )}
           {gameState.lastLoginBonusDate === gameState.lastPlayedDate && gameState.lastLoginBonusCoins > 0 && (
             <div className="status-row">
               <span>ログインボーナス</span>
@@ -250,6 +336,38 @@ export default function HomePage() {
       </section>
 
       <DevDebugPanel gameState={gameState} monsters={monsters} />
+
+      {showEventIntro && activeEvent && (
+        <div className="auth-prompt-overlay" role="dialog" aria-modal="true" aria-labelledby="event-intro-title">
+          <div className="card decorated-card auth-prompt-card">
+            <div className="event-modal-image-wrap">
+              <img src={activeEvent.heroImagePath} alt={activeEvent.name} className="event-modal-image" />
+            </div>
+            <h2 id="event-intro-title" className="auth-card-title">
+              {activeEvent.name}
+            </h2>
+            <p className="auth-card-copy">
+              {activeEvent.description}
+              <br />
+              無料で春イベントたまごを1個受け取れます。
+            </p>
+            <div className="settings-menu-grid centered-actions">
+              <button
+                className="quest-btn settings-menu-button settings-menu-button-primary"
+                onClick={() => dismissEventIntro(true)}
+              >
+                イベントを見る
+              </button>
+              <button
+                className="quest-btn settings-menu-button settings-menu-button-neutral"
+                onClick={() => dismissEventIntro(false)}
+              >
+                あとで
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <BottomNav />
       {evolutionScene && (
         <EvolutionOverlay

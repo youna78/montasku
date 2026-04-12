@@ -20,7 +20,7 @@ inventory,users/{uid}/inventory/profile,document,selectedBackgroundId,string,yes
 inventory,users/{uid}/inventory/profile,document,ownedFrameIds,array<string>,yes,"[classic_gold,sky_crystal]",所持フレームID一覧,既存 ownedFrameIds を将来ここへ移行
 inventory,users/{uid}/inventory/profile,document,selectedFrameId,string,yes,sky_crystal,現在装備中フレーム,既存 selectedFrameId を将来ここへ移行
 inventory,users/{uid}/inventory/profile,document,ownedDecorationIds,array<string>,no,"[spring_flower_01]",将来のデコ素材所持一覧,初期は空配列で可
-inventory,users/{uid}/inventory/profile,document,ownedBoosterIds,array<string>,no,"[exp_boost_20_1h]",将来の所持ブースター一覧,消耗品なら別コレクション化でも可
+inventory,users/{uid}/inventory/profile,document,ownedBoosterItemCounts,map<string,number>,no,"{exp_boost_20_1h: 1}",所持ブースター数。複数購入と消費に対応,消耗品のためID配列ではなく個数管理
 inventory,users/{uid}/inventory/profile,document,createdAt,timestamp,yes,2026-03-29T10:00:00Z,作成日時,初回同期時に生成
 inventory,users/{uid}/inventory/profile,document,updatedAt,timestamp,yes,2026-03-29T10:10:00Z,更新日時,装備変更や購入時に更新
 purchaseHistory,users/{uid}/purchaseHistory/{purchaseId},document,purchaseId,string,yes,web_plink_20260329_001,購入履歴ID,ドキュメントIDと一致させる想定

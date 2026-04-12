@@ -6,6 +6,19 @@ import { useAuth } from "./AuthProvider";
 
 const LAST_AUTH_EMAIL_KEY = "habit-monster-last-auth-email";
 
+function maskEmail(email: string | null | undefined): string {
+  if (!email) return "-";
+  const [localPart, domain = ""] = email.split("@");
+  if (!localPart) return "-";
+  const visible = localPart.slice(0, 3);
+  const localMasked = `${visible}${"*".repeat(Math.max(localPart.length - visible.length, 0))}`;
+  const domainParts = domain.split(".");
+  const domainHead = domainParts[0] ?? "";
+  const tld = domainParts.length > 1 ? domainParts[domainParts.length - 1] : "";
+  const maskedDomain = domainHead ? `${"*".repeat(Math.max(domainHead.length, 3))}${tld ? `.${tld}` : ""}` : "****";
+  return `${localMasked}@${maskedDomain}`;
+}
+
 export function AuthCard() {
   const {
     user,
@@ -133,7 +146,7 @@ export function AuthCard() {
             </div>
             <div className="status-row">
               <span>メール</span>
-              <strong>{user.email ?? "-"}</strong>
+              <strong>{maskEmail(user.email)}</strong>
             </div>
           </div>
           <button className="quest-btn quest-btn-secondary auth-card-button" onClick={() => void signOut()}>

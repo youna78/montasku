@@ -144,7 +144,7 @@ export default function TasksPage() {
         </div>
       </section>
 
-      {feedback && <div className="toast">{feedback}</div>}
+      {feedback && <div className="reward-popup reward-popup-top">{feedback}</div>}
 
       {activeTasks.map((task) => {
         const completed = gameState.completedTaskIdsToday.includes(task.taskId);

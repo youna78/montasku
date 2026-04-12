@@ -29,6 +29,43 @@ export type PendingDailyReview = {
   skippedAt?: string;
 };
 
+export type CharmAttribute = "power" | "heal" | "knowledge" | "create";
+
+export type OwnedCharmItemCounts = Partial<Record<CharmAttribute, number>>;
+export type OwnedPaidCharmItemCounts = Partial<Record<CharmAttribute, number>>;
+export type OwnedBoosterItemCounts = Partial<Record<string, number>>;
+export type OwnedDecorationIds = string[];
+export type SelectedDecorationIds = string[];
+
+export type ActiveAttributeCharm = {
+  itemId: string;
+  name: string;
+  attribute: CharmAttribute;
+  remainingUses: number;
+  variant?: "free" | "paid";
+};
+
+export type ActiveExpBooster = {
+  itemId: string;
+  name: string;
+  boostRate: number;
+  durationMinutes: number;
+  expiresAt: string;
+};
+
+export type SavedUserEventState = {
+  eventId: string;
+  hasSeenIntroPopup: boolean;
+  hasClaimedFreeEgg: boolean;
+  ownedEggCount: number;
+  purchasedEggCount: number;
+  completedTaskCount: number;
+  loginDates: string[];
+  hasCompletedLoginMission: boolean;
+  claimedRewardIds: string[];
+  updatedAt?: string;
+};
+
 export type GameState = {
   currentMonsterId: number;
   currentMonsterLevel: number;
@@ -39,6 +76,15 @@ export type GameState = {
   selectedBackgroundId: string;
   ownedFrameIds: string[];
   selectedFrameId: string;
+  ownedDecorationIds: OwnedDecorationIds;
+  selectedDecorationIds: SelectedDecorationIds;
+  ownedCharmItemCounts: OwnedCharmItemCounts;
+  ownedPaidCharmItemCounts: OwnedPaidCharmItemCounts;
+  ownedBoosterItemCounts: OwnedBoosterItemCounts;
+  activeAttributeCharm: ActiveAttributeCharm | null;
+  activeExpBooster: ActiveExpBooster | null;
+  queuedEggMonsterId: number | null;
+  eventStates: Record<string, SavedUserEventState>;
   lastLoginBonusDate: string | null;
   lastLoginBonusCoins: number;
   todayExp: number;

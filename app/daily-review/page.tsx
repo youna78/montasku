@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
+import { EvolutionOverlay } from "@/components/common/EvolutionOverlay";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { trackEvent } from "@/lib/analytics/gtag";
 import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
@@ -13,6 +14,19 @@ export default function DailyReviewPage() {
   const router = useRouter();
   const { tasks, monsters, gameState, isLoading, resolveDailyReviewTask, skipDailyReview, finishDailyReview } = useGame();
   const [message, setMessage] = useState("");
+  const [pendingEvolutionScene, setPendingEvolutionScene] = useState<{
+    previousMonsterName: string;
+    nextMonsterName: string;
+    previousMonsterId: number;
+    nextMonsterId: number;
+  } | null>(null);
+  const [activeEvolutionScene, setActiveEvolutionScene] = useState<{
+    previousMonsterName: string;
+    nextMonsterName: string;
+    previousMonsterId: number;
+    nextMonsterId: number;
+  } | null>(null);
+  const [afterEvolutionRoute, setAfterEvolutionRoute] = useState<string | null>(null);
 
   useEffect(() => {
     if (!message) return;
@@ -62,17 +76,38 @@ export default function DailyReviewPage() {
 
     if (result.nextState.endEventPending) {
       window.setTimeout(() => router.push("/end-event"), 220);
+      return;
     }
+
+    if (result.evolved) {
+      const previousMonster = monsters.find((monster) => monster.monsterId === result.previousMonsterId);
+      const nextMonster = monsters.find((monster) => monster.monsterId === result.nextMonsterId);
+      setPendingEvolutionScene({
+        previousMonsterName: previousMonster?.name ?? "モンスター",
+        nextMonsterName: nextMonster?.name ?? "モンスター",
+        previousMonsterId: result.previousMonsterId,
+        nextMonsterId: result.nextMonsterId
+      });
+    }
+  };
+
+  const leavePage = (nextRoute: string) => {
+    if (pendingEvolutionScene) {
+      setAfterEvolutionRoute(nextRoute);
+      setActiveEvolutionScene(pendingEvolutionScene);
+      return;
+    }
+    router.push(nextRoute);
   };
 
   const onSkip = () => {
     skipDailyReview();
-    router.push("/home");
+    leavePage("/home");
   };
 
   const onFinish = () => {
     finishDailyReview();
-    router.push(getInitialRoute({ ...gameState, pendingDailyReview: null }));
+    leavePage(getInitialRoute({ ...gameState, pendingDailyReview: null }));
   };
 
   return (
@@ -131,6 +166,23 @@ export default function DailyReviewPage() {
 
       <DevDebugPanel gameState={gameState} monsters={monsters} />
       <BottomNav />
+      {activeEvolutionScene && (
+        <EvolutionOverlay
+          previousMonsterName={activeEvolutionScene.previousMonsterName}
+          nextMonsterName={activeEvolutionScene.nextMonsterName}
+          previousMonsterId={activeEvolutionScene.previousMonsterId}
+          nextMonsterId={activeEvolutionScene.nextMonsterId}
+          onClose={() => {
+            setActiveEvolutionScene(null);
+            setPendingEvolutionScene(null);
+            if (afterEvolutionRoute) {
+              const nextRoute = afterEvolutionRoute;
+              setAfterEvolutionRoute(null);
+              router.push(nextRoute);
+            }
+          }}
+        />
+      )}
     </main>
   );
 }

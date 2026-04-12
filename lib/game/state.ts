@@ -1,7 +1,21 @@
-import type { GameState, LetterRecord, PendingDailyReview } from "@/types/game";
+import type {
+  ActiveExpBooster,
+  ActiveAttributeCharm,
+  AttributeTotals,
+  CharmAttribute,
+  GameState,
+  LetterRecord,
+  OwnedBoosterItemCounts,
+  OwnedCharmItemCounts,
+  OwnedPaidCharmItemCounts,
+  PendingDailyReview,
+  SavedUserEventState
+} from "@/types/game";
 import type { LevelingMaster, MonsterMaster, TaskMaster } from "@/types/master";
 import { LETTER_ITEM_IMAGES } from "./assets";
-import { evaluateEvolution, resolveBirthMonsterId } from "./evolution";
+import { GAME_EVENTS, getEventById, isEventActive, normalizeUserEventState } from "./events";
+import { evaluateEvolution, resolveBirthMonsterId, resolveEggEvolutionMonsterId } from "./evolution";
+import { getAttributeCharmItem, getBoosterShopItem, getDecorationShopItem, getPaidBackgroundShopItem, getPaidBundleShopItem, getPaidFrameShopItem } from "./shop";
 import {
   getCumulativeExpForLevel,
   getFallbackLevelingMaster,
@@ -16,6 +30,10 @@ const MIN_ACTIVE_TASKS = 3;
 const MAX_ACTIVE_TASKS = 15;
 const FREE_COINS_PER_TASK = 2;
 const FREE_COINS_PER_DAILY_LOGIN = 3;
+const ATTRIBUTE_CHARM_PRICE = 300;
+const ATTRIBUTE_CHARM_USES = 3;
+const PAID_ATTRIBUTE_CHARM_PRICE = 300;
+const PAID_ATTRIBUTE_CHARM_USES = 10;
 
 export type CompleteTaskResult = {
   nextState: GameState;
@@ -70,6 +88,67 @@ export type EquipFrameResult = {
   reason?: "not_owned" | "already_equipped";
 };
 
+export type ToggleDecorationResult = {
+  nextState: GameState;
+  toggled: boolean;
+  active: boolean;
+  reason?: "not_owned";
+};
+
+export type PurchaseCharmResult = {
+  nextState: GameState;
+  purchased: boolean;
+  reason?: "insufficient_coins" | "invalid_item";
+};
+
+export type UseCharmResult = {
+  nextState: GameState;
+  used: boolean;
+  reason?: "not_owned";
+};
+
+export type PurchaseBoosterResult = {
+  nextState: GameState;
+  purchased: boolean;
+  reason?: "insufficient_coins" | "invalid_item";
+};
+
+export type PurchasePaidInventoryResult = {
+  nextState: GameState;
+  purchased: boolean;
+  reason?: "already_owned" | "insufficient_coins" | "invalid_item" | "event_not_available";
+};
+
+export type UseBoosterResult = {
+  nextState: GameState;
+  used: boolean;
+  reason?: "not_owned" | "invalid_item";
+};
+
+export type EventEggClaimResult = {
+  nextState: GameState;
+  claimed: boolean;
+  reason?: "already_claimed" | "event_inactive" | "event_not_found";
+};
+
+export type EventEggUseResult = {
+  nextState: GameState;
+  used: boolean;
+  reason?: "event_not_found" | "no_egg" | "already_queued";
+};
+
+export type ForceStartEventEggResult = {
+  nextState: GameState;
+  started: boolean;
+  reason?: "event_not_found" | "no_egg" | "already_active";
+};
+
+export type PurchaseEventRewardResult = {
+  nextState: GameState;
+  purchased: boolean;
+  reason?: "event_not_found" | "event_inactive" | "item_not_found" | "already_owned" | "insufficient_free_coins" | "insufficient_paid_coins";
+};
+
 export type FinishEndEventResult = GameState;
 
 export type DailyReviewResolveResult = {
@@ -96,6 +175,176 @@ function uniqueNumbers(values: number[]): number[] {
 
 function uniqueStrings(values: string[]): string[] {
   return [...new Set(values.filter((value) => typeof value === "string" && value.length > 0))];
+}
+
+function normalizeCharmCounts(rawCounts: OwnedCharmItemCounts | undefined): OwnedCharmItemCounts {
+  const normalized: OwnedCharmItemCounts = {};
+  for (const attribute of ["power", "heal", "knowledge", "create"] as const) {
+    const rawValue = rawCounts?.[attribute];
+    if (typeof rawValue === "number" && rawValue > 0) {
+      normalized[attribute] = Math.floor(rawValue);
+    }
+  }
+  return normalized;
+}
+
+function normalizePaidCharmCounts(rawCounts: OwnedPaidCharmItemCounts | undefined): OwnedPaidCharmItemCounts {
+  const normalized: OwnedPaidCharmItemCounts = {};
+  for (const attribute of ["power", "heal", "knowledge", "create"] as const) {
+    const rawValue = rawCounts?.[attribute];
+    if (typeof rawValue === "number" && rawValue > 0) {
+      normalized[attribute] = Math.floor(rawValue);
+    }
+  }
+  return normalized;
+}
+
+function normalizeBoosterCounts(rawCounts: OwnedBoosterItemCounts | undefined): OwnedBoosterItemCounts {
+  return Object.fromEntries(
+    Object.entries(rawCounts ?? {}).filter(([, count]) => typeof count === "number" && count > 0)
+  );
+}
+
+function normalizeActiveAttributeCharm(rawCharm: ActiveAttributeCharm | null | undefined): ActiveAttributeCharm | null {
+  if (!rawCharm || typeof rawCharm !== "object") return null;
+  if (!rawCharm.itemId || !rawCharm.name) return null;
+  if (!["power", "heal", "knowledge", "create"].includes(rawCharm.attribute)) return null;
+  if (typeof rawCharm.remainingUses !== "number" || rawCharm.remainingUses <= 0) return null;
+
+  return {
+    itemId: rawCharm.itemId,
+    name: rawCharm.name,
+    attribute: rawCharm.attribute,
+    remainingUses: Math.floor(rawCharm.remainingUses),
+    variant: rawCharm.variant === "paid" ? "paid" : "free"
+  };
+}
+
+function normalizeActiveExpBooster(rawBooster: ActiveExpBooster | null | undefined): ActiveExpBooster | null {
+  if (!rawBooster || typeof rawBooster !== "object") return null;
+  if (!rawBooster.itemId || !rawBooster.name) return null;
+  if (typeof rawBooster.boostRate !== "number" || rawBooster.boostRate <= 0) return null;
+  if (typeof rawBooster.durationMinutes !== "number" || rawBooster.durationMinutes <= 0) return null;
+  if (typeof rawBooster.expiresAt !== "string") return null;
+  if (Number.isNaN(new Date(rawBooster.expiresAt).getTime())) return null;
+  if (new Date(rawBooster.expiresAt).getTime() <= Date.now()) return null;
+
+  return rawBooster;
+}
+
+function normalizeEventStates(rawStates: GameState["eventStates"] | undefined): Record<string, SavedUserEventState> {
+  return Object.fromEntries(
+    GAME_EVENTS.map((eventConfig) => {
+      const rawState = rawStates && typeof rawStates === "object" ? rawStates[eventConfig.eventId] : undefined;
+      return [eventConfig.eventId, normalizeUserEventState(eventConfig.eventId, rawState)] as const;
+    })
+  );
+}
+
+function appendUniqueDate(values: string[], nextValue: string): string[] {
+  return values.includes(nextValue) ? values : [...values, nextValue];
+}
+
+function updateEventState(
+  state: GameState,
+  eventId: string,
+  updater: (current: SavedUserEventState) => SavedUserEventState
+): GameState {
+  const currentState = normalizeUserEventState(eventId, state.eventStates[eventId]);
+  return {
+    ...state,
+    eventStates: {
+      ...state.eventStates,
+      [eventId]: updater(currentState)
+    }
+  };
+}
+
+function applyEventTaskCompletionProgress(state: GameState): GameState {
+  const activeEvents = GAME_EVENTS.filter((eventConfig) => isEventActive(eventConfig));
+  if (activeEvents.length === 0) return state;
+
+  return activeEvents.reduce((nextState, eventConfig) => {
+    return updateEventState(nextState, eventConfig.eventId, (current) => ({
+      ...current,
+      completedTaskCount: current.completedTaskCount + 1,
+      updatedAt: new Date().toISOString()
+    }));
+  }, state);
+}
+
+function applyEventLoginBonuses(state: GameState, currentDate: string): GameState {
+  const activeEvents = GAME_EVENTS.filter((eventConfig) => isEventActive(eventConfig));
+  if (activeEvents.length === 0) return state;
+
+  return activeEvents.reduce((nextState, eventConfig) => {
+    const currentEventState = normalizeUserEventState(eventConfig.eventId, nextState.eventStates[eventConfig.eventId]);
+    if (currentEventState.loginDates.includes(currentDate)) {
+      return nextState;
+    }
+
+    const nextLoginDates = appendUniqueDate(currentEventState.loginDates, currentDate);
+    const completedLoginMission = nextLoginDates.length >= eventConfig.mission.loginDaysRequired;
+    const shouldGrantLoginReward =
+      completedLoginMission &&
+      Boolean(eventConfig.mission.loginRewardFrameId) &&
+      !currentEventState.claimedRewardIds.includes("login_mission_reward");
+
+    const nextOwnedFrameIds = shouldGrantLoginReward && eventConfig.mission.loginRewardFrameId
+      ? uniqueStrings([...nextState.ownedFrameIds, eventConfig.mission.loginRewardFrameId])
+      : nextState.ownedFrameIds;
+
+    return {
+      ...nextState,
+      freeCoins: nextState.freeCoins + eventConfig.mission.dailyLoginBonusFreeCoins,
+      ownedFrameIds: nextOwnedFrameIds,
+      eventStates: {
+        ...nextState.eventStates,
+        [eventConfig.eventId]: {
+          ...currentEventState,
+          loginDates: nextLoginDates,
+          hasCompletedLoginMission: completedLoginMission,
+          claimedRewardIds: shouldGrantLoginReward
+            ? [...currentEventState.claimedRewardIds, "login_mission_reward"]
+            : currentEventState.claimedRewardIds,
+          updatedAt: new Date().toISOString()
+        }
+      }
+    };
+  }, state);
+}
+
+function getEventItemCurrencyBalance(state: GameState, currencyType: "free_coin" | "paid_coin"): number {
+  return currencyType === "paid_coin" ? state.paidCoinBalance : state.freeCoins;
+}
+
+function spendEventCurrency(state: GameState, currencyType: "free_coin" | "paid_coin", price: number): GameState {
+  return currencyType === "paid_coin"
+    ? { ...state, paidCoinBalance: state.paidCoinBalance - price }
+    : { ...state, freeCoins: state.freeCoins - price };
+}
+
+function countCharmTotalAttributes(task: TaskMaster): number {
+  return task.power + task.heal + task.knowledge + task.create;
+}
+
+function resolveAttributeGains(task: TaskMaster, activeCharm: ActiveAttributeCharm | null): AttributeTotals {
+  if (!activeCharm) {
+    return {
+      power: task.power,
+      heal: task.heal,
+      knowledge: task.knowledge,
+      create: task.create
+    };
+  }
+
+  const total = countCharmTotalAttributes(task);
+  return {
+    power: activeCharm.attribute === "power" ? total : 0,
+    heal: activeCharm.attribute === "heal" ? total : 0,
+    knowledge: activeCharm.attribute === "knowledge" ? total : 0,
+    create: activeCharm.attribute === "create" ? total : 0
+  };
 }
 
 function normalizePendingDailyReview(rawReview: GameState["pendingDailyReview"] | undefined): GameState["pendingDailyReview"] {
@@ -298,6 +547,15 @@ export function buildInitialState(tasks: TaskMaster[]): GameState {
     selectedBackgroundId: "home_morning",
     ownedFrameIds: ["classic_gold"],
     selectedFrameId: "classic_gold",
+    ownedDecorationIds: [],
+    selectedDecorationIds: [],
+    ownedCharmItemCounts: {},
+    ownedPaidCharmItemCounts: {},
+    ownedBoosterItemCounts: {},
+    activeAttributeCharm: null,
+    activeExpBooster: null,
+    queuedEggMonsterId: null,
+    eventStates: normalizeEventStates(undefined),
     lastLoginBonusDate: null,
     lastLoginBonusCoins: 0,
     todayExp: 0,
@@ -366,6 +624,18 @@ function normalizeState(
     typeof parsed.selectedFrameId === "string" && ownedFrameIds.includes(parsed.selectedFrameId)
       ? parsed.selectedFrameId
       : ownedFrameIds[0] ?? initial.selectedFrameId;
+  const ownedDecorationIds = uniqueStrings(Array.isArray(parsed.ownedDecorationIds) ? parsed.ownedDecorationIds : initial.ownedDecorationIds);
+  const selectedDecorationIds = uniqueStrings(
+    Array.isArray(parsed.selectedDecorationIds)
+      ? parsed.selectedDecorationIds.filter((itemId) => ownedDecorationIds.includes(itemId))
+      : initial.selectedDecorationIds
+  );
+  const ownedCharmItemCounts = normalizeCharmCounts(parsed.ownedCharmItemCounts);
+  const ownedPaidCharmItemCounts = normalizePaidCharmCounts(parsed.ownedPaidCharmItemCounts);
+  const ownedBoosterItemCounts = normalizeBoosterCounts(parsed.ownedBoosterItemCounts);
+  const activeAttributeCharm = normalizeActiveAttributeCharm(parsed.activeAttributeCharm);
+  const activeExpBooster = normalizeActiveExpBooster(parsed.activeExpBooster);
+  const eventStates = normalizeEventStates(parsed.eventStates);
 
   return {
     ...initial,
@@ -378,6 +648,16 @@ function normalizeState(
     selectedBackgroundId,
     ownedFrameIds: ownedFrameIds.length > 0 ? ownedFrameIds : initial.ownedFrameIds,
     selectedFrameId,
+    ownedDecorationIds,
+    selectedDecorationIds,
+    ownedCharmItemCounts,
+    ownedPaidCharmItemCounts,
+    ownedBoosterItemCounts,
+    activeAttributeCharm,
+    activeExpBooster,
+    queuedEggMonsterId:
+      typeof parsed.queuedEggMonsterId === "number" && parsed.queuedEggMonsterId > 0 ? Math.floor(parsed.queuedEggMonsterId) : null,
+    eventStates,
     lastLoginBonusDate: typeof parsed.lastLoginBonusDate === "string" ? parsed.lastLoginBonusDate : initial.lastLoginBonusDate,
     lastLoginBonusCoins: typeof parsed.lastLoginBonusCoins === "number" ? Math.max(0, parsed.lastLoginBonusCoins) : initial.lastLoginBonusCoins,
     attributeTotals: {
@@ -406,6 +686,19 @@ function normalizeState(
     endEventPending: typeof parsed.endEventPending === "boolean" ? parsed.endEventPending || shouldQueueEndEvent : shouldQueueEndEvent,
     pendingDailyReview: normalizedPendingDailyReview
   };
+}
+
+function resolveActiveExpBooster(state: GameState): ActiveExpBooster | null {
+  if (!state.activeExpBooster) return null;
+  if (new Date(state.activeExpBooster.expiresAt).getTime() <= Date.now()) {
+    return null;
+  }
+  return state.activeExpBooster;
+}
+
+function applyExpBoost(baseExp: number, booster: ActiveExpBooster | null): number {
+  if (!booster) return baseExp;
+  return Math.ceil(baseExp * (1 + booster.boostRate));
 }
 
 function buildPendingDailyReview(state: GameState): PendingDailyReview | null {
@@ -437,8 +730,7 @@ function applyDailyReset(state: GameState): GameState {
   const nextStreakDays = dayDiff === 1 ? Math.max(1, state.streakDays) + 1 : 1;
   const pendingDailyReview = buildPendingDailyReview(state);
   const loginBonusCoins = FREE_COINS_PER_DAILY_LOGIN;
-
-  return {
+  const resetState = {
     ...state,
     freeCoins: state.freeCoins + loginBonusCoins,
     todayExp: 0,
@@ -449,6 +741,8 @@ function applyDailyReset(state: GameState): GameState {
     lastLoginBonusCoins: loginBonusCoins,
     pendingDailyReview
   };
+
+  return applyEventLoginBonuses(resetState, today);
 }
 
 export function saveGameState(state: GameState): void {
@@ -503,24 +797,33 @@ function applyExpAndAttributes(
   }
 ): GameState {
   const table = normalizeLevelingMaster(levelingRows);
-  const totalExp = state.currentMonsterExp + task.baseExp;
+  const activeExpBooster = resolveActiveExpBooster(state);
+  const gainedExp = applyExpBoost(task.baseExp, activeExpBooster);
+  const totalExp = state.currentMonsterExp + gainedExp;
   const resolvedLevel = resolveLevelFromExp(totalExp, table);
   const includeTodayExp = options?.includeTodayExp ?? true;
   const markCompletedToday = options?.markCompletedToday ?? true;
+  const gains = resolveAttributeGains(task, state.activeAttributeCharm);
+  const nextActiveCharm =
+    state.activeAttributeCharm && state.activeAttributeCharm.remainingUses > 1
+      ? { ...state.activeAttributeCharm, remainingUses: state.activeAttributeCharm.remainingUses - 1 }
+      : null;
 
   return {
     ...state,
     currentMonsterLevel: resolvedLevel.level,
     currentMonsterExp: totalExp,
     freeCoins: state.freeCoins + FREE_COINS_PER_TASK,
-    todayExp: includeTodayExp ? state.todayExp + task.baseExp : state.todayExp,
+    todayExp: includeTodayExp ? state.todayExp + gainedExp : state.todayExp,
     attributeTotals: {
-      power: state.attributeTotals.power + task.power,
-      heal: state.attributeTotals.heal + task.heal,
-      knowledge: state.attributeTotals.knowledge + task.knowledge,
-      create: state.attributeTotals.create + task.create
+      power: state.attributeTotals.power + gains.power,
+      heal: state.attributeTotals.heal + gains.heal,
+      knowledge: state.attributeTotals.knowledge + gains.knowledge,
+      create: state.attributeTotals.create + gains.create
     },
-    completedTaskIdsToday: markCompletedToday ? [...state.completedTaskIdsToday, task.taskId] : state.completedTaskIdsToday
+    completedTaskIdsToday: markCompletedToday ? [...state.completedTaskIdsToday, task.taskId] : state.completedTaskIdsToday,
+    activeAttributeCharm: nextActiveCharm,
+    activeExpBooster
   };
 }
 
@@ -640,19 +943,17 @@ export function completeTask(params: {
   const previousMonsterId = state.currentMonsterId;
 
   let nextState = applyExpAndAttributes(state, task, levelingRows);
+  nextState = applyEventTaskCompletionProgress(nextState);
   nextState = applyInitialBirthProgress(nextState, monsters);
   const progressResult = applyEvolutionAndEndChecks(nextState, previousLevel, previousMonsterId, monsters, levelingRows);
   nextState = progressResult.nextState;
 
   return {
     nextState,
-    gainedExp: task.baseExp,
+    gainedExp: applyExpBoost(task.baseExp, resolveActiveExpBooster(state)),
     gainedFreeCoins: FREE_COINS_PER_TASK,
     gainedAttributes: {
-      power: task.power,
-      heal: task.heal,
-      knowledge: task.knowledge,
-      create: task.create
+      ...resolveAttributeGains(task, state.activeAttributeCharm)
     },
     alreadyCompleted: false,
     evolved: progressResult.evolved,
@@ -716,6 +1017,7 @@ export function resolveDailyReviewTask(params: {
     includeTodayExp: false,
     markCompletedToday: false
   });
+  nextState = applyEventTaskCompletionProgress(nextState);
   const progressResult = applyEvolutionAndEndChecks(nextState, previousLevel, previousMonsterId, monsters, levelingRows);
   nextState = {
     ...progressResult.nextState,
@@ -731,13 +1033,10 @@ export function resolveDailyReviewTask(params: {
     nextState,
     resolved: true,
     rewarded: true,
-    gainedExp: task.baseExp,
+    gainedExp: applyExpBoost(task.baseExp, resolveActiveExpBooster(state)),
     gainedFreeCoins: FREE_COINS_PER_TASK,
     gainedAttributes: {
-      power: task.power,
-      heal: task.heal,
-      knowledge: task.knowledge,
-      create: task.create
+      ...resolveAttributeGains(task, state.activeAttributeCharm)
     },
     evolved: progressResult.evolved,
     levelUp: progressResult.levelUp,
@@ -864,6 +1163,206 @@ export function purchaseFrameItem(state: GameState, frameId: string, price: numb
   };
 }
 
+export function purchaseAttributeCharmItem(state: GameState, attribute: CharmAttribute): PurchaseCharmResult {
+  if (state.freeCoins < ATTRIBUTE_CHARM_PRICE) {
+    return { nextState: state, purchased: false, reason: "insufficient_coins" };
+  }
+
+  return {
+    nextState: {
+      ...state,
+      freeCoins: state.freeCoins - ATTRIBUTE_CHARM_PRICE,
+      ownedCharmItemCounts: {
+        ...state.ownedCharmItemCounts,
+        [attribute]: (state.ownedCharmItemCounts[attribute] ?? 0) + 1
+      }
+    },
+    purchased: true
+  };
+}
+
+export function purchasePaidAttributeCharmItem(state: GameState, attribute: CharmAttribute): PurchaseCharmResult {
+  if (state.paidCoinBalance < PAID_ATTRIBUTE_CHARM_PRICE) {
+    return { nextState: state, purchased: false, reason: "insufficient_coins" };
+  }
+
+  return {
+    nextState: {
+      ...state,
+      paidCoinBalance: state.paidCoinBalance - PAID_ATTRIBUTE_CHARM_PRICE,
+      ownedPaidCharmItemCounts: {
+        ...state.ownedPaidCharmItemCounts,
+        [attribute]: (state.ownedPaidCharmItemCounts[attribute] ?? 0) + 1
+      }
+    },
+    purchased: true
+  };
+}
+
+export function purchaseBoosterItem(state: GameState, itemId: string): PurchaseBoosterResult {
+  const boosterItem = getBoosterShopItem(itemId);
+  if (!boosterItem) {
+    return { nextState: state, purchased: false, reason: "invalid_item" };
+  }
+
+  const hasEnoughCoins =
+    boosterItem.currencyType === "free_coin"
+      ? state.freeCoins >= boosterItem.price
+      : state.paidCoinBalance >= boosterItem.price;
+
+  if (!hasEnoughCoins) {
+    return { nextState: state, purchased: false, reason: "insufficient_coins" };
+  }
+
+  return {
+    nextState: {
+      ...state,
+      freeCoins: boosterItem.currencyType === "free_coin" ? state.freeCoins - boosterItem.price : state.freeCoins,
+      paidCoinBalance: boosterItem.currencyType === "paid_coin" ? state.paidCoinBalance - boosterItem.price : state.paidCoinBalance,
+      ownedBoosterItemCounts: {
+        ...state.ownedBoosterItemCounts,
+        [itemId]: (state.ownedBoosterItemCounts[itemId] ?? 0) + 1
+      }
+    },
+    purchased: true
+  };
+}
+
+export function purchasePaidBackgroundItem(state: GameState, itemId: string): PurchasePaidInventoryResult {
+  const item = getPaidBackgroundShopItem(itemId);
+  if (!item) {
+    return { nextState: state, purchased: false, reason: "invalid_item" };
+  }
+
+  if (state.ownedBackgroundIds.includes(itemId)) {
+    return { nextState: state, purchased: false, reason: "already_owned" };
+  }
+
+  if (state.paidCoinBalance < item.price) {
+    return { nextState: state, purchased: false, reason: "insufficient_coins" };
+  }
+
+  return {
+    nextState: {
+      ...state,
+      paidCoinBalance: state.paidCoinBalance - item.price,
+      ownedBackgroundIds: uniqueStrings([...state.ownedBackgroundIds, itemId])
+    },
+    purchased: true
+  };
+}
+
+export function purchasePaidFrameItem(state: GameState, itemId: string): PurchasePaidInventoryResult {
+  const item = getPaidFrameShopItem(itemId);
+  if (!item) {
+    return { nextState: state, purchased: false, reason: "invalid_item" };
+  }
+
+  if (state.ownedFrameIds.includes(itemId)) {
+    return { nextState: state, purchased: false, reason: "already_owned" };
+  }
+
+  if (state.paidCoinBalance < item.price) {
+    return { nextState: state, purchased: false, reason: "insufficient_coins" };
+  }
+
+  return {
+    nextState: {
+      ...state,
+      paidCoinBalance: state.paidCoinBalance - item.price,
+      ownedFrameIds: uniqueStrings([...state.ownedFrameIds, itemId])
+    },
+    purchased: true
+  };
+}
+
+export function purchaseDecorationItem(state: GameState, itemId: string): PurchasePaidInventoryResult {
+  const item = getDecorationShopItem(itemId);
+  if (!item) {
+    return { nextState: state, purchased: false, reason: "invalid_item" };
+  }
+
+  if (state.ownedDecorationIds.includes(itemId)) {
+    return { nextState: state, purchased: false, reason: "already_owned" };
+  }
+
+  if (state.paidCoinBalance < item.price) {
+    return { nextState: state, purchased: false, reason: "insufficient_coins" };
+  }
+
+  return {
+    nextState: {
+      ...state,
+      paidCoinBalance: state.paidCoinBalance - item.price,
+      ownedDecorationIds: uniqueStrings([...state.ownedDecorationIds, itemId])
+    },
+    purchased: true
+  };
+}
+
+export function purchasePaidBundleItem(state: GameState, itemId: string): PurchasePaidInventoryResult {
+  const item = getPaidBundleShopItem(itemId);
+  if (!item) {
+    return { nextState: state, purchased: false, reason: "invalid_item" };
+  }
+
+  if (state.paidCoinBalance < item.price) {
+    return { nextState: state, purchased: false, reason: "insufficient_coins" };
+  }
+
+  if (item.bundleType === "spring_starter") {
+    const eventConfig = getEventById("spring_easter_2026");
+    if (!eventConfig || !isEventActive(eventConfig)) {
+      return { nextState: state, purchased: false, reason: "event_not_available" };
+    }
+    const eventState = state.eventStates["spring_easter_2026"];
+    const nextOwnedBackgroundIds = uniqueStrings([...state.ownedBackgroundIds, "spring_meadow"]);
+    const nextOwnedFrameIds = uniqueStrings([...state.ownedFrameIds, "spring_sakura"]);
+
+    return {
+      nextState: {
+        ...state,
+        paidCoinBalance: state.paidCoinBalance - item.price,
+        ownedBackgroundIds: nextOwnedBackgroundIds,
+        ownedFrameIds: nextOwnedFrameIds,
+        eventStates: {
+          ...state.eventStates,
+          spring_easter_2026: {
+            ...eventState,
+            purchasedEggCount: eventState.purchasedEggCount + 1,
+            ownedEggCount: eventState.ownedEggCount + 1,
+            updatedAt: new Date().toISOString()
+          }
+        }
+      },
+      purchased: true
+    };
+  }
+
+  if (item.bundleType === "spring_deco") {
+    const eventConfig = getEventById("spring_easter_2026");
+    if (!eventConfig || !isEventActive(eventConfig)) {
+      return { nextState: state, purchased: false, reason: "event_not_available" };
+    }
+
+    return {
+      nextState: {
+        ...state,
+        paidCoinBalance: state.paidCoinBalance - item.price,
+        ownedDecorationIds: uniqueStrings([
+          ...state.ownedDecorationIds,
+          "paid_deco_sakura_petals_01",
+          "paid_deco_picnic_basket_01",
+          "paid_deco_flower_lantern_01"
+        ])
+      },
+      purchased: true
+    };
+  }
+
+  return { nextState: state, purchased: false, reason: "invalid_item" };
+}
+
 export function equipBackground(state: GameState, backgroundId: string): EquipBackgroundResult {
   if (!state.ownedBackgroundIds.includes(backgroundId)) {
     return { nextState: state, equipped: false, reason: "not_owned" };
@@ -900,6 +1399,107 @@ export function equipFrame(state: GameState, frameId: string): EquipFrameResult 
   };
 }
 
+export function toggleDecoration(state: GameState, itemId: string): ToggleDecorationResult {
+  if (!state.ownedDecorationIds.includes(itemId)) {
+    return { nextState: state, toggled: false, active: false, reason: "not_owned" };
+  }
+
+  const isActive = state.selectedDecorationIds.includes(itemId);
+  const nextSelectedDecorationIds = isActive
+    ? state.selectedDecorationIds.filter((selectedId) => selectedId !== itemId)
+    : uniqueStrings([...state.selectedDecorationIds, itemId]);
+
+  return {
+    nextState: {
+      ...state,
+      selectedDecorationIds: nextSelectedDecorationIds
+    },
+    toggled: true,
+    active: !isActive
+  };
+}
+
+export function useAttributeCharm(state: GameState, attribute: CharmAttribute, variant: "free" | "paid" = "free"): UseCharmResult {
+  const ownedCount =
+    variant === "paid"
+      ? state.ownedPaidCharmItemCounts[attribute] ?? 0
+      : state.ownedCharmItemCounts[attribute] ?? 0;
+  const charmItem = getAttributeCharmItem(variant === "paid" ? `paid_charm_${attribute}_01` : `${attribute}_charm`);
+
+  if (ownedCount <= 0 || !charmItem) {
+    return { nextState: state, used: false, reason: "not_owned" };
+  }
+
+  const nextOwnedCharmItemCounts =
+    variant === "paid"
+      ? state.ownedCharmItemCounts
+      : normalizeCharmCounts({
+          ...state.ownedCharmItemCounts,
+          [attribute]: ownedCount - 1
+        });
+  const nextOwnedPaidCharmItemCounts =
+    variant === "paid"
+      ? normalizePaidCharmCounts({
+          ...state.ownedPaidCharmItemCounts,
+          [attribute]: ownedCount - 1
+        })
+      : state.ownedPaidCharmItemCounts;
+
+  return {
+    nextState: {
+      ...state,
+      ownedCharmItemCounts: nextOwnedCharmItemCounts,
+      ownedPaidCharmItemCounts: nextOwnedPaidCharmItemCounts,
+      activeAttributeCharm: {
+        itemId: charmItem.itemId,
+        name: charmItem.title,
+        attribute,
+        remainingUses: variant === "paid" ? PAID_ATTRIBUTE_CHARM_USES : ATTRIBUTE_CHARM_USES,
+        variant
+      }
+    },
+    used: true
+  };
+}
+
+export function useBoosterItem(state: GameState, itemId: string): UseBoosterResult {
+  const boosterItem = getBoosterShopItem(itemId);
+  if (!boosterItem) {
+    return { nextState: state, used: false, reason: "invalid_item" };
+  }
+
+  const ownedCount = state.ownedBoosterItemCounts[itemId] ?? 0;
+  if (ownedCount <= 0) {
+    return { nextState: state, used: false, reason: "not_owned" };
+  }
+
+  const now = Date.now();
+  const currentBooster = resolveActiveExpBooster(state);
+  const baseTime =
+    currentBooster && currentBooster.itemId === itemId
+      ? Math.max(now, new Date(currentBooster.expiresAt).getTime())
+      : now;
+  const expiresAt = new Date(baseTime + boosterItem.durationMinutes * 60 * 1000).toISOString();
+
+  return {
+    nextState: {
+      ...state,
+      ownedBoosterItemCounts: normalizeBoosterCounts({
+        ...state.ownedBoosterItemCounts,
+        [itemId]: ownedCount - 1
+      }),
+      activeExpBooster: {
+        itemId: boosterItem.itemId,
+        name: boosterItem.title,
+        boostRate: boosterItem.boostRate,
+        durationMinutes: boosterItem.durationMinutes,
+        expiresAt
+      }
+    },
+    used: true
+  };
+}
+
 export function getTaskLimitInfo(state: GameState): { min: number; max: number; current: number } {
   return {
     min: MIN_ACTIVE_TASKS,
@@ -910,31 +1510,40 @@ export function getTaskLimitInfo(state: GameState): { min: number; max: number; 
 
 export function finishBirthEvent(
   state: GameState,
+  monsters: MonsterMaster[] = [],
   levelingRows: LevelingMaster[] = getFallbackLevelingMaster()
 ): GameState {
   const babyStartExp = getCumulativeExpForLevel(2, levelingRows);
+  const currentMonster = monsters.find((monster) => monster.monsterId === state.currentMonsterId);
+  const resolvedMonsterId =
+    currentMonster?.stage === "egg"
+      ? resolveEggEvolutionMonsterId(currentMonster, state.attributeTotals, monsters) ?? state.currentMonsterId
+      : state.currentMonsterId;
 
   return {
     ...state,
+    currentMonsterId: resolvedMonsterId,
     currentMonsterLevel: 2,
     currentMonsterExp: babyStartExp,
     todayExp: 0,
     birthEventPending: false,
+    queuedEggMonsterId: null,
     hasCompletedInitialBirth: true,
     hasCompletedCurrentBirth: true,
     hasSeenTutorial: true,
     isInTutorialFlow: false,
-    discoveredMonsterIds: uniqueNumbers([...state.discoveredMonsterIds, state.currentMonsterId])
+    discoveredMonsterIds: uniqueNumbers([...state.discoveredMonsterIds, resolvedMonsterId])
   };
 }
 
 export function finishEndEvent(state: GameState, monsters: MonsterMaster[]): FinishEndEventResult {
   const currentMonster = monsters.find((monster) => monster.monsterId === state.currentMonsterId);
   const nextLetter = buildFarewellLetter(state, currentMonster);
+  const nextEggMonsterId = state.queuedEggMonsterId ?? 1;
 
   return {
     ...state,
-    currentMonsterId: 1,
+    currentMonsterId: nextEggMonsterId,
     currentMonsterLevel: 1,
     currentMonsterExp: 0,
     attributeTotals: {
@@ -945,12 +1554,189 @@ export function finishEndEvent(state: GameState, monsters: MonsterMaster[]): Fin
     },
     onboardingCompletedTaskCount: 0,
     birthEventPending: false,
+    queuedEggMonsterId: null,
     hasCompletedCurrentBirth: false,
     endEventPending: false,
     isInTutorialFlow: false,
     pendingDailyReview: null,
-    discoveredMonsterIds: uniqueNumbers([...state.discoveredMonsterIds, 1]),
+    discoveredMonsterIds: uniqueNumbers([...state.discoveredMonsterIds, nextEggMonsterId]),
     acquiredLetters: [...state.acquiredLetters, nextLetter]
+  };
+}
+
+export function markEventIntroPopupSeen(state: GameState, eventId: string): GameState {
+  if (!getEventById(eventId)) return state;
+  return updateEventState(state, eventId, (current) => ({
+    ...current,
+    hasSeenIntroPopup: true,
+    updatedAt: new Date().toISOString()
+  }));
+}
+
+export function claimEventFreeEgg(state: GameState, eventId: string): EventEggClaimResult {
+  const eventConfig = getEventById(eventId);
+  if (!eventConfig) {
+    return { nextState: state, claimed: false, reason: "event_not_found" };
+  }
+  if (!isEventActive(eventConfig)) {
+    return { nextState: state, claimed: false, reason: "event_inactive" };
+  }
+
+  const current = normalizeUserEventState(eventId, state.eventStates[eventId]);
+  if (current.hasClaimedFreeEgg) {
+    return { nextState: state, claimed: false, reason: "already_claimed" };
+  }
+
+  return {
+    nextState: updateEventState(state, eventId, (eventState) => ({
+      ...eventState,
+      hasClaimedFreeEgg: true,
+      ownedEggCount: eventState.ownedEggCount + eventConfig.freeEggClaimCount,
+      claimedRewardIds: [...eventState.claimedRewardIds, "free_event_egg"],
+      updatedAt: new Date().toISOString()
+    })),
+    claimed: true
+  };
+}
+
+export function queueEventEgg(state: GameState, eventId: string): EventEggUseResult {
+  const eventConfig = getEventById(eventId);
+  if (!eventConfig) {
+    return { nextState: state, used: false, reason: "event_not_found" };
+  }
+
+  const current = normalizeUserEventState(eventId, state.eventStates[eventId]);
+  if (current.ownedEggCount <= 0) {
+    return { nextState: state, used: false, reason: "no_egg" };
+  }
+  if (state.queuedEggMonsterId === eventConfig.freeEggMonsterId) {
+    return { nextState: state, used: false, reason: "already_queued" };
+  }
+
+  let nextState = updateEventState(state, eventId, (eventState) => ({
+    ...eventState,
+    ownedEggCount: Math.max(0, eventState.ownedEggCount - 1),
+    updatedAt: new Date().toISOString()
+  }));
+
+  nextState = {
+    ...nextState,
+    queuedEggMonsterId: eventConfig.freeEggMonsterId
+  };
+
+  return {
+    nextState,
+    used: true
+  };
+}
+
+export function forceStartEventEgg(state: GameState, eventId: string, monsters: MonsterMaster[]): ForceStartEventEggResult {
+  const eventConfig = getEventById(eventId);
+  if (!eventConfig) {
+    return { nextState: state, started: false, reason: "event_not_found" };
+  }
+
+  const current = normalizeUserEventState(eventId, state.eventStates[eventId]);
+  if (current.ownedEggCount <= 0) {
+    return { nextState: state, started: false, reason: "no_egg" };
+  }
+
+  if (state.currentMonsterId === eventConfig.freeEggMonsterId && state.birthEventPending) {
+    return { nextState: state, started: false, reason: "already_active" };
+  }
+
+  const currentMonster = monsters.find((monster) => monster.monsterId === state.currentMonsterId);
+  const nextLetter = buildFarewellLetter(state, currentMonster);
+
+  const nextState = updateEventState(
+    {
+      ...state,
+      currentMonsterId: eventConfig.freeEggMonsterId,
+      currentMonsterLevel: 1,
+      currentMonsterExp: 0,
+      attributeTotals: {
+        power: 0,
+        heal: 0,
+        knowledge: 0,
+        create: 0
+      },
+      todayExp: 0,
+      birthEventPending: true,
+      queuedEggMonsterId: null,
+      hasCompletedCurrentBirth: false,
+      endEventPending: false,
+      isInTutorialFlow: false,
+      onboardingCompletedTaskCount: 0,
+      discoveredMonsterIds: uniqueNumbers([...state.discoveredMonsterIds, eventConfig.freeEggMonsterId]),
+      acquiredLetters: [...state.acquiredLetters, nextLetter]
+    },
+    eventId,
+    (eventState) => ({
+      ...eventState,
+      ownedEggCount: Math.max(0, eventState.ownedEggCount - 1),
+      updatedAt: new Date().toISOString()
+    })
+  );
+
+  return {
+    nextState,
+    started: true
+  };
+}
+
+export function purchaseEventReward(state: GameState, eventId: string, itemId: string): PurchaseEventRewardResult {
+  const eventConfig = getEventById(eventId);
+  if (!eventConfig) {
+    return { nextState: state, purchased: false, reason: "event_not_found" };
+  }
+  if (!isEventActive(eventConfig)) {
+    return { nextState: state, purchased: false, reason: "event_inactive" };
+  }
+
+  const item = [...eventConfig.freeCoinShopItems, ...eventConfig.paidCoinShopItems].find((entry) => entry.itemId === itemId);
+  if (!item) {
+    return { nextState: state, purchased: false, reason: "item_not_found" };
+  }
+
+  const balance = getEventItemCurrencyBalance(state, item.currencyType);
+  if (balance < item.price) {
+    return {
+      nextState: state,
+      purchased: false,
+      reason: item.currencyType === "paid_coin" ? "insufficient_paid_coins" : "insufficient_free_coins"
+    };
+  }
+
+  if (item.rewardType === "background" && state.ownedBackgroundIds.includes(item.grantValue)) {
+    return { nextState: state, purchased: false, reason: "already_owned" };
+  }
+  if (item.rewardType === "frame" && state.ownedFrameIds.includes(item.grantValue)) {
+    return { nextState: state, purchased: false, reason: "already_owned" };
+  }
+
+  let nextState = spendEventCurrency(state, item.currencyType, item.price);
+  if (item.rewardType === "background") {
+    nextState = {
+      ...nextState,
+      ownedBackgroundIds: uniqueStrings([...nextState.ownedBackgroundIds, item.grantValue])
+    };
+  } else if (item.rewardType === "frame") {
+    nextState = {
+      ...nextState,
+      ownedFrameIds: uniqueStrings([...nextState.ownedFrameIds, item.grantValue])
+    };
+  } else {
+    nextState = updateEventState(nextState, eventId, (eventState) => ({
+      ...eventState,
+      ownedEggCount: eventState.ownedEggCount + 1,
+      purchasedEggCount: eventState.purchasedEggCount + 1,
+      updatedAt: new Date().toISOString()
+    }));
+  }
+
+  return {
+    nextState,
+    purchased: true
   };
 }
 

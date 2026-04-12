@@ -1,0 +1,5 @@
+item_id,item_name,attribute,effect_summary,effect_detail,uses_per_item,price_free_coin,price_paid_coin,consumable,can_stack,shop_section,inventory_tab,recommended_icon_path,recommended_w,recommended_h,format,notes
+power_charm,ちからのおまもり,power,次の3タスクはPowerだけが伸びる,次の3タスクで得る属性値の合計をPowerにだけ加算する。EXPは通常どおり入る,3,25,,yes,no,free_coin/item,item,/img/icon/icon_attr_power_01.png,512,512,png,同じ習慣でもpower系に寄せたい時に使う
+heal_charm,いやしのおまもり,heal,次の3タスクはHealだけが伸びる,次の3タスクで得る属性値の合計をHealにだけ加算する。EXPは通常どおり入る,3,25,,yes,no,free_coin/item,item,/img/icon/icon_attr_heal_01.png,512,512,png,癒し系進化へ寄せたい時に使う
+knowledge_charm,ちえのおまもり,knowledge,次の3タスクはKnowledgeだけが伸びる,次の3タスクで得る属性値の合計をKnowledgeにだけ加算する。EXPは通常どおり入る,3,25,,yes,no,free_coin/item,item,/img/icon/icon_attr_knowledge_01.png,512,512,png,知識系進化へ寄せたい時に使う
+create_charm,ひらめきのおまもり,create,次の3タスクはCreateだけが伸びる,次の3タスクで得る属性値の合計をCreateにだけ加算する。EXPは通常どおり入る,3,25,,yes,no,free_coin/item,item,/img/icon/icon_attr_create_01.png,512,512,png,創作系進化へ寄せたい時に使う

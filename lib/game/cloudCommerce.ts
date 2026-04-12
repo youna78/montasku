@@ -5,6 +5,14 @@ import { getFirebaseFirestore } from "@/lib/firebase/firestore";
 
 const COMMERCE_SCHEMA_VERSION = 1;
 
+function normalizeBoosterItemCounts(
+  rawCounts: Record<string, number> | Record<string, number | undefined> | undefined
+): Record<string, number> {
+  return Object.fromEntries(
+    Object.entries(rawCounts ?? {}).filter(([, count]) => typeof count === "number" && count > 0)
+  ) as Record<string, number>;
+}
+
 function stripUndefined<T>(value: T): T {
   if (Array.isArray(value)) {
     return value.map((item) => stripUndefined(item)) as T;
@@ -53,8 +61,21 @@ export function buildInventoryProfileFromGameState(state: GameState): InventoryP
     selectedBackgroundId: state.selectedBackgroundId,
     ownedFrameIds: state.ownedFrameIds,
     selectedFrameId: state.selectedFrameId,
-    ownedDecorationIds: [],
-    ownedBoosterIds: []
+    ownedDecorationIds: state.ownedDecorationIds,
+    selectedDecorationIds: state.selectedDecorationIds,
+    ownedCharmItemCounts: {
+      power: state.ownedCharmItemCounts.power ?? 0,
+      heal: state.ownedCharmItemCounts.heal ?? 0,
+      knowledge: state.ownedCharmItemCounts.knowledge ?? 0,
+      create: state.ownedCharmItemCounts.create ?? 0
+    },
+    ownedPaidCharmItemCounts: {
+      power: state.ownedPaidCharmItemCounts.power ?? 0,
+      heal: state.ownedPaidCharmItemCounts.heal ?? 0,
+      knowledge: state.ownedPaidCharmItemCounts.knowledge ?? 0,
+      create: state.ownedPaidCharmItemCounts.create ?? 0
+    },
+    ownedBoosterItemCounts: normalizeBoosterItemCounts(state.ownedBoosterItemCounts)
   };
 }
 
@@ -158,6 +179,60 @@ export function mergeCommerceIntoGameState(
       Array.isArray(inventory.ownedFrameIds) && inventory.ownedFrameIds.length > 0
         ? [...new Set(inventory.ownedFrameIds.filter(Boolean))]
         : nextState.ownedFrameIds;
+    const ownedDecorationIds =
+      Array.isArray(inventory.ownedDecorationIds) && inventory.ownedDecorationIds.length > 0
+        ? [...new Set(inventory.ownedDecorationIds.filter(Boolean))]
+        : nextState.ownedDecorationIds;
+    const selectedDecorationIds =
+      Array.isArray(inventory.selectedDecorationIds) && inventory.selectedDecorationIds.length > 0
+        ? inventory.selectedDecorationIds.filter((itemId): itemId is string => typeof itemId === "string" && ownedDecorationIds.includes(itemId))
+        : nextState.selectedDecorationIds.filter((itemId) => ownedDecorationIds.includes(itemId));
+    const ownedCharmItemCounts =
+      inventory.ownedCharmItemCounts && typeof inventory.ownedCharmItemCounts === "object"
+        ? {
+            power:
+              typeof inventory.ownedCharmItemCounts.power === "number" && inventory.ownedCharmItemCounts.power > 0
+                ? Math.floor(inventory.ownedCharmItemCounts.power)
+                : 0,
+            heal:
+              typeof inventory.ownedCharmItemCounts.heal === "number" && inventory.ownedCharmItemCounts.heal > 0
+                ? Math.floor(inventory.ownedCharmItemCounts.heal)
+                : 0,
+            knowledge:
+              typeof inventory.ownedCharmItemCounts.knowledge === "number" && inventory.ownedCharmItemCounts.knowledge > 0
+                ? Math.floor(inventory.ownedCharmItemCounts.knowledge)
+                : 0,
+            create:
+              typeof inventory.ownedCharmItemCounts.create === "number" && inventory.ownedCharmItemCounts.create > 0
+                ? Math.floor(inventory.ownedCharmItemCounts.create)
+                : 0
+          }
+        : nextState.ownedCharmItemCounts;
+    const ownedPaidCharmItemCounts =
+      inventory.ownedPaidCharmItemCounts && typeof inventory.ownedPaidCharmItemCounts === "object"
+        ? {
+            power:
+              typeof inventory.ownedPaidCharmItemCounts.power === "number" && inventory.ownedPaidCharmItemCounts.power > 0
+                ? Math.floor(inventory.ownedPaidCharmItemCounts.power)
+                : 0,
+            heal:
+              typeof inventory.ownedPaidCharmItemCounts.heal === "number" && inventory.ownedPaidCharmItemCounts.heal > 0
+                ? Math.floor(inventory.ownedPaidCharmItemCounts.heal)
+                : 0,
+            knowledge:
+              typeof inventory.ownedPaidCharmItemCounts.knowledge === "number" && inventory.ownedPaidCharmItemCounts.knowledge > 0
+                ? Math.floor(inventory.ownedPaidCharmItemCounts.knowledge)
+                : 0,
+            create:
+              typeof inventory.ownedPaidCharmItemCounts.create === "number" && inventory.ownedPaidCharmItemCounts.create > 0
+                ? Math.floor(inventory.ownedPaidCharmItemCounts.create)
+                : 0
+          }
+        : nextState.ownedPaidCharmItemCounts;
+    const ownedBoosterItemCounts =
+      inventory.ownedBoosterItemCounts && typeof inventory.ownedBoosterItemCounts === "object"
+        ? normalizeBoosterItemCounts(inventory.ownedBoosterItemCounts)
+        : nextState.ownedBoosterItemCounts;
 
     nextState = {
       ...nextState,
@@ -170,7 +245,12 @@ export function mergeCommerceIntoGameState(
       selectedFrameId:
         typeof inventory.selectedFrameId === "string" && ownedFrameIds.includes(inventory.selectedFrameId)
           ? inventory.selectedFrameId
-          : nextState.selectedFrameId
+          : nextState.selectedFrameId,
+      ownedDecorationIds,
+      selectedDecorationIds,
+      ownedCharmItemCounts,
+      ownedPaidCharmItemCounts,
+      ownedBoosterItemCounts
     };
   }
 

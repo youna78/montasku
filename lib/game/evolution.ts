@@ -14,39 +14,76 @@ function dominantAttribute(totals: AttributeTotals): MainAttribute {
   return entries[0]?.[0] ?? "heal";
 }
 
-export function resolveBirthMonsterId(totals: AttributeTotals, monsters: MonsterMaster[]): number | null {
-  const attr = dominantAttribute(totals);
-  const map = {
-    heal: "ピンクスライム",
-    power: "ブルースライム",
-    knowledge: "グリーンスライム",
-    create: "パープルスライム"
-  } as const;
-  return monsters.find((m) => m.name === map[attr])?.monsterId ?? null;
+function splitCandidates(value?: string): string[] {
+  if (!value) return [];
+  return value
+    .split("|")
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
-// Temporary MVP logic. This is intentionally isolated so it can be replaced by evolution_rules.csv later.
+function findMonsterByName(monsters: MonsterMaster[], name: string): MonsterMaster | undefined {
+  return monsters.find((monster) => monster.name === name);
+}
+
+function resolveCandidateMonsterId(
+  candidateNames: string[],
+  dominantAttr: MainAttribute,
+  monsters: MonsterMaster[]
+): number | null {
+  if (candidateNames.length === 0) return null;
+
+  const candidateMonsters = candidateNames
+    .map((name) => findMonsterByName(monsters, name))
+    .filter((monster): monster is MonsterMaster => Boolean(monster));
+
+  if (candidateMonsters.length === 0) return null;
+
+  if (candidateMonsters.length === 1) {
+    return candidateMonsters[0].monsterId;
+  }
+
+  const matched = candidateMonsters.find((monster) => splitCandidates(monster.unlockCondition).includes(dominantAttr));
+  if (matched) {
+    return matched.monsterId;
+  }
+
+  return candidateMonsters[0].monsterId;
+}
+
+export function resolveBirthMonsterId(totals: AttributeTotals, monsters: MonsterMaster[]): number | null {
+  const egg = monsters.find((monster) => monster.monsterId === 1 || monster.name === "タマゴ");
+  if (!egg) return null;
+  return resolveCandidateMonsterId(splitCandidates(egg.evolutionTo), dominantAttribute(totals), monsters);
+}
+
+function requiredLevelForEvolution(stage: MonsterMaster["stage"]): number | null {
+  switch (stage) {
+    case "baby":
+      return 8;
+    case "child":
+      return 16;
+    case "adult":
+      return 30;
+    default:
+      return null;
+  }
+}
+
+export function resolveEggEvolutionMonsterId(currentMonster: MonsterMaster, totals: AttributeTotals, monsters: MonsterMaster[]): number | null {
+  if (currentMonster.stage !== "egg") return null;
+  return resolveCandidateMonsterId(splitCandidates(currentMonster.evolutionTo), dominantAttribute(totals), monsters);
+}
+
+// CSV-driven evolution for normal and special branches.
 export function evaluateEvolution({ gameState, monsters }: EvolutionContext): number | null {
-  const current = monsters.find((m) => m.monsterId === gameState.currentMonsterId);
+  const current = monsters.find((monster) => monster.monsterId === gameState.currentMonsterId);
   if (!current) return null;
 
-  const attr = dominantAttribute(gameState.attributeTotals);
-  const lv = gameState.currentMonsterLevel;
-
-  if (current.stage === "baby" && lv >= 8) {
-    const map = { heal: "ミニフェアリー", power: "プチドラ", knowledge: "プチビースト", create: "ミニスピリット" } as const;
-    return monsters.find((m) => m.name === map[attr])?.monsterId ?? null;
+  const requiredLevel = requiredLevelForEvolution(current.stage);
+  if (!requiredLevel || gameState.currentMonsterLevel < requiredLevel) {
+    return null;
   }
 
-  if (current.stage === "child" && lv >= 16) {
-    const map = { heal: "アークフェアリー", power: "ドラゴン", knowledge: "ウィザードビースト", create: "アートゴーレム" } as const;
-    return monsters.find((m) => m.name === map[attr])?.monsterId ?? null;
-  }
-
-  if (current.stage === "adult" && lv >= 30) {
-    const map = { heal: "セラフィム", power: "アークドラゴン", knowledge: "アークメイジ", create: "クリエイター" } as const;
-    return monsters.find((m) => m.name === map[attr])?.monsterId ?? null;
-  }
-
-  return null;
+  return resolveCandidateMonsterId(splitCandidates(current.evolutionTo), dominantAttribute(gameState.attributeTotals), monsters);
 }

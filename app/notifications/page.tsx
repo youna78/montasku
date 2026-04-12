@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { HOME_ANNOUNCEMENTS } from "@/lib/game/announcements";
+import { getEventStatusLabel, getRemainingDaysLabel, getVisibleHomeEvents } from "@/lib/game/events";
 import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { useGame } from "@/lib/game/useGame";
 
@@ -33,6 +34,7 @@ export default function NotificationsPage() {
   }
 
   const activeAnnouncements = HOME_ANNOUNCEMENTS.filter((announcement) => announcement.active);
+  const visibleEvents = getVisibleHomeEvents();
   const hasDailyReviewNotification = Boolean(gameState.pendingDailyReview);
 
   return (
@@ -80,7 +82,26 @@ export default function NotificationsPage() {
         </section>
       ))}
 
-      {!hasDailyReviewNotification && activeAnnouncements.length === 0 && (
+      {visibleEvents.map((eventConfig) => (
+        <section className="card decorated-card notification-card" key={eventConfig.eventId}>
+          <div className="notification-card-head">
+            <span className="notification-badge notification-badge-event">{getEventStatusLabel(eventConfig)}</span>
+            <h2>{eventConfig.name}</h2>
+          </div>
+          <p>
+            {eventConfig.description}
+            <br />
+            {getRemainingDaysLabel(eventConfig)}
+          </p>
+          <div className="notification-card-actions">
+            <Link href={`/event/${eventConfig.slug}`} className="quest-btn task-global-menu-button task-global-menu-button-secondary">
+              イベントページへ
+            </Link>
+          </div>
+        </section>
+      ))}
+
+      {!hasDailyReviewNotification && activeAnnouncements.length === 0 && visibleEvents.length === 0 && (
         <section className="card decorated-card notification-card">
           <div className="notification-card-head">
             <span className="notification-badge notification-badge-info">案内</span>

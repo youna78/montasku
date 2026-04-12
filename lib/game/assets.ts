@@ -16,7 +16,25 @@ const MONSTER_IMAGE_BY_ID: Record<number, string> = {
   15: "/img/monster/monster_final_set_02.png",
   16: "/img/monster/monster_final_set_03.png",
   17: "/img/monster/monster_final_set_04.png",
-  21: "/img/ui/ui_shadow_fallback_01.png"
+  18: "/img/monster/monster_baby_gold__01.png",
+  19: "/img/monster/monster_child_gold__02.png",
+  20: "/img/monster/monster_adult_gold__03.png",
+  21: "/img/monster/monster_final_night__04.png",
+  22: "/img/monster/event_spring_egg_01.png",
+  23: "/img/monster/event_spring_baby_01.png",
+  24: "/img/monster/event_spring_baby_02.png",
+  25: "/img/monster/event_spring_child_01.png",
+  26: "/img/monster/event_spring_child_02.png",
+  27: "/img/monster/event_spring_child_03.png",
+  28: "/img/monster/event_spring_child_04.png",
+  29: "/img/monster/event_spring_adult_01.png",
+  30: "/img/monster/event_spring_adult_02.png",
+  31: "/img/monster/event_spring_adult_03.png",
+  32: "/img/monster/event_spring_adult_04.png",
+  33: "/img/monster/event_spring_final_01.png",
+  34: "/img/monster/event_spring_final_02.png",
+  35: "/img/monster/event_spring_final_03.png",
+  36: "/img/monster/event_spring_final_04.png"
 };
 
 export const ATTRIBUTE_ICON_BY_KEY = {

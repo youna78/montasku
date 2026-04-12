@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getMonsterImage } from "@/lib/game/assets";
+import { resolveEggEvolutionMonsterId } from "@/lib/game/evolution";
 import { useGame } from "@/lib/game/useGame";
 
 export default function BirthEventPage() {
@@ -38,7 +39,15 @@ export default function BirthEventPage() {
     return <main>Loading...</main>;
   }
 
-  const bornMonster = monsters.find((m) => m.monsterId === gameState.currentMonsterId);
+  const currentMonster = monsters.find((m) => m.monsterId === gameState.currentMonsterId);
+  const bornMonster =
+    currentMonster?.stage === "egg"
+      ? monsters.find(
+          (monster) =>
+            monster.monsterId ===
+            resolveEggEvolutionMonsterId(currentMonster, gameState.attributeTotals, monsters)
+        ) ?? currentMonster
+      : currentMonster;
   const eventText =
     hatchPhase === "egg"
       ? "タマゴが揺れている..."
