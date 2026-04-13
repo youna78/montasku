@@ -1,4 +1,4 @@
-import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, serverTimestamp, setDoc } from "firebase/firestore";
 import type { GameState } from "@/types/game";
 import type { InventoryProfile, PurchaseHistoryRecord, WalletSummary } from "@/types/commerce";
 import { getFirebaseFirestore } from "@/lib/firebase/firestore";
@@ -39,6 +39,10 @@ function getInventoryDocRef(uid: string) {
 
 function getPurchaseHistoryDocRef(uid: string, purchaseId: string) {
   return doc(getFirebaseFirestore(), "users", uid, "purchaseHistory", purchaseId);
+}
+
+function getPurchaseHistoryCollectionRef(uid: string) {
+  return collection(getFirebaseFirestore(), "users", uid, "purchaseHistory");
 }
 
 export function buildWalletSummaryFromGameState(state: GameState): WalletSummary {
@@ -268,4 +272,15 @@ export async function appendCloudPurchaseHistory(uid: string, record: PurchaseHi
     }),
     { merge: true }
   );
+}
+
+export async function loadCloudPurchaseHistory(uid: string): Promise<PurchaseHistoryRecord[]> {
+  const snapshot = await getDocs(getPurchaseHistoryCollectionRef(uid));
+  return snapshot.docs
+    .map((docSnapshot) => docSnapshot.data() as PurchaseHistoryRecord)
+    .sort((left, right) => {
+      const leftTime = Date.parse(left.purchasedAt ?? "") || 0;
+      const rightTime = Date.parse(right.purchasedAt ?? "") || 0;
+      return rightTime - leftTime;
+    });
 }

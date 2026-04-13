@@ -770,6 +770,7 @@ export default function ShopPage() {
 
           <section className="card decorated-card">
             <div className="shop-support-links">
+              <Link href="/purchase-history" className="ui-link-button ui-link-secondary">購入履歴</Link>
               <Link href="/commerce" className="ui-link-button ui-link-secondary">特定商取引法に基づく表記</Link>
               <Link href="/contact" className="ui-link-button ui-link-secondary">お問い合わせ</Link>
             </div>

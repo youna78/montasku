@@ -72,9 +72,15 @@ export default function ShopThanksPage() {
           <p>
             反映まで少し時間がかかる場合があります。しばらく待ってからショップやホームの所持モンタコインをご確認ください。
           </p>
+          <p>
+            反映に時間がかかる場合は、購入履歴ページで購入IDと状態をご確認のうえ、お問い合わせください。
+          </p>
         </div>
 
         <div className="shop-support-links">
+          <Link href="/purchase-history" className="ui-link-button ui-link-secondary">
+            購入履歴を見る
+          </Link>
           <Link href="/shop" className="ui-link-button ui-link-secondary">
             ショップへ戻る
           </Link>

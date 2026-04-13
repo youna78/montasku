@@ -79,6 +79,9 @@ export default function SettingsPage() {
           <Link href="/contact" className="ui-link-button settings-menu-button settings-menu-button-neutral">
             お問い合わせ
           </Link>
+          <Link href="/purchase-history" className="ui-link-button settings-menu-button settings-menu-button-neutral">
+            購入履歴
+          </Link>
           <Link href="/commerce" className="ui-link-button settings-menu-button settings-menu-button-neutral">
             特定商取引法に基づく表記
           </Link>
