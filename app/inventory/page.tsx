@@ -20,7 +20,7 @@ const CHARM_BUTTON_CLASS: Record<(typeof SHOP_ATTRIBUTE_CHARMS)[number]["attribu
 
 export default function InventoryPage() {
   const router = useRouter();
-  const { monsters, gameState, isLoading, equipBackground, equipFrame, useAttributeCharm, useBooster, toggleDecoration } = useGame();
+  const { monsters, gameState, isLoading, equipBackground, equipFrame, useAttributeCharm, useBooster, toggleDecoration, unequipDecoration } = useGame();
   const [tab, setTab] = useState<InventoryTab>("background");
   const [message, setMessage] = useState("");
 
@@ -136,6 +136,17 @@ export default function InventoryPage() {
     setMessage(item ? `${item.title} を${result.active ? "表示" : "非表示"}にしました` : "デコを切り替えました");
   };
 
+  const onUnequipDecoration = (itemId: string) => {
+    const result = unequipDecoration(itemId);
+    const item = SHOP_DECORATIONS.find((decoration) => decoration.itemId === itemId);
+    if (!result) return;
+    if (!result.toggled) {
+      setMessage(item ? `${item.title} は表示されていません` : "デコを外せませんでした");
+      return;
+    }
+    setMessage(item ? `${item.title} を非表示にしました` : "デコを外しました");
+  };
+
   return (
     <main
       className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
@@ -248,7 +259,7 @@ export default function InventoryPage() {
               <div className="task-global-menu">
                 <button
                   className={`quest-btn task-global-menu-button ${active ? "task-global-menu-button-current task-global-menu-button-active" : "task-global-menu-button-accent"}`}
-                  onClick={() => onToggleDecoration(item.itemId)}
+                  onClick={() => (active ? onUnequipDecoration(item.itemId) : onToggleDecoration(item.itemId))}
                 >
                   {active ? "このデコを外す" : "このデコを使う"}
                 </button>

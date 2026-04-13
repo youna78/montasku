@@ -745,6 +745,15 @@ function applyDailyReset(state: GameState): GameState {
   return applyEventLoginBonuses(resetState, today);
 }
 
+export function refreshGameStateForToday(state: GameState): GameState {
+  const today = todayLocalDate();
+  if (state.lastPlayedDate !== today) {
+    return applyDailyReset(state);
+  }
+
+  return applyEventLoginBonuses(state, today);
+}
+
 export function saveGameState(state: GameState): void {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -1426,6 +1435,25 @@ export function toggleDecoration(state: GameState, itemId: string): ToggleDecora
     },
     toggled: true,
     active: !isActive
+  };
+}
+
+export function unequipDecoration(state: GameState, itemId: string): ToggleDecorationResult {
+  if (!state.ownedDecorationIds.includes(itemId)) {
+    return { nextState: state, toggled: false, active: false, reason: "not_owned" };
+  }
+
+  if (!state.selectedDecorationIds.includes(itemId)) {
+    return { nextState: state, toggled: false, active: false };
+  }
+
+  return {
+    nextState: {
+      ...state,
+      selectedDecorationIds: state.selectedDecorationIds.filter((selectedId) => selectedId !== itemId)
+    },
+    toggled: true,
+    active: false
   };
 }
 

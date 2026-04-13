@@ -365,11 +365,6 @@ export default function EventShopDetailPage() {
         <p className="shop-note">
           モンタコインは、Stripe で購入できる有料コインです。必要なときは通常ショップのモンタコインページからチャージできます。
         </p>
-        <div className="notification-card-actions">
-          <Link href="/shop?currency=paid&category=coin" className="ui-link-button settings-menu-button settings-menu-button-primary">
-            モンタコインを買う
-          </Link>
-        </div>
         {starterCheckoutItem ? (
           <div className="shop-grid shop-grid-single-centered">
             <section className="card decorated-card shop-grid-card" key={starterCheckoutItem.itemId}>

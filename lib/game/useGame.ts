@@ -43,10 +43,12 @@ import {
   purchasePaidBundleItem as runPurchasePaidBundleItem,
   purchasePaidFrameItem as runPurchasePaidFrameItem,
   purchasePaidAttributeCharmItem as runPurchasePaidAttributeCharmItem,
+  refreshGameStateForToday as runRefreshGameStateForToday,
   saveGameState,
   skipDailyReview as runSkipDailyReview,
   startTutorialFlow as runStartTutorialFlow,
   toggleDecoration as runToggleDecoration,
+  unequipDecoration as runUnequipDecoration,
   useAttributeCharm as runUseAttributeCharm,
   useBoosterItem as runUseBoosterItem,
   type AddTaskResult,
@@ -96,6 +98,7 @@ type UseGameResult = {
   purchasePaidBundle: (itemId: string) => PurchasePaidInventoryResult | null;
   purchaseDecoration: (itemId: string) => PurchasePaidInventoryResult | null;
   toggleDecoration: (itemId: string) => ToggleDecorationResult | null;
+  unequipDecoration: (itemId: string) => ToggleDecorationResult | null;
   useBooster: (itemId: string) => UseBoosterResult | null;
   resolveDailyReviewTask: (taskId: number, didComplete: boolean) => DailyReviewResolveResult | null;
   skipDailyReview: () => void;
@@ -172,19 +175,33 @@ export function useGame(): UseGameResult {
             loadCloudEventStates(user.uid)
           ]);
           if (cloudState) {
-            loadedState = hydrateGameState(cloudState, loadedTasks, loadedLeveling);
+            loadedState = hydrateGameState(
+              {
+                ...cloudState,
+                eventStates: {
+                  ...(cloudState.eventStates ?? {}),
+                  ...cloudEventStates
+                }
+              },
+              loadedTasks,
+              loadedLeveling
+            );
           } else {
             await saveCloudGameState(user.uid, localState, { migratedFromLocal: true });
+            loadedState = hydrateGameState(
+              {
+                ...localState,
+                eventStates: {
+                  ...localState.eventStates,
+                  ...cloudEventStates
+                }
+              },
+              loadedTasks,
+              loadedLeveling
+            );
           }
 
           loadedState = mergeCommerceIntoGameState(loadedState, cloudWallet, cloudInventory);
-          loadedState = {
-            ...loadedState,
-            eventStates: {
-              ...loadedState.eventStates,
-              ...cloudEventStates
-            }
-          };
           await saveCloudCommerceState(user.uid, loadedState);
           await saveCloudEventStates(user.uid, loadedState.eventStates);
         }
@@ -264,6 +281,31 @@ export function useGame(): UseGameResult {
       });
     }
   }, [user]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const syncTodayState = () => {
+      const current = gameStateRef.current;
+      if (!current) return;
+      const next = runRefreshGameStateForToday(current);
+      if (next === current) return;
+      commitState(next);
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        syncTodayState();
+      }
+    };
+
+    window.addEventListener("focus", syncTodayState);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.removeEventListener("focus", syncTodayState);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [commitState]);
 
   const completeTask = useCallback(
     (taskId: number): CompleteTaskResult | null => {
@@ -591,6 +633,17 @@ export function useGame(): UseGameResult {
     [commitState]
   );
 
+  const unequipDecoration = useCallback(
+    (itemId: string): ToggleDecorationResult | null => {
+      const current = gameStateRef.current;
+      if (!current) return null;
+      const result = runUnequipDecoration(current, itemId);
+      commitState(result.nextState);
+      return result;
+    },
+    [commitState]
+  );
+
   const resolveDailyReviewTask = useCallback(
     (taskId: number, didComplete: boolean): DailyReviewResolveResult | null => {
       const current = gameStateRef.current;
@@ -727,6 +780,7 @@ export function useGame(): UseGameResult {
     purchasePaidBundle,
     purchaseDecoration,
     toggleDecoration,
+    unequipDecoration,
     useBooster,
     resolveDailyReviewTask,
     skipDailyReview,
