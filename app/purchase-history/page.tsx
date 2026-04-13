@@ -80,6 +80,7 @@ export default function PurchaseHistoryPage() {
   const [history, setHistory] = useState<PurchaseHistoryRecord[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState("");
+  const [copiedPurchaseId, setCopiedPurchaseId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -118,6 +119,26 @@ export default function PurchaseHistoryPage() {
     () => history.filter((record) => record.status !== "fulfilled"),
     [history]
   );
+
+  const copyInquiryText = async (record: PurchaseHistoryRecord) => {
+    const inquiryText = [
+      "モンタスクの購入内容について確認したいです。",
+      `購入ID: ${record.purchaseId}`,
+      `商品名: ${resolveProductTitle(record.productId)}`,
+      `購入日時: ${formatHistoryDate(record.purchasedAt)}`,
+      `状態: ${getStatusLabel(record.status)}`
+    ].join("\n");
+
+    try {
+      await navigator.clipboard.writeText(inquiryText);
+      setCopiedPurchaseId(record.purchaseId);
+      window.setTimeout(() => {
+        setCopiedPurchaseId((current) => (current === record.purchaseId ? null : current));
+      }, 1800);
+    } catch (error) {
+      console.error("[purchase-history] failed to copy inquiry text", error);
+    }
+  };
 
   if (isLoading || !gameState) {
     return <main>Loading...</main>;
@@ -189,6 +210,18 @@ export default function PurchaseHistoryPage() {
                     {grantedItems.length > 0 ? (
                       <p className="purchase-history-meta">付与内容: {grantedItems.join(" / ")}</p>
                     ) : null}
+                    <div className="purchase-history-actions">
+                      <button
+                        type="button"
+                        className="quest-btn task-global-menu-button-secondary"
+                        onClick={() => void copyInquiryText(record)}
+                      >
+                        問い合わせ用テキストをコピー
+                      </button>
+                      {copiedPurchaseId === record.purchaseId ? (
+                        <span className="purchase-history-copy-note">コピーしました</span>
+                      ) : null}
+                    </div>
                   </article>
                 );
               })}

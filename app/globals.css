@@ -1195,6 +1195,26 @@ button:disabled {
   margin: 4px 0 0;
   font-size: 13px;
   color: #5a4630;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.purchase-history-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.purchase-history-actions .quest-btn {
+  width: auto;
+  min-width: 220px;
+}
+
+.purchase-history-copy-note {
+  font-size: 12px;
+  color: #2d6a3d;
 }
 
 .review-task-item {
