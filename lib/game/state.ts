@@ -1457,6 +1457,25 @@ export function unequipDecoration(state: GameState, itemId: string): ToggleDecor
   };
 }
 
+export function equipDecoration(state: GameState, itemId: string): ToggleDecorationResult {
+  if (!state.ownedDecorationIds.includes(itemId)) {
+    return { nextState: state, toggled: false, active: false, reason: "not_owned" };
+  }
+
+  if (state.selectedDecorationIds.includes(itemId)) {
+    return { nextState: state, toggled: false, active: true };
+  }
+
+  return {
+    nextState: {
+      ...state,
+      selectedDecorationIds: uniqueStrings([...state.selectedDecorationIds, itemId])
+    },
+    toggled: true,
+    active: true
+  };
+}
+
 export function useAttributeCharm(state: GameState, attribute: CharmAttribute, variant: "free" | "paid" = "free"): UseCharmResult {
   const ownedCount =
     variant === "paid"

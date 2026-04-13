@@ -20,7 +20,7 @@ const CHARM_BUTTON_CLASS: Record<(typeof SHOP_ATTRIBUTE_CHARMS)[number]["attribu
 
 export default function InventoryPage() {
   const router = useRouter();
-  const { monsters, gameState, isLoading, equipBackground, equipFrame, useAttributeCharm, useBooster, toggleDecoration, unequipDecoration } = useGame();
+  const { monsters, gameState, isLoading, equipBackground, equipFrame, useAttributeCharm, useBooster, equipDecoration, unequipDecoration } = useGame();
   const [tab, setTab] = useState<InventoryTab>("background");
   const [message, setMessage] = useState("");
 
@@ -126,7 +126,7 @@ export default function InventoryPage() {
   };
 
   const onToggleDecoration = (itemId: string) => {
-    const result = toggleDecoration(itemId);
+    const result = equipDecoration(itemId);
     const item = SHOP_DECORATIONS.find((decoration) => decoration.itemId === itemId);
     if (!result) return;
     if (!result.toggled) {

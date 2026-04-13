@@ -504,13 +504,37 @@ button:disabled {
 .monster-stage {
   position: relative;
   min-height: 200px;
-  margin-bottom: 10px;
   border: 2px solid rgba(108, 68, 25, 0.8);
   border-radius: 8px;
   overflow: hidden;
   background-size: cover;
   background-position: center;
   box-shadow: inset 0 0 0 2px rgba(255, 245, 220, 0.65);
+  flex: 1;
+}
+
+.home-stage-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 10px;
+}
+
+.monster-stage-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.monster-stage-frame-image {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
 }
 
 .home-decoration {
@@ -544,16 +568,14 @@ button:disabled {
 }
 
 .home-decoration-paid_deco_flower_lantern_01 {
-  right: 18px;
+  left: 18px;
   top: 36px;
   width: 74px;
 }
 
 .home-stage-actions {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 3;
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: 10px;
 }
@@ -582,6 +604,16 @@ button:disabled {
 
 .home-shop-shortcut {
   min-width: 84px;
+}
+
+@media (max-width: 720px) {
+  .home-stage-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .home-stage-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .home-notification-icon {

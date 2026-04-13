@@ -20,6 +20,7 @@ import {
   completeTask as runCompleteTask,
   equipBackground as runEquipBackground,
   equipFrame as runEquipFrame,
+  equipDecoration as runEquipDecoration,
   finishEndEvent as runFinishEndEvent,
   finishBirthEvent as runFinishBirthEvent,
   finishDailyReview as runFinishDailyReview,
@@ -97,6 +98,7 @@ type UseGameResult = {
   purchasePaidFrame: (itemId: string) => PurchasePaidInventoryResult | null;
   purchasePaidBundle: (itemId: string) => PurchasePaidInventoryResult | null;
   purchaseDecoration: (itemId: string) => PurchasePaidInventoryResult | null;
+  equipDecoration: (itemId: string) => ToggleDecorationResult | null;
   toggleDecoration: (itemId: string) => ToggleDecorationResult | null;
   unequipDecoration: (itemId: string) => ToggleDecorationResult | null;
   useBooster: (itemId: string) => UseBoosterResult | null;
@@ -633,6 +635,17 @@ export function useGame(): UseGameResult {
     [commitState]
   );
 
+  const equipDecoration = useCallback(
+    (itemId: string): ToggleDecorationResult | null => {
+      const current = gameStateRef.current;
+      if (!current) return null;
+      const result = runEquipDecoration(current, itemId);
+      commitState(result.nextState);
+      return result;
+    },
+    [commitState]
+  );
+
   const unequipDecoration = useCallback(
     (itemId: string): ToggleDecorationResult | null => {
       const current = gameStateRef.current;
@@ -779,6 +792,7 @@ export function useGame(): UseGameResult {
     purchasePaidFrame,
     purchasePaidBundle,
     purchaseDecoration,
+    equipDecoration,
     toggleDecoration,
     unequipDecoration,
     useBooster,

@@ -371,8 +371,7 @@ export default function EventShopDetailPage() {
               <div className="shop-grid-preview shop-grid-preview-paid">
                 <div className="shop-badge-stack">
                   <span className="shop-paid-badge">決済</span>
-                  <span className="shop-test-badge">テスト中</span>
-                </div>
+                                  </div>
                 <img src={starterCheckoutItem.imagePath} alt={starterCheckoutItem.title} className="shop-paid-pack-icon" />
               </div>
               <div className="shop-grid-meta">

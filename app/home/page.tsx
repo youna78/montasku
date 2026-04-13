@@ -10,7 +10,7 @@ import { trackEvent } from "@/lib/analytics/gtag";
 import { HOME_ANNOUNCEMENTS } from "@/lib/game/announcements";
 import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage, getStageBadge } from "@/lib/game/assets";
 import { getEventStatusLabel, getRemainingDaysLabel, getVisibleHomeEvents, isEventActive } from "@/lib/game/events";
-import { getBackgroundImagePath, getDecorationShopItem, getFrameThemeClass } from "@/lib/game/shop";
+import { getBackgroundImagePath, getDecorationShopItem, getFramePreviewImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { playSfx } from "@/lib/game/sfx";
 import { progressToNextLevel, shouldRouteToDailyReview } from "@/lib/game/state";
 import { resolveLevelFromExp } from "@/lib/game/leveling";
@@ -123,6 +123,7 @@ export default function HomePage() {
   const activeDecorations = gameState.selectedDecorationIds
     .map((itemId) => getDecorationShopItem(itemId))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const activeFrameImagePath = getFramePreviewImagePath(gameState.selectedFrameId);
 
   const onCompleteFromHome = (taskId: number) => {
     const result = completeTask(taskId);
@@ -191,8 +192,26 @@ export default function HomePage() {
       )}
 
       <section className="card decorated-card">
-        <div className="monster-stage" style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}>
-          <div className="monster-stage-overlay" />
+        <div className="home-stage-layout">
+          <div className="monster-stage" style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}>
+            <div className="monster-stage-overlay" />
+            {activeFrameImagePath ? (
+              <div className="monster-stage-frame">
+                <img src={activeFrameImagePath} alt="" className="monster-stage-frame-image" />
+              </div>
+            ) : null}
+            {activeDecorations.map((decoration) => (
+              <div
+                key={decoration.itemId}
+                className={`home-decoration home-decoration-${decoration.itemId}`}
+              >
+                <img src={decoration.imagePath} alt={decoration.title} className="home-decoration-image" />
+              </div>
+            ))}
+            <div className="monster-wrap">
+              <img src={getMonsterImage(currentMonster?.monsterId)} alt={currentMonster?.name ?? "monster"} className={`monster-img ${monsterMotionClass}`} />
+            </div>
+          </div>
           <div className="home-stage-actions">
             <Link href="/notifications" className="home-notification-button">
               <span className="home-notification-icon">
@@ -207,17 +226,6 @@ export default function HomePage() {
               </span>
               <span className="home-notification-label">ショップ</span>
             </Link>
-          </div>
-          {activeDecorations.map((decoration) => (
-            <div
-              key={decoration.itemId}
-              className={`home-decoration home-decoration-${decoration.itemId}`}
-            >
-              <img src={decoration.imagePath} alt={decoration.title} className="home-decoration-image" />
-            </div>
-          ))}
-          <div className="monster-wrap">
-            <img src={getMonsterImage(currentMonster?.monsterId)} alt={currentMonster?.name ?? "monster"} className={`monster-img ${monsterMotionClass}`} />
           </div>
         </div>
         {stageBadge && (

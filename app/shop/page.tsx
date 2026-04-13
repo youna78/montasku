@@ -498,8 +498,7 @@ export default function ShopPage() {
           <div className="shop-grid-preview shop-grid-preview-paid">
             <div className="shop-badge-stack">
               <span className="shop-paid-badge">有料</span>
-              <span className="shop-test-badge">テスト中</span>
-            </div>
+                          </div>
             <img src={item.imagePath} alt={item.title} className="shop-paid-pack-icon" />
             <div className="shop-paid-amount">{item.totalPaidCoins}</div>
             <div className="shop-paid-label">モンタコイン</div>
@@ -637,8 +636,7 @@ export default function ShopPage() {
                     <div className="shop-grid-preview shop-grid-preview-paid">
                       <div className="shop-badge-stack">
                         <span className="shop-paid-badge">決済</span>
-                        <span className="shop-test-badge">テスト中</span>
-                      </div>
+                                              </div>
                       <img src={item.imagePath} alt={item.title} className="shop-paid-pack-icon" />
                     </div>
                     <div className="shop-grid-meta">
@@ -753,10 +751,7 @@ export default function ShopPage() {
                   </div>
                 </>
               ) : null}
-              <div className="shop-test-callout">
-                <span className="shop-test-callout-badge">テスト中</span>
-                <p>いまは Stripe のテスト決済です。実際の請求は発生しません。決済完了後、モンタコインは自動反映されます。<Link href="/shop/thanks" className="inline-text-link">購入完了</Link> ページに戻ったあと、少し待ってから表示をご確認ください。</p>
-              </div>
+              <p className="shop-note">決済完了後、モンタコインは自動反映されます。少し待ってから表示をご確認ください。</p>
             </div>
           </section>
 
@@ -775,7 +770,6 @@ export default function ShopPage() {
 
           <section className="card decorated-card">
             <div className="shop-support-links">
-              <Link href="/shop/thanks" className="ui-link-button ui-link-secondary">購入完了</Link>
               <Link href="/commerce" className="ui-link-button ui-link-secondary">特定商取引法に基づく表記</Link>
               <Link href="/contact" className="ui-link-button ui-link-secondary">お問い合わせ</Link>
             </div>

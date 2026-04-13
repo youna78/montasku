@@ -128,6 +128,14 @@ function toNumber(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function resolveAssetPath(candidate: string | undefined, fallback: string | undefined): string | undefined {
+  const normalized = candidate?.trim();
+  if (normalized && normalized.startsWith("/")) {
+    return normalized;
+  }
+  return fallback;
+}
+
 function applyBackgroundMaster<T extends ShopBackgroundItem | ShopPaidBackgroundItem>(item: T): T {
   const row = getShopMasterRow(item.itemId);
   if (!row) return item;
@@ -137,7 +145,7 @@ function applyBackgroundMaster<T extends ShopBackgroundItem | ShopPaidBackground
     title: row.display_name || item.title,
     description: row.short_description || item.description,
     price,
-    imagePath: row.current_path || item.imagePath
+    imagePath: resolveAssetPath(row.current_path, item.imagePath) ?? item.imagePath
   };
 }
 
@@ -150,7 +158,7 @@ function applyFrameMaster<T extends ShopFrameItem | ShopPaidFrameItem>(item: T):
     title: row.display_name || item.title,
     description: row.short_description || item.description,
     price,
-    imagePath: row.current_path || item.imagePath
+    imagePath: resolveAssetPath(row.current_path, item.imagePath)
   };
 }
 
@@ -165,7 +173,7 @@ function applyCharmMaster(item: ShopAttributeCharmItem): ShopAttributeCharmItem 
     description: row.short_description || item.description,
     price,
     uses: Number.isFinite(uses) && uses > 0 ? uses : item.uses,
-    iconPath: row.current_path || item.iconPath
+    iconPath: resolveAssetPath(row.current_path, item.iconPath) ?? item.iconPath
   };
 }
 
@@ -178,7 +186,7 @@ function applyBoosterMaster(item: ShopBoosterItem): ShopBoosterItem {
     title: row.display_name || item.title,
     description: row.short_description || item.description,
     price,
-    iconPath: row.current_path || item.iconPath
+    iconPath: resolveAssetPath(row.current_path, item.iconPath) ?? item.iconPath
   };
 }
 
@@ -193,7 +201,7 @@ function applyPaidCoinMaster(item: ShopPaidCoinItem): ShopPaidCoinItem {
     priceJpy: toNumber(row.price_monta_coins, item.priceJpy),
     paidCoinsGranted: Number.isFinite(paidCoins) ? paidCoins : item.paidCoinsGranted,
     totalPaidCoins: Number.isFinite(paidCoins) ? paidCoins : item.totalPaidCoins,
-    imagePath: row.current_path || item.imagePath
+    imagePath: resolveAssetPath(row.current_path, item.imagePath) ?? item.imagePath
   };
 }
 
@@ -205,7 +213,7 @@ function applyDecorationMaster(item: ShopDecorationItem): ShopDecorationItem {
     title: row.display_name || item.title,
     description: row.short_description || item.description,
     price: toNumber(row.price_monta_coins, item.price),
-    imagePath: row.current_path || item.imagePath
+    imagePath: resolveAssetPath(row.current_path, item.imagePath) ?? item.imagePath
   };
 }
 
@@ -217,7 +225,7 @@ function applyBundleMaster(item: ShopPaidBundleItem): ShopPaidBundleItem {
     title: row.display_name || item.title,
     description: row.short_description || item.description,
     price: item.currencyType === "paid_coin" ? toNumber(row.price_monta_coins, item.price) : item.price,
-    imagePath: row.current_path || item.imagePath
+    imagePath: resolveAssetPath(row.current_path, item.imagePath) ?? item.imagePath
   };
 }
 
