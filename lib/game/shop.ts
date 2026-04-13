@@ -274,21 +274,24 @@ export const SHOP_FRAMES: ShopFrameItem[] = [
     title: "クラシックフレーム",
     description: "いまの雰囲気をそのまま楽しめる基本フレームです。",
     price: 0,
-    previewClassName: "frame-preview-gold"
+    previewClassName: "frame-preview-gold",
+    imagePath: "/img/deco_frame/frame_classic_gold_01.png"
   },
   {
     itemId: "sky_crystal",
     title: "スカイクリスタル",
     description: "青みのある光で、すっきりした印象に変わるフレームです。",
     price: 300,
-    previewClassName: "frame-preview-sky"
+    previewClassName: "frame-preview-sky",
+    imagePath: "/img/deco_frame/frame_sky_crystal_01.png"
   },
   {
     itemId: "rose_charm",
     title: "ローズチャーム",
     description: "やさしいピンク系で、少し華やかな雰囲気になるフレームです。",
     price: 300,
-    previewClassName: "frame-preview-rose"
+    previewClassName: "frame-preview-rose",
+    imagePath: "/img/deco_frame/frame_rose_charm_01.png"
   },
   {
     itemId: "spring_clover",

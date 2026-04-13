@@ -258,7 +258,7 @@ export default function InventoryPage() {
               </div>
               <div className="task-global-menu">
                 <button
-                  className={`quest-btn task-global-menu-button ${active ? "task-global-menu-button-current task-global-menu-button-active" : "task-global-menu-button-accent"}`}
+                  className={`quest-btn task-global-menu-button ${active ? "task-global-menu-button-secondary task-global-menu-button-active" : "task-global-menu-button-accent"}`}
                   onClick={() => (active ? onUnequipDecoration(item.itemId) : onToggleDecoration(item.itemId))}
                 >
                   {active ? "このデコを外す" : "このデコを使う"}
