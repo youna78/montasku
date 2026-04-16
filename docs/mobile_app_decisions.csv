@@ -1,0 +1,11 @@
+decision_area,decision_needed,recommended_choice,reason,next_action
+アプリ化方式,yes,CapacitorでWeb版をラップ,既存Next.js/Vercel/Firebase/Stripe資産を活かせるため最短で現実的,Capacitor導入可否を決める
+公開順序,yes,まずAndroid内部テスト→iOS TestFlight→両ストア申請,Androidの方が検証を始めやすくiOS審査前に不具合を潰しやすい,Google Play ConsoleとApple Developerの準備
+課金方式,yes,WebはStripe継続・アプリ内デジタル購入はStore課金へ分離,ストア規約上アプリ内でデジタル商品をStripe販売するのはリスクが高い,アプリ版ではモンタコイン購入導線を一時非表示にするかStore課金化する
+アカウント削除,yes,設定画面に「アカウント削除」導線を追加,アプリ審査で重要。ログイン機能があるため削除導線が必要,削除対象データと確認ダイアログ文言を決める
+Googleログイン,yes,初期はWebView Firebase Authで検証し問題があればネイティブプラグイン化,最小工数で試せるがiOS/Androidで挙動差が出る可能性がある,Capacitor実機でGoogle/メールログインを検証
+広告,yes,アプリではAdSenseではなくAdMob検討,Webとアプリで広告プロダクトが異なるため,アプリ版初期は広告なしでも可
+Firestore同期,yes,ログインユーザーはFirestore優先を維持,端末変更対応の中心になるため,gameState保存範囲の棚卸し
+ストア名義,yes,個人名義か事業名義を決定,ストア表示や特商法表示に影響,Apple/Googleアカウント情報を確認
+問い合わせ,partly,/contactをサポートURLとして利用,既存導線があるため流用可能,購入ID付き問い合わせ導線を継続整備
+初回リリース範囲,yes,ログイン/タスク/図鑑/イベント/ショップ閲覧まで。アプリ内課金は別フェーズも可,審査リスクと実装負荷を下げるため,初回アプリ版で有料購入を含めるか決める

@@ -4,6 +4,7 @@ import {
   browserLocalPersistence,
   getRedirectResult,
   getAuth,
+  getIdToken,
   sendEmailVerification,
   sendPasswordResetEmail,
   setPersistence,
@@ -76,6 +77,15 @@ export async function sendVerificationEmail() {
 export async function sendResetPasswordEmail(email: string) {
   await ensurePersistence();
   return sendPasswordResetEmail(getFirebaseAuth(), email);
+}
+
+export async function getCurrentUserIdToken(forceRefresh = false) {
+  const currentUser = getFirebaseAuth().currentUser;
+  if (!currentUser) {
+    throw new Error("auth/no-current-user");
+  }
+
+  return getIdToken(currentUser, forceRefresh);
 }
 
 export async function signOutFirebase() {

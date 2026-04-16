@@ -1,0 +1,48 @@
+category,item,platform,priority,status,recommended_decision,notes,related_files_or_console
+方針,アプリ化方式を決める,Android/iOS,high,方針OK,CapacitorでVercel版をラップする,既存Webを活かせるため最短。将来ネイティブ化する場合も段階移行しやすい。,
+方針,PWAだけで進めるか確認,Android/iOS,medium,後回し,ストア公開を目指すならPWA単独ではなくCapacitor推奨,ホーム追加だけならPWAでも可。ただしApp Store/Google Play配信や課金連携を考えると不足。,
+方針,アプリ内課金の扱いを決める,Android/iOS,critical,方針OK,アプリ版のデジタルコイン販売はStore課金へ寄せる,Web版Stripe販売は維持可能。iOS/Androidアプリ内でデジタルアイテム購入を案内する場合は各ストア規約確認が必須。,Stripe Dashboard / App Store Connect / Google Play Console
+方針,Web版とアプリ版の同一アカウント運用,Android/iOS,high,方針OK,Firebase Authの同一uidで統一,現在の設計と相性が良い。Google/メールログインを共通アカウントとして使う。,Firebase Authentication
+技術準備,Capacitor導入,Android/iOS,high,対応済み,@capacitor/core @capacitor/cli を追加,Capacitor 7系を導入。Node 20運用と整合済み。Vercel URLをWebView表示する構成。,package.json / capacitor.config.ts
+技術準備,Androidプロジェクト追加,Android,high,対応済み,npx cap add android,android/ を生成し cap sync 済み。Gradle確認にはローカルJava Runtimeが必要。,android/
+技術準備,iOSプロジェクト追加,iOS,high,未着手,npx cap add ios,Xcodeでビルド確認する。Mac/Xcode/Apple Developer Programが必要。,ios/
+技術準備,Nodeバージョン固定,Android/iOS,medium,対応済み寄り,Node 20を維持,package.json engines と .nvmrc の整合を確認。,package.json / .nvmrc
+技術準備,環境変数の扱い,Android/iOS,high,要確認,公開可能なNEXT_PUBLIC_*のみアプリに含める,Firebase Web API Keyは公開前提だがAPIキー制限必須。秘密鍵やStripe Secretは絶対に含めない。,Vercel Environment Variables / Google Cloud API Key
+技術準備,本番URL固定,Android/iOS,high,要確認,NEXT_PUBLIC_APP_URL=https://montasku.vercel.app を維持,Checkout戻り先や問い合わせ導線で使うため本番URLを固定する。,Vercel Environment Variables
+Firebase,承認済みドメイン確認,Android/iOS,high,要確認,montasku.vercel.app / montasku.firebaseapp.com / montasku.web.app を維持,WebViewログイン時に必要。アプリ独自schemeを使う場合は追加設定が必要。,Firebase Authentication > Settings > Authorized domains
+Firebase,Googleログイン方式確認,Android/iOS,critical,要検証,最初はWebView上のFirebase Web Authで動作確認,アプリストア版ではリダイレクト/ポップアップ挙動が変わる可能性あり。必要ならネイティブGoogle Sign-Inプラグイン検討。,Firebase Authentication / Google Cloud OAuth
+Firebase,メールログイン確認,Android/iOS,high,要検証,メールログインはWebViewでも継続利用,確認メール/再設定メールの戻り先URLも本番URLで確認する。,Firebase Authentication Templates
+Firebase,Firestore Security Rules確認,Android/iOS,critical,要確認,uid単位の読み書き制限を必ず確認,アプリ化で利用者が増える前に users/{uid} と purchaseHistory/wallet/inventory のルールを点検。,Firebase Firestore Rules
+決済,Stripe Web決済のアプリ内表示可否,Android/iOS,critical,要確認,アプリ内ではデジタルコインをStripe購入させない方針を検討,iOS/Androidのデジタルコンテンツ販売はストア課金が原則。Web版のみStripe販売にするのが安全。,Stripe / App Store Review Guidelines / Google Play Payments Policy
+決済,アプリ版モンタコイン購入導線,Android/iOS,critical,未着手,アプリ版ではストア課金実装まで非表示または説明表示,Web版購入ページへの誘導も規約上注意。まずはアプリ内課金対応まで購入ボタンを出さない判断が安全。,app/shop/page.tsx
+決済,Store課金商品設計,Android/iOS,high,未着手,モンタコイン商品をApp Store/Google Play商品IDに対応させる,既存Stripe商品とは別に product_id を管理するCSVを作ると安全。,docs/paid_coin_spec_draft.csv
+決済,購入反映サーバー設計,Android/iOS,high,未着手,Store receipt検証後にFirestore walletへ反映,Stripe webhookと同様にサーバー側で検証して付与する。クライアントだけで付与しない。,app/api / Firebase Admin
+決済,返金/未反映対応,Android/iOS,medium,一部済み,購入履歴と問い合わせ導線を維持,ストア課金では注文番号/transactionIdを問い合わせに含める設計が必要。,app/purchase-history/page.tsx
+データ,localStorage依存確認,Android/iOS,high,要確認,重要データはFirestore優先へ段階移行,WebView内localStorageは端末依存。機種変更を考えるとFirestore保存範囲を広げる。,lib/game/state.ts / lib/game/cloud*.ts
+データ,gameState同期確認,Android/iOS,high,要確認,ログイン時はFirestore優先を維持,ゲスト利用時は端末ローカル。ログイン促進ポップアップはアプリでも有効。,AuthProvider / game cloud sync
+データ,オフライン時の挙動,Android/iOS,medium,後回し,まずはオンライン前提,将来オフライン対応するなら同期競合ルールが必要。,
+UI,スマホWebView表示確認,Android/iOS,high,要確認,Safe Area対応を確認,iPhone Safari風とWebViewで下メニュー/固定ボタンの重なりを確認。,app/globals.css
+UI,下部ナビの重なり確認,Android/iOS,medium,一部対応済み,bottom-navのz-indexを維持,ショップ/お知らせとの重なりは直近対応済み。実機で継続確認。,app/globals.css
+UI,ホーム画面アイコン/フレーム表示確認,Android/iOS,medium,要確認,WebViewで画像比率を実機確認,デコフレームや通知/ショップアイコンが画面幅で崩れないか確認。,app/home/page.tsx
+UI,ストア用スクリーンショット準備,Android/iOS,medium,未着手,主要画面を5枚程度用意,ホーム/タスク/図鑑/ショップ/イベントが候補。,App Store Connect / Google Play Console
+アセット,アプリアイコン作成,Android/iOS,high,未着手,1024x1024を基準に作成,iOS/Android各サイズへ自動生成する。透過不可のストア要件に注意。,public / native assets
+アセット,スプラッシュ画面作成,Android/iOS,medium,未着手,モンタスクロゴ+背景で作成,Capacitor splash screen用。,
+アセット,ストア掲載画像作成,Android/iOS,medium,未着手,アイキャッチ/スクショ/説明画像を準備,Google Play feature graphic等も必要。,Google Play Console
+法務,プライバシーポリシーURL,Android/iOS,critical,対応済み,/privacy を利用,ストア申請時にURL入力が必要。,app/privacy/page.tsx
+法務,利用規約URL,Android/iOS,high,対応済み,/terms を利用,課金開始後は有料コンテンツ条項追加を検討。,app/terms/page.tsx
+法務,特商法ページURL,Android/iOS,high,対応済み,/commerce を利用,日本向け有料販売では導線維持。,app/commerce/page.tsx
+法務,お問い合わせURL,Android/iOS,high,対応済み,/contact を利用,ストア掲載のサポートURLにも利用可能。,app/contact/page.tsx
+法務,アカウント削除導線,Android/iOS,critical,初期実装済み,アプリ公開前に必ず用意,設定画面のアカウントカードに退会・アカウント削除ボタンを追加。クラウドデータとFirebase Authユーザーを削除。,components/auth/AuthCard.tsx / app/api/account/delete/route.ts
+法務,解約/退会の用語整理,Android/iOS,high,要確認,サブスクなしなら「退会・アカウント削除」として実装,現状は継続課金ではないため解約ではなくアカウント削除/データ削除が中心。,settings
+ストア,Apple Developer Program登録,iOS,critical,未着手,登録必須,年額費用が必要。個人/法人名義を決める。,Apple Developer
+ストア,Google Play Console登録,Android,critical,未着手,登録必須,初回登録費用が必要。本人確認も早めに。,Google Play Console
+ストア,Bundle ID / Package Name決定,Android/iOS,critical,未着手,例 com.ikizurasenryaku.montasku,後から変更しづらいので先に決める。,Capacitor config
+ストア,アプリ名/サブタイトル/説明文,Android/iOS,medium,未着手,モンタスクで統一,検索用キーワードも検討。,App Store Connect / Google Play Console
+ストア,年齢レーティング確認,Android/iOS,medium,未着手,全年齢想定,課金あり/広告あり/ユーザー生成なし等を正確に回答。,Store questionnaires
+ストア,広告表示の有無,Android/iOS,medium,要確認,AdSenseはアプリ内では別扱い,アプリではAdMob等を検討。WebのAdSenseをWebViewで出す扱いは確認が必要。,Google AdSense / AdMob
+ストア,審査用アカウント準備,Android/iOS,high,未着手,テストログイン手順を用意,審査担当がログインや課金不要で基本機能を見られるようにする。,Firebase Auth
+ストア,テスト配信,Android/iOS,high,未着手,TestFlight / Internal testing を使う,公開前に実機でログイン/ショップ/イベント/購入履歴を確認。,App Store Connect / Google Play Console
+運用,クラッシュ/ログ監視,Android/iOS,medium,未着手,Firebase Crashlytics検討,Capacitor WebViewだけならまずGA4/Firebase Analyticsでも可。,Firebase
+運用,GA4アプリ計測,Android/iOS,medium,未着手,Web GA4とは別にアプリ計測検討,WebViewイベントとネイティブイベントの二重計測に注意。,GA4 / Firebase Analytics
+運用,バージョン管理,Android/iOS,medium,未着手,versionCode/build number運用を決める,審査提出のたびに上げる必要あり。,Capacitor / Xcode / Android Studio
+運用,リリース前チェック,Android/iOS,high,未着手,ログイン/同期/購入/問い合わせ/法務導線を一通り確認,特に決済とアカウント削除は審査で見られやすい。,

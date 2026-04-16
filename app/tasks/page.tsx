@@ -61,6 +61,7 @@ export default function TasksPage() {
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map((active) => tasks.find((task) => task.taskId === active.taskId))
     .filter((task): task is TaskMaster => Boolean(task));
+  const isTutorialMode = !gameState.hasSeenTutorial || gameState.isInTutorialFlow;
 
   const onComplete = (taskId: number) => {
     const result = completeTask(taskId);
@@ -127,22 +128,24 @@ export default function TasksPage() {
           )}
         </div>
       </section>
-      <section className="card decorated-card">
-        <div className="task-global-menu">
-          <Link href="/shop" className="ui-link-button task-global-menu-button settings-menu-button-neutral">
-            ショップ
-          </Link>
-          <Link href="/task-add" className="ui-link-button task-global-menu-button task-global-menu-button-primary">
-            追加
-          </Link>
-          <Link href="/task-remove" className="ui-link-button task-global-menu-button task-global-menu-button-secondary">
-            削除
-          </Link>
-          <Link href="/task-reorder" className="ui-link-button task-global-menu-button task-global-menu-button-accent">
-            並び替え
-          </Link>
-        </div>
-      </section>
+      {!isTutorialMode && (
+        <section className="card decorated-card">
+          <div className="task-global-menu">
+            <Link href="/shop" className="ui-link-button task-global-menu-button settings-menu-button-neutral">
+              ショップ
+            </Link>
+            <Link href="/task-add" className="ui-link-button task-global-menu-button task-global-menu-button-primary">
+              追加
+            </Link>
+            <Link href="/task-remove" className="ui-link-button task-global-menu-button task-global-menu-button-secondary">
+              削除
+            </Link>
+            <Link href="/task-reorder" className="ui-link-button task-global-menu-button task-global-menu-button-accent">
+              並び替え
+            </Link>
+          </div>
+        </section>
+      )}
 
       {feedback && <div className="reward-popup reward-popup-top">{feedback}</div>}
 
@@ -183,7 +186,7 @@ export default function TasksPage() {
       })}
 
       <DevDebugPanel gameState={gameState} monsters={monsters} />
-      <BottomNav />
+      {!isTutorialMode && <BottomNav />}
       {evolutionScene && (
         <EvolutionOverlay
           previousMonsterName={evolutionScene.previousMonsterName}

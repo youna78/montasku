@@ -1,0 +1,5 @@
+package com.ikizurasenryaku.montasku;
+
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {}

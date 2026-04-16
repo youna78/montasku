@@ -11,6 +11,7 @@ import {
   signInWithGooglePopup,
   signOutFirebase,
   signUpWithEmail,
+  getCurrentUserIdToken,
   getFirebaseAuth
 } from "@/lib/firebase/auth";
 import { ensureUserDocument } from "@/lib/firebase/firestore";
@@ -32,6 +33,7 @@ type AuthContextValue = {
   sendVerificationEmail: () => Promise<boolean>;
   sendPasswordResetEmail: (email: string) => Promise<boolean>;
   signOut: () => Promise<boolean>;
+  deleteAccount: () => Promise<boolean>;
   dismissDailyPrompt: () => void;
   clearError: () => void;
 };
@@ -264,6 +266,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error) {
           console.error("[auth] sign-out failed", error);
           setErrorMessage("ログアウトに失敗しました。");
+          return false;
+        }
+      },
+      deleteAccount: async () => {
+        if (!configured) return false;
+
+        try {
+          setErrorMessage("");
+          setInfoMessage("");
+          const token = await getCurrentUserIdToken(true);
+          const response = await fetch("/api/account/delete", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+
+          if (!response.ok) {
+            const body = (await response.json().catch(() => null)) as { error?: string } | null;
+            throw new Error(body?.error ?? "アカウント削除に失敗しました。");
+          }
+
+          await signOutFirebase();
+          setUser(null);
+          setInfoMessage("アカウントを削除しました。");
+          return true;
+        } catch (error) {
+          console.error("[auth] delete account failed", error);
+          setErrorMessage(error instanceof Error ? error.message : "アカウント削除に失敗しました。");
           return false;
         }
       },

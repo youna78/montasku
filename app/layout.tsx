@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import { Suspense, type ReactNode } from "react";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { GuestLoginPrompt } from "@/components/auth/GuestLoginPrompt";
+import { NativeAuthGate } from "@/components/auth/NativeAuthGate";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { PageViewTracker } from "@/components/analytics/PageViewTracker";
 import "./globals.css";
@@ -38,7 +39,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <PageViewTracker measurementId={gaMeasurementId} />
             </Suspense>
           ) : null}
-          {children}
+          <NativeAuthGate>{children}</NativeAuthGate>
           <GuestLoginPrompt />
         </AuthProvider>
       </body>

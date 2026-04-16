@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getMonsterImage } from "@/lib/game/assets";
 import { useGame } from "@/lib/game/useGame";
@@ -50,7 +49,6 @@ export default function TutorialEggPage() {
         </div>
       </section>
       <DevDebugPanel gameState={gameState} monsters={monsters} />
-      <BottomNav />
     </main>
   );
 }

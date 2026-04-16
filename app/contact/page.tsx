@@ -1,3 +1,4 @@
+import { AccountDeletionSection } from "@/components/auth/AccountDeletionSection";
 import { LegalPageLayout } from "@/components/legal/LegalPageLayout";
 
 export default function ContactPage() {
@@ -43,6 +44,8 @@ export default function ContactPage() {
         <p>返信にはお時間をいただく場合があります。</p>
         <p>内容によっては個別に返信できない場合がありますので、あらかじめご了承ください。</p>
       </div>
+
+      <AccountDeletionSection />
     </LegalPageLayout>
   );
 }

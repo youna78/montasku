@@ -10,6 +10,7 @@ import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getFirebaseAuth } from "@/lib/firebase/auth";
 import { getVisibleHomeEvents, isEventActive } from "@/lib/game/events";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
+import { isNativeMobileApp } from "@/lib/platform/capacitor";
 import {
   getBackgroundImagePath,
   getBoosterShopItem,
@@ -31,6 +32,21 @@ import { useGame } from "@/lib/game/useGame";
 type PurchaseModalState = {
   title: string;
   lines: string[];
+};
+
+type BundleConfirmState = {
+  itemId: string;
+  title: string;
+  ownedLines: string[];
+  grantedLines: string[];
+};
+
+type PurchaseConfirmState = {
+  title: string;
+  priceLabel: string;
+  message?: string;
+  confirmLabel?: string;
+  onConfirm: () => void;
 };
 
 type FreeCategoryTab = "background" | "frame" | "deco" | "item";
@@ -70,6 +86,13 @@ export default function ShopPage() {
   const [activeFreeCategoryTab, setActiveFreeCategoryTab] = useState<FreeCategoryTab>("background");
   const [activePaidCategoryTab, setActivePaidCategoryTab] = useState<PaidCategoryTab>("coin");
   const [checkoutItemId, setCheckoutItemId] = useState<string | null>(null);
+  const [bundleConfirm, setBundleConfirm] = useState<BundleConfirmState | null>(null);
+  const [purchaseConfirm, setPurchaseConfirm] = useState<PurchaseConfirmState | null>(null);
+  const [isNativeApp, setIsNativeApp] = useState(false);
+
+  useEffect(() => {
+    setIsNativeApp(isNativeMobileApp());
+  }, []);
 
   useEffect(() => {
     if (!message) return;
@@ -137,6 +160,20 @@ export default function ShopPage() {
   const openInventoryPopup = (title: string, lines: string[]) => {
     setRecentPurchase(null);
     setPurchaseModal({ title, lines });
+  };
+
+  const requestPurchase = (
+    confirm: Omit<PurchaseConfirmState, "onConfirm">,
+    onConfirm: () => void
+  ) => {
+    setPurchaseConfirm({ ...confirm, onConfirm });
+  };
+
+  const onConfirmPurchase = () => {
+    if (!purchaseConfirm) return;
+    const action = purchaseConfirm.onConfirm;
+    setPurchaseConfirm(null);
+    action();
   };
 
   const onBuy = (itemId: string, price: number) => {
@@ -309,6 +346,56 @@ export default function ShopPage() {
     setMessage("こうにゅうしました");
   };
 
+  const getBundleConfirmState = (itemId: string): BundleConfirmState | null => {
+    const item = SHOP_EVERGREEN_BUNDLES.find((bundle) => bundle.itemId === itemId);
+    if (!item) return null;
+
+    if (item.itemId === "paid_bundle_spring_deco_01") {
+      const ownedLines = [
+        gameState.ownedDecorationIds.includes("paid_deco_picnic_basket_01") ? "ピクニックバスケット" : "",
+        gameState.ownedDecorationIds.includes("paid_deco_flower_lantern_01") ? "花灯りランタン" : ""
+      ].filter(Boolean);
+
+      return {
+        itemId,
+        title: item.title,
+        ownedLines,
+        grantedLines: ["ピクニックバスケット", "花灯りランタン", "春の芽吹きたまご"]
+      };
+    }
+
+    return {
+      itemId,
+      title: item.title,
+      ownedLines: [],
+      grantedLines: [item.title]
+    };
+  };
+
+  const onRequestBuyPaidBundle = (itemId: string) => {
+    const confirmState = getBundleConfirmState(itemId);
+    if (confirmState && confirmState.ownedLines.length > 0) {
+      setBundleConfirm(confirmState);
+      return;
+    }
+    const item = SHOP_EVERGREEN_BUNDLES.find((bundle) => bundle.itemId === itemId);
+    requestPurchase(
+      {
+        title: item?.title ?? "セット",
+        priceLabel: item ? `${item.price} モンタコイン` : "モンタコイン",
+        message: "このセットを購入しますか？"
+      },
+      () => onBuyPaidBundle(itemId)
+    );
+  };
+
+  const onConfirmBuyPaidBundle = () => {
+    if (!bundleConfirm) return;
+    const itemId = bundleConfirm.itemId;
+    setBundleConfirm(null);
+    onBuyPaidBundle(itemId);
+  };
+
   const onBuyDecoration = (itemId: string) => {
     const result = purchaseDecoration(itemId);
     const item = SHOP_EVERGREEN_DECORATIONS.find((decoration) => decoration.itemId === itemId);
@@ -404,7 +491,19 @@ export default function ShopPage() {
               <div className="shop-grid-price">{item.price === 0 ? "初期所持" : `${item.price} フリーコイン`}</div>
             </div>
             {!owned ? (
-              <button className="quest-btn shop-grid-button task-global-menu-button-primary" onClick={() => onBuy(item.itemId, item.price)}>
+              <button
+                className="quest-btn shop-grid-button task-global-menu-button-primary"
+                onClick={() =>
+                  requestPurchase(
+                    {
+                      title: item.title,
+                      priceLabel: `${item.price} フリーコイン`,
+                      message: "この背景を購入しますか？"
+                    },
+                    () => onBuy(item.itemId, item.price)
+                  )
+                }
+              >
                 購入する
               </button>
             ) : (
@@ -432,7 +531,19 @@ export default function ShopPage() {
                 <div className="shop-grid-price">{item.price === 0 ? "初期所持" : `${item.price} フリーコイン`}</div>
               </div>
               {!owned ? (
-                <button className="quest-btn shop-grid-button task-global-menu-button-primary" onClick={() => onBuyFrame(item.itemId, item.price)}>
+                <button
+                  className="quest-btn shop-grid-button task-global-menu-button-primary"
+                  onClick={() =>
+                    requestPurchase(
+                      {
+                        title: item.title,
+                        priceLabel: `${item.price} フリーコイン`,
+                        message: "このフレームを購入しますか？"
+                      },
+                      () => onBuyFrame(item.itemId, item.price)
+                    )
+                  }
+                >
                   購入する
                 </button>
               ) : (
@@ -459,7 +570,19 @@ export default function ShopPage() {
                     <p>{item.description}</p>
                     <div className={`shop-grid-price charm-price charm-price-${item.attribute}`}>{item.price} フリーコイン / 所持 {ownedCount}</div>
                   </div>
-                  <button className={`quest-btn shop-grid-button ${CHARM_BUTTON_CLASS[item.attribute]}`} onClick={() => onBuyCharm(item.attribute)}>
+                  <button
+                    className={`quest-btn shop-grid-button ${CHARM_BUTTON_CLASS[item.attribute]}`}
+                    onClick={() =>
+                      requestPurchase(
+                        {
+                          title: item.title,
+                          priceLabel: `${item.price} フリーコイン`,
+                          message: "このアイテムを購入しますか？"
+                        },
+                        () => onBuyCharm(item.attribute)
+                      )
+                    }
+                  >
                     購入する
                   </button>
                 </section>
@@ -479,7 +602,19 @@ export default function ShopPage() {
                     <p>{item.description}</p>
                     <div className="shop-grid-price">{item.price} フリーコイン / 所持 {ownedCount}</div>
                   </div>
-                  <button className="quest-btn shop-grid-button task-global-menu-button-primary" onClick={() => onBuyBooster(item.itemId)}>
+                  <button
+                    className="quest-btn shop-grid-button task-global-menu-button-primary"
+                    onClick={() =>
+                      requestPurchase(
+                        {
+                          title: item.title,
+                          priceLabel: `${item.price} フリーコイン`,
+                          message: "このアイテムを購入しますか？"
+                        },
+                        () => onBuyBooster(item.itemId)
+                      )
+                    }
+                  >
                     購入する
                   </button>
                 </section>
@@ -508,9 +643,27 @@ export default function ShopPage() {
             <p>{item.description}</p>
             <div className="shop-grid-price">{item.priceJpy} 円{item.bonusPaidCoins > 0 ? ` / +${item.bonusPaidCoins} おまけ` : ""}</div>
           </div>
-          <button className="quest-btn shop-grid-button task-global-menu-button-accent" onClick={() => onStartPaidCheckout(item)} disabled={checkoutItemId === item.itemId || !user}>
-            {!user ? "ログインで購入可能" : checkoutItemId === item.itemId ? "移動中..." : "Stripe で購入"}
-          </button>
+          {isNativeApp ? (
+            <p className="shop-note shop-note-strong">Androidアプリ版での購入は準備中です。</p>
+          ) : (
+            <button
+              className="quest-btn shop-grid-button task-global-menu-button-accent"
+              onClick={() =>
+                requestPurchase(
+                  {
+                    title: item.title,
+                    priceLabel: `${item.priceJpy} 円`,
+                    message: "決済ページへ移動します。購入しますか？",
+                    confirmLabel: "決済へ進む"
+                  },
+                  () => onStartPaidCheckout(item)
+                )
+              }
+              disabled={checkoutItemId === item.itemId || !user}
+            >
+              {!user ? "ログインで購入可能" : checkoutItemId === item.itemId ? "移動中..." : "Stripe で購入"}
+            </button>
+          )}
         </section>
       ))
     : activePaidCategoryTab === "background"
@@ -530,7 +683,21 @@ export default function ShopPage() {
                   <div className="shop-grid-price">{item.price} モンタコイン</div>
                 </div>
                 {!owned ? (
-                  <button className="quest-btn shop-grid-button task-global-menu-button-accent" onClick={() => onBuyPaidBackground(item.itemId)}>購入する</button>
+                  <button
+                    className="quest-btn shop-grid-button task-global-menu-button-accent"
+                    onClick={() =>
+                      requestPurchase(
+                        {
+                          title: item.title,
+                          priceLabel: `${item.price} モンタコイン`,
+                          message: "この背景を購入しますか？"
+                        },
+                        () => onBuyPaidBackground(item.itemId)
+                      )
+                    }
+                  >
+                    購入する
+                  </button>
                 ) : (
                   <button className={`quest-btn shop-grid-button ${equipped ? "task-global-menu-button-current task-global-menu-button-active" : "task-global-menu-button-secondary"}`} onClick={() => onEquip(item.itemId)}>
                     {equipped ? "そうび中" : "使う"}
@@ -560,7 +727,21 @@ export default function ShopPage() {
                   <div className="shop-grid-price">{item.price} モンタコイン</div>
                 </div>
                 {!owned ? (
-                  <button className="quest-btn shop-grid-button task-global-menu-button-accent" onClick={() => onBuyPaidFrame(item.itemId)}>購入する</button>
+                  <button
+                    className="quest-btn shop-grid-button task-global-menu-button-accent"
+                    onClick={() =>
+                      requestPurchase(
+                        {
+                          title: item.title,
+                          priceLabel: `${item.price} モンタコイン`,
+                          message: "このフレームを購入しますか？"
+                        },
+                        () => onBuyPaidFrame(item.itemId)
+                      )
+                    }
+                  >
+                    購入する
+                  </button>
                 ) : (
                   <button className={`quest-btn shop-grid-button ${equipped ? "task-global-menu-button-current task-global-menu-button-active" : "task-global-menu-button-secondary"}`} onClick={() => onEquipFrame(item.itemId)}>
                     {equipped ? "そうび中" : "使う"}
@@ -584,7 +765,20 @@ export default function ShopPage() {
                       <p>{item.description}</p>
                       <div className="shop-grid-price">{item.price} モンタコイン</div>
                     </div>
-                    <button className={`quest-btn shop-grid-button ${owned ? "task-global-menu-button-current task-global-menu-button-active" : "task-global-menu-button-accent"}`} onClick={() => onBuyDecoration(item.itemId)}>
+                    <button
+                      className={`quest-btn shop-grid-button ${owned ? "task-global-menu-button-current task-global-menu-button-active" : "task-global-menu-button-accent"}`}
+                      onClick={() =>
+                        requestPurchase(
+                          {
+                            title: item.title,
+                            priceLabel: `${item.price} モンタコイン`,
+                            message: "このデコを購入しますか？"
+                          },
+                          () => onBuyDecoration(item.itemId)
+                        )
+                      }
+                      disabled={owned}
+                    >
                       {owned ? "所持中" : "購入する"}
                     </button>
                   </section>
@@ -606,7 +800,21 @@ export default function ShopPage() {
                         <p>{item.description}</p>
                         <div className={`shop-grid-price charm-price charm-price-${item.attribute}`}>{item.price} モンタコイン / 所持 {ownedCount}</div>
                       </div>
-                      <button className={`quest-btn shop-grid-button ${CHARM_BUTTON_CLASS[item.attribute]}`} onClick={() => onBuyPaidCharm(item.attribute)}>購入する</button>
+                      <button
+                        className={`quest-btn shop-grid-button ${CHARM_BUTTON_CLASS[item.attribute]}`}
+                        onClick={() =>
+                          requestPurchase(
+                            {
+                              title: item.title,
+                              priceLabel: `${item.price} モンタコイン`,
+                              message: "このアイテムを購入しますか？"
+                            },
+                            () => onBuyPaidCharm(item.attribute)
+                          )
+                        }
+                      >
+                        購入する
+                      </button>
                     </section>
                   );
                 }),
@@ -625,7 +833,21 @@ export default function ShopPage() {
                         <p>{item.description}</p>
                         <div className="shop-grid-price">{item.price} モンタコイン / 所持 {ownedCount}</div>
                       </div>
-                      <button className="quest-btn shop-grid-button task-global-menu-button-accent" onClick={() => onBuyBooster(item.itemId)}>購入する</button>
+                      <button
+                        className="quest-btn shop-grid-button task-global-menu-button-accent"
+                        onClick={() =>
+                          requestPurchase(
+                            {
+                              title: item.title,
+                              priceLabel: `${item.price} モンタコイン`,
+                              message: "このアイテムを購入しますか？"
+                            },
+                            () => onBuyBooster(item.itemId)
+                          )
+                        }
+                      >
+                        購入する
+                      </button>
                     </section>
                   );
                 })
@@ -644,9 +866,27 @@ export default function ShopPage() {
                       <p>{item.description}</p>
                       <div className="shop-grid-price">{item.priceJpy} 円</div>
                     </div>
-                    <button className="quest-btn shop-grid-button task-global-menu-button-accent" onClick={() => onStartPaidCheckout(item)} disabled={checkoutItemId === item.itemId || !user}>
-                      {!user ? "ログインで購入可能" : checkoutItemId === item.itemId ? "移動中..." : "Stripe で購入"}
-                    </button>
+                    {isNativeApp ? (
+                      <p className="shop-note shop-note-strong">Androidアプリ版での購入は準備中です。</p>
+                    ) : (
+                      <button
+                        className="quest-btn shop-grid-button task-global-menu-button-accent"
+                        onClick={() =>
+                          requestPurchase(
+                            {
+                              title: item.title,
+                              priceLabel: `${item.priceJpy} 円`,
+                              message: "決済ページへ移動します。購入しますか？",
+                              confirmLabel: "決済へ進む"
+                            },
+                            () => onStartPaidCheckout(item)
+                          )
+                        }
+                        disabled={checkoutItemId === item.itemId || !user}
+                      >
+                        {!user ? "ログインで購入可能" : checkoutItemId === item.itemId ? "移動中..." : "Stripe で購入"}
+                      </button>
+                    )}
                   </section>
                 )),
                 ...SHOP_EVERGREEN_BUNDLES.map((item) => (
@@ -660,7 +900,7 @@ export default function ShopPage() {
                       <p>{item.description}</p>
                       <div className="shop-grid-price">{item.price} モンタコイン</div>
                     </div>
-                    <button className="quest-btn shop-grid-button task-global-menu-button-accent" onClick={() => onBuyPaidBundle(item.itemId)}>購入する</button>
+                    <button className="quest-btn shop-grid-button task-global-menu-button-accent" onClick={() => onRequestBuyPaidBundle(item.itemId)}>購入する</button>
                   </section>
                 ))
               ];
@@ -675,15 +915,37 @@ export default function ShopPage() {
       {message && <div className="toast">{message}</div>}
 
       {recentPurchase && (
-        <section className="card decorated-card">
-          <div className="shop-recent-purchase">
-            <p><strong>{recentPurchase.title}</strong> を購入しました。</p>
+        <div className="auth-email-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="shop-equip-modal-title">
+          <div className="card decorated-card auth-email-modal-card">
+            <h2 id="shop-equip-modal-title" className="auth-email-modal-title">購入しました</h2>
+            <p className="shop-note shop-note-strong"><strong>{recentPurchase.title}</strong> を購入しました。</p>
+            <p className="shop-note">すぐ装備するかい？</p>
             <div className="task-global-menu">
-              <button className="quest-btn task-global-menu-button task-global-menu-button-primary" onClick={onEquipRecent}>いますぐ装備</button>
+              <button className="quest-btn task-global-menu-button task-global-menu-button-primary" onClick={onEquipRecent}>いますぐ装備する</button>
               <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={() => router.push("/inventory")}>持ち物で確認</button>
+              <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={() => setRecentPurchase(null)}>あとで</button>
             </div>
           </div>
-        </section>
+        </div>
+      )}
+
+      {purchaseConfirm && (
+        <div className="auth-email-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="shop-purchase-confirm-title">
+          <div className="card decorated-card auth-email-modal-card">
+            <h2 id="shop-purchase-confirm-title" className="auth-email-modal-title">購入しますか？</h2>
+            <p className="shop-note shop-note-strong"><strong>{purchaseConfirm.title}</strong></p>
+            <p className="shop-note">{purchaseConfirm.message ?? "この商品を購入しますか？"}</p>
+            <div className="shop-grid-price shop-confirm-price">{purchaseConfirm.priceLabel}</div>
+            <div className="task-global-menu">
+              <button className="quest-btn task-global-menu-button task-global-menu-button-primary" onClick={onConfirmPurchase}>
+                {purchaseConfirm.confirmLabel ?? "購入する"}
+              </button>
+              <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={() => setPurchaseConfirm(null)}>
+                やめる
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {purchaseModal && (
@@ -698,6 +960,29 @@ export default function ShopPage() {
           </div>
         </section>
       )}
+
+      {bundleConfirm ? (
+        <div className="auth-email-modal-overlay">
+          <div className="auth-email-modal-card">
+            <h2 className="auth-email-modal-title">セットを購入しますか？</h2>
+            <p className="shop-note">
+              <strong>{bundleConfirm.title}</strong>
+              {" "}
+              には、すでに所持しているアイテムが含まれています。
+            </p>
+            <p className="shop-note">所持中: {bundleConfirm.ownedLines.map((line) => `「${line}」`).join(" / ")}</p>
+            <p className="shop-note">内容: {bundleConfirm.grantedLines.map((line) => `「${line}」`).join(" / ")}</p>
+            <div className="task-global-menu">
+              <button className="quest-btn task-global-menu-button task-global-menu-button-accent" onClick={onConfirmBuyPaidBundle}>
+                それでも購入する
+              </button>
+              <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={() => setBundleConfirm(null)}>
+                やめる
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <section className="card decorated-card">
         <div className="status-panel compact-status-panel">
@@ -742,7 +1027,11 @@ export default function ShopPage() {
         <>
           <section className="card decorated-card">
             <div className="shop-paid-intro">
-              <p className="shop-note shop-note-strong">モンタコインは、Stripe で購入できる有料コインです。チャージしたあと、背景やフレーム、アイテム、セット商品に使えます。</p>
+              <p className="shop-note shop-note-strong">
+                {isNativeApp
+                  ? "Androidアプリ版のモンタコイン購入は準備中です。所持しているモンタコインは、背景やフレーム、アイテム、セット商品に使えます。"
+                  : "モンタコインは、Stripe で購入できる有料コインです。チャージしたあと、背景やフレーム、アイテム、セット商品に使えます。"}
+              </p>
               {!user ? (
                 <>
                   <p className="shop-note">モンタコインを購入するにはログインが必要です。設定画面からログインすると、そのまま購入できます。</p>

@@ -546,7 +546,7 @@ export function buildInitialState(tasks: TaskMaster[]): GameState {
     ownedBackgroundIds: ["home_morning"],
     selectedBackgroundId: "home_morning",
     ownedFrameIds: ["classic_gold"],
-    selectedFrameId: "classic_gold",
+    selectedFrameId: "",
     ownedDecorationIds: [],
     selectedDecorationIds: [],
     ownedCharmItemCounts: {},
@@ -621,9 +621,11 @@ function normalizeState(
       : ownedBackgroundIds[0] ?? initial.selectedBackgroundId;
   const ownedFrameIds = uniqueStrings(Array.isArray(parsed.ownedFrameIds) ? parsed.ownedFrameIds : initial.ownedFrameIds);
   const selectedFrameId =
-    typeof parsed.selectedFrameId === "string" && ownedFrameIds.includes(parsed.selectedFrameId)
+    parsed.selectedFrameId === ""
+      ? ""
+      : typeof parsed.selectedFrameId === "string" && ownedFrameIds.includes(parsed.selectedFrameId)
       ? parsed.selectedFrameId
-      : ownedFrameIds[0] ?? initial.selectedFrameId;
+      : initial.selectedFrameId;
   const ownedDecorationIds = uniqueStrings(Array.isArray(parsed.ownedDecorationIds) ? parsed.ownedDecorationIds : initial.ownedDecorationIds);
   const selectedDecorationIds = uniqueStrings(
     Array.isArray(parsed.selectedDecorationIds)

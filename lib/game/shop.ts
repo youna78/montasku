@@ -674,7 +674,8 @@ export function getFrameThemeClass(frameId: string): string {
     case "paid_frame_starlight_01":
       return "theme-frame-starlight";
     case "classic_gold":
-    default:
       return "theme-frame-gold";
+    default:
+      return "";
   }
 }

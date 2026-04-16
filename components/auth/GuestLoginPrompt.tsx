@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { isNativeMobileApp } from "@/lib/platform/capacitor";
 import { useAuth } from "./AuthProvider";
 
 const LAST_AUTH_EMAIL_KEY = "habit-monster-last-auth-email";
@@ -24,8 +25,13 @@ export function GuestLoginPrompt() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [isNativeApp, setIsNativeApp] = useState(false);
 
-  if (!isConfigured || isLoading || user || !showDailyPrompt) {
+  useEffect(() => {
+    setIsNativeApp(isNativeMobileApp());
+  }, []);
+
+  if (isNativeApp || !isConfigured || isLoading || user || !showDailyPrompt) {
     return null;
   }
 

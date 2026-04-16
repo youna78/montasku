@@ -150,7 +150,15 @@ export async function saveCloudInventoryProfile(uid: string, state: GameState): 
 }
 
 export async function saveCloudCommerceState(uid: string, state: GameState): Promise<void> {
-  await Promise.all([saveCloudWalletSummary(uid, state), saveCloudInventoryProfile(uid, state)]);
+  await saveCloudInventoryProfile(uid, state);
+
+  try {
+    await saveCloudWalletSummary(uid, state);
+  } catch (error) {
+    // Wallet contains paid-coin fields, so production Firestore rules may block
+    // client writes. Do not let that prevent game state / monster loading.
+    console.warn("[cloudCommerce] skipped client wallet save", error);
+  }
 }
 
 export function mergeCommerceIntoGameState(

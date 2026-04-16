@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { useGame } from "@/lib/game/useGame";
 
@@ -51,7 +50,6 @@ export default function TutorialPage() {
         </div>
       </section>
       <DevDebugPanel gameState={gameState} monsters={monsters} />
-      <BottomNav />
     </main>
   );
 }

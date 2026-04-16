@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { isNativeMobileApp } from "@/lib/platform/capacitor";
 import { useAuth } from "./AuthProvider";
 
 const LAST_AUTH_EMAIL_KEY = "habit-monster-last-auth-email";
@@ -33,10 +34,15 @@ export function AuthCard() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [isNativeApp, setIsNativeApp] = useState(false);
   const accountName =
     user?.displayName?.trim() ||
     (user?.email ? user.email.split("@")[0] : "") ||
     "メールユーザー";
+
+  useEffect(() => {
+    setIsNativeApp(isNativeMobileApp());
+  }, []);
 
   const openEmailModal = (nextMode: "login" | "signup") => {
     clearError();
@@ -93,7 +99,9 @@ export function AuthCard() {
       {isConfigured && !isLoading && !user && (
         <div className="auth-card-stack">
           <p className="auth-card-message auth-card-message-centered">
-            ゲストのまま遊べますが、Google ログインすると今後別の端末でも遊べます
+            {isNativeApp
+              ? "Androidアプリ版では、Googleログインまたはメール登録が必要です。"
+              : "ゲストのまま遊べますが、Google ログインすると今後別の端末でも遊べます"}
           </p>
           <div className="auth-privacy-note">
             <p>
@@ -212,6 +220,7 @@ export function AuthCard() {
           </div>
         </div>
       )}
+
     </section>
   );
 }

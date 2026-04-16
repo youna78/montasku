@@ -140,6 +140,18 @@ export default function PurchaseHistoryPage() {
     }
   };
 
+  const copyPurchaseId = async (purchaseId: string) => {
+    try {
+      await navigator.clipboard.writeText(purchaseId);
+      setCopiedPurchaseId(purchaseId);
+      window.setTimeout(() => {
+        setCopiedPurchaseId((current) => (current === purchaseId ? null : current));
+      }, 1800);
+    } catch (error) {
+      console.error("[purchase-history] failed to copy purchase id", error);
+    }
+  };
+
   if (isLoading || !gameState) {
     return <main>Loading...</main>;
   }
@@ -214,10 +226,23 @@ export default function PurchaseHistoryPage() {
                       <button
                         type="button"
                         className="quest-btn task-global-menu-button-secondary"
+                        onClick={() => void copyPurchaseId(record.purchaseId)}
+                      >
+                        購入IDをコピー
+                      </button>
+                      <button
+                        type="button"
+                        className="quest-btn task-global-menu-button-secondary"
                         onClick={() => void copyInquiryText(record)}
                       >
                         問い合わせ用テキストをコピー
                       </button>
+                      <Link
+                        href={`/contact?purchase_id=${encodeURIComponent(record.purchaseId)}`}
+                        className="ui-link-button settings-menu-button settings-menu-button-neutral purchase-history-contact-link"
+                      >
+                        この購入について問い合わせ
+                      </Link>
                       {copiedPurchaseId === record.purchaseId ? (
                         <span className="purchase-history-copy-note">コピーしました</span>
                       ) : null}
