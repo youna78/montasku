@@ -15,6 +15,7 @@
     "cap:android:open": "cap open android"
   },
   "dependencies": {
+    "@capacitor-firebase/authentication": "^7.5.0",
     "@capacitor/android": "^7.6.1",
     "@capacitor/cli": "^7.6.1",
     "@capacitor/core": "^7.6.1",

@@ -7,8 +7,7 @@ import {
   sendResetPasswordEmail,
   sendVerificationEmail,
   signInWithEmail,
-  signInWithGoogleRedirect,
-  signInWithGooglePopup,
+  signInWithGoogle as signInWithGoogleFirebase,
   signOutFirebase,
   signUpWithEmail,
   getCurrentUserIdToken,
@@ -74,17 +73,11 @@ function toAuthErrorMessage(error: unknown, fallback: string): string {
       return "ポップアップでログインできませんでした。もう一度お試しください。";
     case "auth/unauthorized-domain":
       return "このドメインは Firebase の承認済みドメインに登録されていません。";
+    case "auth/native-google-credential-missing":
+      return "Android の Google ログイン情報を取得できませんでした。もう一度お試しください。";
     default:
       return fallback;
   }
-}
-
-function shouldUseRedirect() {
-  if (typeof window === "undefined") return false;
-  const userAgent = window.navigator.userAgent.toLowerCase();
-  const isTouchDevice = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
-
-  return /iphone|ipad|ipod|android/.test(userAgent) || isTouchDevice;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -172,12 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setShowDailyPrompt(false);
           setErrorMessage("");
           setInfoMessage("");
-          if (shouldUseRedirect()) {
-            await signInWithGoogleRedirect();
-            return true;
-          }
-
-          await signInWithGooglePopup();
+          await signInWithGoogleFirebase();
           return true;
         } catch (error) {
           console.error("[auth] sign-in failed", error);

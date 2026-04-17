@@ -8,12 +8,14 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
   setPersistence,
+  signInWithCredential,
   signInWithEmailAndPassword,
   signInWithRedirect,
   signInWithPopup,
   signOut
 } from "firebase/auth";
 import { getFirebaseApp } from "./client";
+import { isNativeMobileApp } from "@/lib/platform/capacitor";
 
 let persistenceReady: Promise<void> | null = null;
 
@@ -47,6 +49,40 @@ export async function signInWithGoogleRedirect() {
   });
 
   return signInWithRedirect(getFirebaseAuth(), provider);
+}
+
+export async function signInWithGoogleNative() {
+  await ensurePersistence();
+  const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
+  const result = await FirebaseAuthentication.signInWithGoogle({
+    skipNativeAuth: true,
+    scopes: ["email", "profile"],
+    useCredentialManager: true
+  });
+  const credential = result.credential;
+  if (!credential?.idToken && !credential?.accessToken) {
+    throw new Error("auth/native-google-credential-missing");
+  }
+
+  const firebaseCredential = GoogleAuthProvider.credential(credential.idToken, credential.accessToken);
+  return signInWithCredential(getFirebaseAuth(), firebaseCredential);
+}
+
+export async function signInWithGoogle() {
+  if (isNativeMobileApp()) {
+    return signInWithGoogleNative();
+  }
+
+  const userAgent = typeof window !== "undefined" ? window.navigator.userAgent.toLowerCase() : "";
+  const isTouchDevice = typeof window !== "undefined"
+    ? window.matchMedia?.("(pointer: coarse)")?.matches ?? false
+    : false;
+
+  if (/iphone|ipad|ipod|android/.test(userAgent) || isTouchDevice) {
+    return signInWithGoogleRedirect();
+  }
+
+  return signInWithGooglePopup();
 }
 
 export async function consumeGoogleRedirectResult() {

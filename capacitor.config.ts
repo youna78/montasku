@@ -1,3 +1,5 @@
+/// <reference types="@capacitor-firebase/authentication" />
+
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
@@ -7,6 +9,12 @@ const config: CapacitorConfig = {
   server: {
     url: process.env.CAPACITOR_SERVER_URL ?? "https://montasku.vercel.app",
     cleartext: false
+  },
+  plugins: {
+    FirebaseAuthentication: {
+      skipNativeAuth: true,
+      providers: ["google.com"]
+    }
   }
 };
 
