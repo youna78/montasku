@@ -5,3 +5,6 @@ node_modules
 .env*.local
 
 .DS_Store
+
+# Firebase local app config
+android/app/google-services*.json

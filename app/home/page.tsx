@@ -226,6 +226,12 @@ export default function HomePage() {
               </span>
               <span className="home-notification-label">ショップ</span>
             </Link>
+            <Link href="/inventory" className="home-notification-button home-inventory-shortcut">
+              <span className="home-notification-icon">
+                <img src="/img/icon/icon_quest_reward_02.png" alt="" className="home-notification-icon-image" />
+              </span>
+              <span className="home-notification-label">持ち物</span>
+            </Link>
           </div>
         </div>
         {stageBadge && (
