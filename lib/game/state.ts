@@ -1420,6 +1420,20 @@ export function equipFrame(state: GameState, frameId: string): EquipFrameResult 
   };
 }
 
+export function unequipFrame(state: GameState): EquipFrameResult {
+  if (state.selectedFrameId === "") {
+    return { nextState: state, equipped: false, reason: "already_equipped" };
+  }
+
+  return {
+    nextState: {
+      ...state,
+      selectedFrameId: ""
+    },
+    equipped: true
+  };
+}
+
 export function toggleDecoration(state: GameState, itemId: string): ToggleDecorationResult {
   if (!state.ownedDecorationIds.includes(itemId)) {
     return { nextState: state, toggled: false, active: false, reason: "not_owned" };

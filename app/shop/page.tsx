@@ -70,6 +70,7 @@ export default function ShopPage() {
     equipBackground,
     purchaseFrame,
     equipFrame,
+    unequipFrame,
     purchaseAttributeCharm,
     purchasePaidAttributeCharm,
     purchaseBooster,
@@ -426,6 +427,17 @@ export default function ShopPage() {
     setMessage("フレームをへんこうしました");
   };
 
+  const onUnequipFrame = () => {
+    const result = unequipFrame();
+    if (!result) return;
+    if (!result.equipped) {
+      setMessage("フレームは外れています");
+      return;
+    }
+    setRecentPurchase(null);
+    setMessage("フレームを外しました");
+  };
+
   const onEquipRecent = () => {
     if (!recentPurchase) return;
     if (recentPurchase.itemType === "background") {
@@ -547,9 +559,16 @@ export default function ShopPage() {
                   購入する
                 </button>
               ) : (
-                <button className={`quest-btn shop-grid-button ${equipped ? "task-global-menu-button-current task-global-menu-button-active" : "task-global-menu-button-secondary"}`} onClick={() => onEquipFrame(item.itemId)}>
-                  {equipped ? "そうび中" : "使う"}
-                </button>
+                <>
+                  <button className={`quest-btn shop-grid-button ${equipped ? "task-global-menu-button-current task-global-menu-button-active" : "task-global-menu-button-secondary"}`} onClick={() => onEquipFrame(item.itemId)}>
+                    {equipped ? "そうび中" : "使う"}
+                  </button>
+                  {equipped ? (
+                    <button className="quest-btn shop-grid-button task-global-menu-button-secondary" onClick={onUnequipFrame}>
+                      フレームを外す
+                    </button>
+                  ) : null}
+                </>
               )}
             </section>
           );
@@ -743,9 +762,16 @@ export default function ShopPage() {
                     購入する
                   </button>
                 ) : (
-                  <button className={`quest-btn shop-grid-button ${equipped ? "task-global-menu-button-current task-global-menu-button-active" : "task-global-menu-button-secondary"}`} onClick={() => onEquipFrame(item.itemId)}>
-                    {equipped ? "そうび中" : "使う"}
-                  </button>
+                  <>
+                    <button className={`quest-btn shop-grid-button ${equipped ? "task-global-menu-button-current task-global-menu-button-active" : "task-global-menu-button-secondary"}`} onClick={() => onEquipFrame(item.itemId)}>
+                      {equipped ? "そうび中" : "使う"}
+                    </button>
+                    {equipped ? (
+                      <button className="quest-btn shop-grid-button task-global-menu-button-secondary" onClick={onUnequipFrame}>
+                        フレームを外す
+                      </button>
+                    ) : null}
+                  </>
                 )}
               </section>
             );

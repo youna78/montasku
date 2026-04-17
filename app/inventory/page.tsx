@@ -20,7 +20,7 @@ const CHARM_BUTTON_CLASS: Record<(typeof SHOP_ATTRIBUTE_CHARMS)[number]["attribu
 
 export default function InventoryPage() {
   const router = useRouter();
-  const { monsters, gameState, isLoading, equipBackground, equipFrame, useAttributeCharm, useBooster, equipDecoration, unequipDecoration } = useGame();
+  const { monsters, gameState, isLoading, equipBackground, equipFrame, unequipFrame, useAttributeCharm, useBooster, equipDecoration, unequipDecoration } = useGame();
   const [tab, setTab] = useState<InventoryTab>("background");
   const [message, setMessage] = useState("");
 
@@ -99,6 +99,16 @@ export default function InventoryPage() {
       return;
     }
     setMessage("フレームをそうびしました");
+  };
+
+  const onUnequipFrame = () => {
+    const result = unequipFrame();
+    if (!result) return;
+    if (!result.equipped) {
+      setMessage("フレームは外れています");
+      return;
+    }
+    setMessage("フレームを外しました");
   };
 
   const onUseCharm = (attribute: keyof typeof gameState.attributeTotals, variant: "free" | "paid") => {
@@ -237,6 +247,14 @@ export default function InventoryPage() {
                 >
                   {equipped ? "使用中" : "このフレームを使う"}
                 </button>
+                {equipped ? (
+                  <button
+                    className="quest-btn task-global-menu-button task-global-menu-button-secondary"
+                    onClick={onUnequipFrame}
+                  >
+                    フレームを外す
+                  </button>
+                ) : null}
               </div>
             </section>
           );

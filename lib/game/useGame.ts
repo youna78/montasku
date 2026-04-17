@@ -20,6 +20,7 @@ import {
   completeTask as runCompleteTask,
   equipBackground as runEquipBackground,
   equipFrame as runEquipFrame,
+  unequipFrame as runUnequipFrame,
   equipDecoration as runEquipDecoration,
   finishEndEvent as runFinishEndEvent,
   finishBirthEvent as runFinishBirthEvent,
@@ -90,6 +91,7 @@ type UseGameResult = {
   equipBackground: (backgroundId: string) => EquipBackgroundResult | null;
   purchaseFrame: (frameId: string, price: number) => PurchaseShopItemResult | null;
   equipFrame: (frameId: string) => EquipFrameResult | null;
+  unequipFrame: () => EquipFrameResult | null;
   purchaseAttributeCharm: (attribute: CharmAttribute) => PurchaseCharmResult | null;
   purchasePaidAttributeCharm: (attribute: CharmAttribute) => PurchaseCharmResult | null;
   useAttributeCharm: (attribute: CharmAttribute, variant?: "free" | "paid") => UseCharmResult | null;
@@ -602,6 +604,17 @@ export function useGame(): UseGameResult {
     [commitState]
   );
 
+  const unequipFrame = useCallback(
+    (): EquipFrameResult | null => {
+      const current = gameStateRef.current;
+      if (!current) return null;
+      const result = runUnequipFrame(current);
+      commitState(result.nextState);
+      return result;
+    },
+    [commitState]
+  );
+
   const useAttributeCharm = useCallback(
     (attribute: CharmAttribute, variant: "free" | "paid" = "free") => {
       const current = gameStateRef.current;
@@ -784,6 +797,7 @@ export function useGame(): UseGameResult {
     equipBackground,
     purchaseFrame,
     equipFrame,
+    unequipFrame,
     purchaseAttributeCharm,
     purchasePaidAttributeCharm,
     useAttributeCharm,

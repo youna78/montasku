@@ -506,6 +506,9 @@ button:disabled {
   position: relative;
   min-height: 180px;
   aspect-ratio: 2 / 1;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   border: 2px solid rgba(108, 68, 25, 0.8);
   border-radius: 8px;
   overflow: hidden;
@@ -578,7 +581,7 @@ button:disabled {
 
 .home-stage-actions {
   position: relative;
-  z-index: 1;
+  z-index: 6;
   display: grid;
   gap: 10px;
 }
@@ -612,6 +615,11 @@ button:disabled {
 @media (max-width: 720px) {
   .home-stage-layout {
     grid-template-columns: 1fr;
+  }
+
+  .monster-stage {
+    max-width: 100%;
+    min-height: auto;
   }
 
   .home-stage-actions {
