@@ -52,6 +52,7 @@ function toAuthUser(user: User): AuthUserProfile {
 
 function toAuthErrorMessage(error: unknown, fallback: string): string {
   const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
+  const nativeMessage = error instanceof Error ? error.message : "";
 
   switch (code) {
     case "auth/invalid-email":
@@ -76,6 +77,12 @@ function toAuthErrorMessage(error: unknown, fallback: string): string {
     case "auth/native-google-credential-missing":
       return "Android の Google ログイン情報を取得できませんでした。もう一度お試しください。";
     default:
+      if (nativeMessage.includes("10") || nativeMessage.includes("DEVELOPER_ERROR")) {
+        return "Android の Googleログイン設定に問題があります。Firebase の SHA-1 / SHA-256、google-services.json、パッケージ名を確認してください。";
+      }
+      if (nativeMessage) {
+        return `${fallback}（${nativeMessage}）`;
+      }
       return fallback;
   }
 }
