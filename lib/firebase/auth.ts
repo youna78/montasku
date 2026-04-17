@@ -54,11 +54,24 @@ export async function signInWithGoogleRedirect() {
 export async function signInWithGoogleNative() {
   await ensurePersistence();
   const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
-  const result = await FirebaseAuthentication.signInWithGoogle({
-    skipNativeAuth: true,
-    scopes: ["email", "profile"],
-    useCredentialManager: true
-  });
+  let result;
+  try {
+    result = await FirebaseAuthentication.signInWithGoogle({
+      skipNativeAuth: true,
+      scopes: ["email", "profile"],
+      useCredentialManager: true
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (!message.includes("Cannot find a matching credential") && !message.includes("NoCredential")) {
+      throw error;
+    }
+    result = await FirebaseAuthentication.signInWithGoogle({
+      skipNativeAuth: true,
+      scopes: ["email", "profile"],
+      useCredentialManager: false
+    });
+  }
   const credential = result.credential;
   if (!credential?.idToken && !credential?.accessToken) {
     throw new Error("auth/native-google-credential-missing");
