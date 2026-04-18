@@ -23,6 +23,8 @@ html,
 body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  min-height: 100%;
   background: var(--bg);
   background-image: url("/img/background/bg_main_field_01.png");
   background-size: cover;
@@ -32,6 +34,9 @@ body {
   font-family: "Osaka-mono", "MS Gothic", "Courier New", monospace;
   line-height: 1.45;
   text-rendering: geometricPrecision;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: hidden;
 }
 
 main {
@@ -80,6 +85,12 @@ button {
   padding: 8px 12px;
   cursor: pointer;
   font-family: "Osaka-mono", "MS Gothic", "Courier New", monospace;
+}
+
+input,
+select,
+textarea {
+  font-size: 16px;
 }
 
 button.primary {
@@ -627,9 +638,18 @@ button:disabled {
   }
 
   .monster-stage {
-    width: 94%;
+    width: 100%;
     max-width: 100%;
     min-height: auto;
+  }
+
+  .monster-stage-frame {
+    width: 114%;
+  }
+
+  .monster-img {
+    width: 104px;
+    height: 104px;
   }
 
   .home-stage-actions {
@@ -1030,6 +1050,7 @@ button:disabled {
   background: rgba(255, 249, 232, 0.95);
   color: var(--text);
   font-family: "Osaka-mono", "MS Gothic", "Courier New", monospace;
+  font-size: 16px;
 }
 
 .auth-card-button {
@@ -2888,14 +2909,61 @@ a.quest-btn[aria-disabled="true"] {
 }
 
 @media (max-width: 560px) {
-  .event-banner-card,
-  .event-egg-row {
-    grid-template-columns: 1fr;
+  .event-banner-card {
+    grid-template-columns: 86px minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+    padding: 10px;
   }
 
   .event-banner-image,
   .event-banner-image-wrap {
-    min-height: 120px;
+    min-height: 0;
+    height: 58px;
+  }
+
+  .event-banner-image {
+    object-fit: cover;
+  }
+
+  .event-banner-meta {
+    gap: 3px;
+  }
+
+  .event-banner-meta strong {
+    font-size: 14px;
+    line-height: 1.25;
+  }
+
+  .event-banner-meta p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .event-banner-head {
+    gap: 4px;
+  }
+
+  .event-banner-remaining {
+    font-size: 11px;
+  }
+
+  .event-hero-image-wrap {
+    height: clamp(72px, 22vw, 96px);
+    max-height: 96px;
+    aspect-ratio: auto;
+    padding: 4px;
+  }
+
+  .event-hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .event-egg-row {
+    grid-template-columns: 1fr;
   }
 
   .event-progress-grid,

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Suspense, type ReactNode } from "react";
 import { AuthProvider } from "@/components/auth/AuthProvider";
@@ -21,6 +21,13 @@ export const metadata: Metadata = {
     icon: "/img/branding/appicon.jpg",
     apple: "/img/branding/appicon.jpg"
   }
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover"
 };
 
 const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
