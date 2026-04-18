@@ -506,7 +506,7 @@ button:disabled {
   position: relative;
   min-height: 180px;
   aspect-ratio: 2 / 1;
-  width: 86%;
+  width: 92%;
   max-width: 100%;
   min-width: 0;
   margin: 0 auto;
@@ -627,6 +627,7 @@ button:disabled {
   }
 
   .monster-stage {
+    width: 94%;
     max-width: 100%;
     min-height: auto;
   }
