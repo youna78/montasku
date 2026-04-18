@@ -16,7 +16,11 @@ const dotGothic16 = localFont({
 
 export const metadata: Metadata = {
   title: "Habit Monster MVP",
-  description: "Task-based monster growth MVP"
+  description: "Task-based monster growth MVP",
+  icons: {
+    icon: "/img/branding/appicon.jpg",
+    apple: "/img/branding/appicon.jpg"
+  }
 };
 
 const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;

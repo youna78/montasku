@@ -12,13 +12,16 @@
     "lint": "next lint",
     "cap:sync": "cap sync",
     "cap:android:add": "cap add android",
-    "cap:android:open": "cap open android"
+    "cap:android:open": "cap open android",
+    "cap:ios:add": "cap add ios",
+    "cap:ios:open": "cap open ios"
   },
   "dependencies": {
     "@capacitor-firebase/authentication": "^7.5.0",
     "@capacitor/android": "^7.6.1",
     "@capacitor/cli": "^7.6.1",
     "@capacitor/core": "^7.6.1",
+    "@capacitor/ios": "^7.6.2",
     "firebase": "^12.11.0",
     "firebase-admin": "^13.7.0",
     "next": "^15.5.14",

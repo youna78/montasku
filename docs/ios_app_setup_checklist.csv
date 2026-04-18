@@ -1,0 +1,14 @@
+category,step,status,where,notes
+Firebase,iOSアプリを追加,needed,Firebase Console > プロジェクト設定 > マイアプリ,Bundle ID は com.ikizurasenryaku.montasku
+Firebase,GoogleService-Info.plist をダウンロード,needed,Firebase Console > iOSアプリ設定,チャットやGitHubに貼らない
+Firebase,GoogleService-Info.plist を配置,needed,/Users/apple/Desktop/taskgame/ios/App/App/GoogleService-Info.plist,ios/.gitignore でGit除外済み
+Firebase,Authentication のGoogleログイン確認,needed,Firebase Console > Authentication > Sign-in method,既存プロジェクトのGoogleログインを使う
+Google Cloud,iOS OAuthクライアント確認,needed,Google Cloud Console > APIとサービス > 認証情報,FirebaseのiOSアプリ追加で自動作成される場合あり
+Xcode,Signing & Capabilities設定,needed,Xcode > App target > Signing & Capabilities,Apple Developer Teamを選択
+Xcode,Bundle Identifier確認,done,Xcode > App target > General,com.ikizurasenryaku.montasku
+Xcode,実機ビルド確認,needed,Xcode > Run,GoogleService-Info.plist配置後に確認
+App Store Connect,アプリ登録,needed,App Store Connect > My Apps,名前・Bundle ID・SKUを設定
+App Store Connect,プライバシー回答,needed,App Privacy,Googleログイン/メール/ユーザーID/今後の課金方針に合わせる
+App Store Connect,アカウント削除導線,done,https://montasku.vercel.app/contact,お問い合わせページ下部に退会・アカウント削除導線あり
+Billing,初回iOS版の有料コイン導線非表示,planned,アプリ仕様,iOS/Androidのデジタル商品は将来的にストア課金へ移行
+Firebase,REVERSED_CLIENT_ID をURL Schemeへ追加,needed,Xcode > App target > Info > URL Types,GoogleService-Info.plist内の REVERSED_CLIENT_ID をコピーしてURL Schemesに設定

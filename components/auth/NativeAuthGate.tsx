@@ -36,7 +36,7 @@ export function NativeAuthGate({ children }: { children: ReactNode }) {
   }
 
   if (isNativeApp && !user && !isPublicNativePath(pathname)) {
-    return <main className="page-shell"><div className="card decorated-card auth-card-message auth-card-message-centered">Androidアプリ版はログインが必要です。</div></main>;
+    return <main className="page-shell"><div className="card decorated-card auth-card-message auth-card-message-centered">アプリ版はログインが必要です。</div></main>;
   }
 
   return <>{children}</>;
