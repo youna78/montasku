@@ -8,7 +8,7 @@ import { EvolutionOverlay } from "@/components/common/EvolutionOverlay";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { trackEvent } from "@/lib/analytics/gtag";
 import { HOME_ANNOUNCEMENTS } from "@/lib/game/announcements";
-import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage, getStageBadge } from "@/lib/game/assets";
+import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage } from "@/lib/game/assets";
 import { getEventStatusLabel, getRemainingDaysLabel, getVisibleHomeEvents, isEventActive } from "@/lib/game/events";
 import { getBackgroundImagePath, getDecorationShopItem, getFramePreviewImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { playSfx } from "@/lib/game/sfx";
@@ -21,6 +21,15 @@ type EvolutionScene = {
   nextMonsterName: string;
   previousMonsterId: number;
   nextMonsterId: number;
+};
+
+const GROWTH_STAGE_LABELS: Record<string, string> = {
+  egg: "Egg",
+  baby: "Baby",
+  child: "Child",
+  adult: "Adult",
+  final: "Final",
+  end: "End"
 };
 
 function toPercent(value: number, total: number): number {
@@ -118,7 +127,7 @@ export default function HomePage() {
     { key: "create", label: "Create", value: gameState.attributeTotals.create, className: "bar-create" }
   ];
 
-  const stageBadge = getStageBadge(growthStage);
+  const growthStageLabel = GROWTH_STAGE_LABELS[growthStage] ?? growthStage;
   const monsterMotionClass = growthStage === "egg" ? "monster-img-alive" : "monster-img-walk-hop";
   const activeDecorations = gameState.selectedDecorationIds
     .map((itemId) => getDecorationShopItem(itemId))
@@ -234,15 +243,14 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
-        {stageBadge && (
-          <div className="badge-wrap">
-            <img src={stageBadge} alt="stage" className="badge-img" />
-          </div>
-        )}
         <div className="status-panel">
           <div className="status-row">
             <span>現在のモンスター</span>
             <strong>{currentMonster?.name ?? "-"}</strong>
+          </div>
+          <div className="status-row">
+            <span>成長段階</span>
+            <strong>{growthStageLabel}</strong>
           </div>
           <div className="status-row">
             <span>Lv</span>
