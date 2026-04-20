@@ -13,7 +13,7 @@ import { getEventBySlug, getEventStatusLabel, getRemainingDaysLabel, isEventActi
 import { getBackgroundImagePath, getFrameThemeClass, SHOP_EVENT_BUNDLES, SHOP_EVENT_DECORATIONS, SHOP_PAID_COIN_ITEMS } from "@/lib/game/shop";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
-import { isNativeMobileApp } from "@/lib/platform/capacitor";
+import { getNativePlatform, isNativeMobileApp } from "@/lib/platform/capacitor";
 
 type PurchaseConfirmState = {
   title: string;
@@ -48,9 +48,18 @@ export default function EventShopDetailPage() {
   const [bundleConfirm, setBundleConfirm] = useState<{ itemId: string; title: string; ownedLines: string[]; grantedLines: string[] } | null>(null);
   const [checkoutItemId, setCheckoutItemId] = useState<string | null>(null);
   const [isNativeApp, setIsNativeApp] = useState(false);
+  const [nativePlatformLabel, setNativePlatformLabel] = useState("アプリ");
 
   useEffect(() => {
     setIsNativeApp(isNativeMobileApp());
+    const platform = getNativePlatform();
+    if (platform === "ios") {
+      setNativePlatformLabel("iOSアプリ");
+    } else if (platform === "android") {
+      setNativePlatformLabel("Androidアプリ");
+    } else {
+      setNativePlatformLabel("アプリ");
+    }
   }, []);
 
   useEffect(() => {
@@ -450,7 +459,7 @@ export default function EventShopDetailPage() {
         </div>
         <p className="shop-note">
           {isNativeApp
-            ? "Androidアプリ版のモンタコイン購入は準備中です。Web版で購入済みのモンタコインは、イベント限定アイテムにも使えます。"
+            ? `${nativePlatformLabel}版のモンタコイン購入は準備中です。Web版で購入済みのモンタコインは、イベント限定アイテムにも使えます。`
             : "モンタコインは、Stripe で購入できる有料コインです。必要なときは通常ショップのモンタコインページからチャージできます。"}
         </p>
         {starterCheckoutItem ? (
@@ -471,7 +480,7 @@ export default function EventShopDetailPage() {
                 <div className="shop-grid-price">{starterCheckoutItem.priceJpy} 円</div>
               </div>
               {isNativeApp ? (
-                <p className="shop-note shop-note-strong">Androidアプリ版での購入は準備中です。</p>
+                <p className="shop-note shop-note-strong">{nativePlatformLabel}版での購入は準備中です。</p>
               ) : (
                 <button
                   className="quest-btn shop-grid-button task-global-menu-button-accent"

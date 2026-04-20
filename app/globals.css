@@ -635,6 +635,9 @@ button:disabled {
 @media (max-width: 720px) {
   .home-stage-layout {
     grid-template-columns: 1fr;
+    padding-top: 26px;
+    padding-bottom: 34px;
+    margin-bottom: 18px;
   }
 
   .monster-stage {
@@ -654,6 +657,7 @@ button:disabled {
 
   .home-stage-actions {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 18px;
   }
 }
 
@@ -2909,6 +2913,20 @@ a.quest-btn[aria-disabled="true"] {
 }
 
 @media (max-width: 560px) {
+  .shop-subtab-row-wide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .shop-paid-subtab-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .shop-tab-button {
+    min-height: 44px;
+  }
+
   .event-banner-card {
     grid-template-columns: 86px minmax(0, 1fr);
     gap: 8px;
@@ -2950,10 +2968,10 @@ a.quest-btn[aria-disabled="true"] {
   }
 
   .event-hero-image-wrap {
-    height: clamp(72px, 22vw, 96px);
-    max-height: 96px;
+    height: clamp(132px, 38vw, 180px);
+    max-height: 180px;
     aspect-ratio: auto;
-    padding: 4px;
+    padding: 6px;
   }
 
   .event-hero-image {

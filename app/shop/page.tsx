@@ -10,7 +10,7 @@ import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getFirebaseAuth } from "@/lib/firebase/auth";
 import { getVisibleHomeEvents, isEventActive } from "@/lib/game/events";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
-import { isNativeMobileApp } from "@/lib/platform/capacitor";
+import { getNativePlatform, isNativeMobileApp } from "@/lib/platform/capacitor";
 import {
   getBackgroundImagePath,
   getBoosterShopItem,
@@ -90,9 +90,18 @@ export default function ShopPage() {
   const [bundleConfirm, setBundleConfirm] = useState<BundleConfirmState | null>(null);
   const [purchaseConfirm, setPurchaseConfirm] = useState<PurchaseConfirmState | null>(null);
   const [isNativeApp, setIsNativeApp] = useState(false);
+  const [nativePlatformLabel, setNativePlatformLabel] = useState("アプリ");
 
   useEffect(() => {
     setIsNativeApp(isNativeMobileApp());
+    const platform = getNativePlatform();
+    if (platform === "ios") {
+      setNativePlatformLabel("iOSアプリ");
+    } else if (platform === "android") {
+      setNativePlatformLabel("Androidアプリ");
+    } else {
+      setNativePlatformLabel("アプリ");
+    }
   }, []);
 
   useEffect(() => {
@@ -663,7 +672,7 @@ export default function ShopPage() {
             <div className="shop-grid-price">{item.priceJpy} 円{item.bonusPaidCoins > 0 ? ` / +${item.bonusPaidCoins} おまけ` : ""}</div>
           </div>
           {isNativeApp ? (
-            <p className="shop-note shop-note-strong">Androidアプリ版での購入は準備中です。</p>
+            <p className="shop-note shop-note-strong">{nativePlatformLabel}版での購入は準備中です。</p>
           ) : (
             <button
               className="quest-btn shop-grid-button task-global-menu-button-accent"
@@ -893,7 +902,7 @@ export default function ShopPage() {
                       <div className="shop-grid-price">{item.priceJpy} 円</div>
                     </div>
                     {isNativeApp ? (
-                      <p className="shop-note shop-note-strong">Androidアプリ版での購入は準備中です。</p>
+                      <p className="shop-note shop-note-strong">{nativePlatformLabel}版での購入は準備中です。</p>
                     ) : (
                       <button
                         className="quest-btn shop-grid-button task-global-menu-button-accent"
@@ -1055,7 +1064,7 @@ export default function ShopPage() {
             <div className="shop-paid-intro">
               <p className="shop-note shop-note-strong">
                 {isNativeApp
-                  ? "Androidアプリ版のモンタコイン購入は準備中です。所持しているモンタコインは、背景やフレーム、アイテム、セット商品に使えます。"
+                  ? `${nativePlatformLabel}版のモンタコイン購入は準備中です。所持しているモンタコインは、背景やフレーム、アイテム、セット商品に使えます。`
                   : "モンタコインは、Stripe で購入できる有料コインです。チャージしたあと、背景やフレーム、アイテム、セット商品に使えます。"}
               </p>
               {!user ? (
