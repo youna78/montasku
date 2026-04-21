@@ -14,6 +14,7 @@ export function GuestLoginPrompt() {
     user,
     showDailyPrompt,
     dismissDailyPrompt,
+    signInWithApple,
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
@@ -81,10 +82,10 @@ export function GuestLoginPrompt() {
   return (
     <div className="auth-prompt-overlay" role="dialog" aria-modal="true" aria-labelledby="guest-login-title">
       <div className="card decorated-card auth-prompt-card">
-        <h2 id="guest-login-title">Googleログイン</h2>
-        <p className="auth-prompt-message">ゲストのまま遊べますが、Google ログインすると今後別の端末でも遊べます</p>
+        <h2 id="guest-login-title">ログイン</h2>
+        <p className="auth-prompt-message">ゲストのまま遊べますが、ログインすると今後別の端末でも遊べます</p>
         <div className="auth-privacy-note auth-privacy-note-compact">
-          <p>Googleでログインすると、氏名、メールアドレス、ユーザーIDを取得します。</p>
+          <p>GoogleまたはAppleでログインすると、氏名、メールアドレス、ユーザーIDを取得します。</p>
           <p>ログイン機能、データ保存、機種変更時の引き継ぎに利用します。</p>
           <p>
             詳しくは
@@ -99,6 +100,9 @@ export function GuestLoginPrompt() {
         <div className="auth-prompt-actions">
           <button className="quest-btn quest-btn-primary auth-card-button" onClick={() => void signInWithGoogle()}>
             Googleでログイン
+          </button>
+          <button className="quest-btn quest-btn-apple auth-card-button" onClick={() => void signInWithApple()}>
+            Appleでログイン
           </button>
           <div className="auth-divider">または</div>
           <div className="auth-mode-toggle">

@@ -17,7 +17,7 @@ export default function TermsPage() {
       <div className="legal-section">
         <h2>2. アカウント</h2>
         <p>
-          Googleログインまたはメールアドレス認証を利用する場合、ユーザーは自身の管理するアカウント情報を用いてログインするものとします。
+          Googleログイン、Appleログイン、またはメールアドレス認証を利用する場合、ユーザーは自身の管理するアカウント情報を用いてログインするものとします。
         </p>
       </div>
 

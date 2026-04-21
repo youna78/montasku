@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthCard } from "@/components/auth/AuthCard";
-import { useAuth } from "@/components/auth/AuthProvider";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
@@ -14,7 +13,6 @@ import { isNativeMobileApp } from "@/lib/platform/capacitor";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user, isLoading: isAuthLoading } = useAuth();
   const { monsters, gameState, isLoading } = useGame();
   const [isNativeApp, setIsNativeApp] = useState<boolean | null>(null);
 
@@ -25,7 +23,6 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!gameState) return;
     if (isNativeApp === null) return;
-    if (isNativeApp && !isAuthLoading && !user) return;
     if (gameState.endEventPending) {
       router.replace("/end-event");
       return;
@@ -41,13 +38,11 @@ export default function SettingsPage() {
     if (!gameState.hasSeenTutorial) {
       router.replace("/tutorial");
     }
-  }, [gameState, isAuthLoading, isNativeApp, router, user]);
+  }, [gameState, isNativeApp, router]);
 
   if (isLoading || !gameState || isNativeApp === null) {
     return <main>Loading...</main>;
   }
-
-  const isNativeLoginRequired = isNativeApp && !isAuthLoading && !user;
 
   return (
     <main
@@ -56,32 +51,30 @@ export default function SettingsPage() {
     >
       <div className="title-panel">設定</div>
       <AuthCard />
-      {!isNativeLoginRequired && (
-        <section className="card decorated-card">
-          <div className="settings-menu-grid centered-actions">
-            <Link href="/task-settings" className="ui-link-button settings-menu-button settings-menu-button-primary">
-              タスク設定へ
-            </Link>
-            <Link href="/shop" className="ui-link-button settings-menu-button settings-menu-button-neutral">
-              ショップ
-            </Link>
-            <Link href="/inventory" className="ui-link-button settings-menu-button settings-menu-button-neutral">
-              持ち物
-            </Link>
-            <Link href="/letters" className="ui-link-button settings-menu-button settings-menu-button-secondary">
-              てがみ
-            </Link>
-            <a
-              href="https://docs.google.com/forms/d/e/1FAIpQLSflbsd5RHq5IBKaTU7k6aIFPJjhk1GINQ0VqSjwSYRFBtUvJA/viewform?usp=publish-editor"
-              target="_blank"
-              rel="noreferrer"
-              className="ui-link-button settings-menu-button settings-menu-button-accent"
-            >
-              タスク追加リクエスト
-            </a>
-          </div>
-        </section>
-      )}
+      <section className="card decorated-card">
+        <div className="settings-menu-grid centered-actions">
+          <Link href="/task-settings" className="ui-link-button settings-menu-button settings-menu-button-primary">
+            タスク設定へ
+          </Link>
+          <Link href="/shop" className="ui-link-button settings-menu-button settings-menu-button-neutral">
+            ショップ
+          </Link>
+          <Link href="/inventory" className="ui-link-button settings-menu-button settings-menu-button-neutral">
+            持ち物
+          </Link>
+          <Link href="/letters" className="ui-link-button settings-menu-button settings-menu-button-secondary">
+            てがみ
+          </Link>
+          <a
+            href="https://docs.google.com/forms/d/e/1FAIpQLSflbsd5RHq5IBKaTU7k6aIFPJjhk1GINQ0VqSjwSYRFBtUvJA/viewform?usp=publish-editor"
+            target="_blank"
+            rel="noreferrer"
+            className="ui-link-button settings-menu-button settings-menu-button-accent"
+          >
+            タスク追加リクエスト
+          </a>
+        </div>
+      </section>
       <section className="card decorated-card">
         <div className="settings-menu-grid centered-actions">
           <Link href="/privacy" className="ui-link-button settings-menu-button settings-menu-button-neutral">
@@ -102,7 +95,7 @@ export default function SettingsPage() {
         </div>
       </section>
       <DevDebugPanel gameState={gameState} monsters={monsters} />
-      {!isNativeLoginRequired && <BottomNav />}
+      <BottomNav />
     </main>
   );
 }

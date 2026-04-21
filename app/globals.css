@@ -1744,6 +1744,12 @@ a.quest-btn {
   text-shadow: 1px 1px 0 rgba(255, 244, 214, 0.55);
 }
 
+.quest-btn.quest-btn-apple {
+  background: linear-gradient(180deg, #4a4a4a 0%, #242424 44%, #050505 45%, #1a1a1a 100%);
+  border-color: #050505;
+  color: #ffffff;
+}
+
 .quest-btn.quest-btn-danger {
   background: linear-gradient(180deg, #f2a8a8 0%, #d95f5f 44%, #a73535 45%, #bd4747 100%);
   border-color: #7c2424;

@@ -7,6 +7,7 @@ import {
   sendResetPasswordEmail,
   sendVerificationEmail,
   signInWithEmail,
+  signInWithApple as signInWithAppleFirebase,
   signInWithGoogle as signInWithGoogleFirebase,
   signOutFirebase,
   signUpWithEmail,
@@ -27,6 +28,7 @@ type AuthContextValue = {
   infoMessage: string;
   showDailyPrompt: boolean;
   signInWithGoogle: () => Promise<boolean>;
+  signInWithApple: () => Promise<boolean>;
   signInWithEmail: (email: string, password: string) => Promise<boolean>;
   signUpWithEmail: (email: string, password: string) => Promise<boolean>;
   sendVerificationEmail: () => Promise<boolean>;
@@ -76,7 +78,12 @@ function toAuthErrorMessage(error: unknown, fallback: string): string {
       return "このドメインは Firebase の承認済みドメインに登録されていません。";
     case "auth/native-google-credential-missing":
       return "Android の Google ログイン情報を取得できませんでした。もう一度お試しください。";
+    case "auth/native-apple-credential-missing":
+      return "Appleログイン情報を取得できませんでした。もう一度お試しください。";
     default:
+      if (nativeMessage.includes("canceled") || nativeMessage.includes("cancelled") || nativeMessage.includes("キャンセル")) {
+        return "ログインがキャンセルされました。";
+      }
       if (nativeMessage.includes("10") || nativeMessage.includes("DEVELOPER_ERROR")) {
         return "Android の Googleログイン設定に問題があります。Firebase の SHA-1 / SHA-256、google-services.json、パッケージ名を確認してください。";
       }
@@ -121,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await consumeGoogleRedirectResult();
       } catch (error) {
         console.error("[auth] consume redirect result failed", error);
-        setErrorMessage(toAuthErrorMessage(error, "Googleログインに失敗しました。"));
+        setErrorMessage(toAuthErrorMessage(error, "ログインに失敗しました。"));
       }
     })();
 
@@ -177,6 +184,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error) {
           console.error("[auth] sign-in failed", error);
           setErrorMessage(toAuthErrorMessage(error, "Googleログインに失敗しました。"));
+          return false;
+        }
+      },
+      signInWithApple: async () => {
+        if (!configured) {
+          setErrorMessage("Firebase の環境変数が未設定です。");
+          return false;
+        }
+
+        try {
+          setShowDailyPrompt(false);
+          setErrorMessage("");
+          setInfoMessage("");
+          await signInWithAppleFirebase();
+          return true;
+        } catch (error) {
+          console.error("[auth] apple sign-in failed", error);
+          setErrorMessage(toAuthErrorMessage(error, "Appleログインに失敗しました。"));
           return false;
         }
       },

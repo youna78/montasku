@@ -23,6 +23,7 @@ export function AuthCard() {
     isConfigured,
     errorMessage,
     infoMessage,
+    signInWithApple,
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
@@ -100,12 +101,12 @@ export function AuthCard() {
         <div className="auth-card-stack">
           <p className="auth-card-message auth-card-message-centered">
             {isNativeApp
-              ? "Androidアプリ版では、Googleログインまたはメール登録が必要です。"
-              : "ゲストのまま遊べますが、Google ログインすると今後別の端末でも遊べます"}
+              ? "ゲストのまま遊べます。ログインすると別の端末でもデータを引き継げます。"
+              : "ゲストのまま遊べますが、ログインすると今後別の端末でも遊べます"}
           </p>
           <div className="auth-privacy-note">
             <p>
-              Googleでログインすると、アカウント識別のために氏名、メールアドレス、ユーザーIDを取得します。
+              GoogleまたはAppleでログインすると、アカウント識別のために氏名、メールアドレス、ユーザーIDを取得します。
             </p>
             <p>
               取得した情報は、ログイン機能の提供、データ保存、機種変更時の引き継ぎのために利用します。
@@ -122,6 +123,9 @@ export function AuthCard() {
           </div>
           <button className="quest-btn quest-btn-primary auth-card-button" onClick={() => void signInWithGoogle()}>
             Googleでログイン
+          </button>
+          <button className="quest-btn quest-btn-apple auth-card-button" onClick={() => void signInWithApple()}>
+            Appleでログイン
           </button>
           <div className="auth-divider">または</div>
           <div className="auth-mode-toggle">

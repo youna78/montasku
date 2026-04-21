@@ -15,8 +15,9 @@ const dotGothic16 = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Habit Monster MVP",
-  description: "Task-based monster growth MVP",
+  title: "モンタスク",
+  description: "毎日のタスク達成でモンスターを育てる習慣化ゲーム",
+  manifest: "/manifest.json",
   icons: {
     icon: "/img/branding/appicon.jpg",
     apple: "/img/branding/appicon.jpg"

@@ -1,6 +1,7 @@
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
+  OAuthProvider,
   browserLocalPersistence,
   getRedirectResult,
   getAuth,
@@ -81,6 +82,43 @@ export async function signInWithGoogleNative() {
   return signInWithCredential(getFirebaseAuth(), firebaseCredential);
 }
 
+function createAppleProvider() {
+  const provider = new OAuthProvider("apple.com");
+  provider.addScope("email");
+  provider.addScope("name");
+  return provider;
+}
+
+export async function signInWithApplePopup() {
+  await ensurePersistence();
+  return signInWithPopup(getFirebaseAuth(), createAppleProvider());
+}
+
+export async function signInWithAppleRedirect() {
+  await ensurePersistence();
+  return signInWithRedirect(getFirebaseAuth(), createAppleProvider());
+}
+
+export async function signInWithAppleNative() {
+  await ensurePersistence();
+  const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
+  const result = await FirebaseAuthentication.signInWithApple({
+    skipNativeAuth: true
+  });
+  const credential = result.credential;
+  if (!credential?.idToken) {
+    throw new Error("auth/native-apple-credential-missing");
+  }
+
+  const provider = createAppleProvider();
+  const firebaseCredential = provider.credential({
+    idToken: credential.idToken,
+    accessToken: credential.accessToken,
+    rawNonce: credential.nonce
+  });
+  return signInWithCredential(getFirebaseAuth(), firebaseCredential);
+}
+
 export async function signInWithGoogle() {
   if (isNativeMobileApp()) {
     return signInWithGoogleNative();
@@ -96,6 +134,23 @@ export async function signInWithGoogle() {
   }
 
   return signInWithGooglePopup();
+}
+
+export async function signInWithApple() {
+  if (isNativeMobileApp()) {
+    return signInWithAppleNative();
+  }
+
+  const userAgent = typeof window !== "undefined" ? window.navigator.userAgent.toLowerCase() : "";
+  const isTouchDevice = typeof window !== "undefined"
+    ? window.matchMedia?.("(pointer: coarse)")?.matches ?? false
+    : false;
+
+  if (/iphone|ipad|ipod|android/.test(userAgent) || isTouchDevice) {
+    return signInWithAppleRedirect();
+  }
+
+  return signInWithApplePopup();
 }
 
 export async function consumeGoogleRedirectResult() {

@@ -9,11 +9,11 @@ export default function PrivacyPage() {
 
       <div className="legal-section">
         <h2>1. 取得する情報</h2>
-        <p>本サービスは、Googleログインを利用する際に、以下の情報を取得する場合があります。</p>
+        <p>本サービスは、GoogleログインまたはAppleログインを利用する際に、以下の情報を取得する場合があります。</p>
         <ul className="legal-list">
           <li>氏名</li>
           <li>メールアドレス</li>
-          <li>Googleアカウントに紐づくユーザーID</li>
+          <li>ログインに利用したアカウントに紐づくユーザーID</li>
         </ul>
       </div>
 
@@ -34,6 +34,7 @@ export default function PrivacyPage() {
         <p>本サービスでは、以下の外部サービスを利用することがあります。</p>
         <ul className="legal-list">
           <li>Google Authentication</li>
+          <li>Sign in with Apple</li>
           <li>Firebase Authentication</li>
           <li>Cloud Firestore</li>
           <li>Vercel</li>
