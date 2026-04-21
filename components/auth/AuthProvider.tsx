@@ -81,6 +81,9 @@ function toAuthErrorMessage(error: unknown, fallback: string): string {
     case "auth/native-apple-credential-missing":
       return "Appleログイン情報を取得できませんでした。もう一度お試しください。";
     default:
+      if (nativeMessage.includes("auth/native-apple-provider-timeout")) {
+        return "Appleログインの準備がまだアプリ本体に反映されていません。アプリを再ビルドしてからもう一度お試しください。";
+      }
       if (nativeMessage.includes("canceled") || nativeMessage.includes("cancelled") || nativeMessage.includes("キャンセル")) {
         return "ログインがキャンセルされました。";
       }

@@ -20,6 +20,16 @@ import { isNativeMobileApp } from "@/lib/platform/capacitor";
 
 let persistenceReady: Promise<void> | null = null;
 
+function rejectAfter<T>(promise: Promise<T>, ms: number, error: Error): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(error), ms);
+    promise
+      .then(resolve)
+      .catch(reject)
+      .finally(() => window.clearTimeout(timer));
+  });
+}
+
 export function getFirebaseAuth() {
   return getAuth(getFirebaseApp());
 }
@@ -102,9 +112,13 @@ export async function signInWithAppleRedirect() {
 export async function signInWithAppleNative() {
   await ensurePersistence();
   const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
-  const result = await FirebaseAuthentication.signInWithApple({
-    skipNativeAuth: true
-  });
+  const result = await rejectAfter(
+    FirebaseAuthentication.signInWithApple({
+      skipNativeAuth: true
+    }),
+    8000,
+    new Error("auth/native-apple-provider-timeout")
+  );
   const credential = result.credential;
   if (!credential?.idToken) {
     throw new Error("auth/native-apple-credential-missing");
