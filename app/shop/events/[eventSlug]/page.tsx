@@ -113,10 +113,13 @@ export default function EventShopDetailPage() {
   const eventState = gameState.eventStates[eventConfig.eventId];
   const isVisible = isEventAnnouncementVisible(eventConfig);
   const isActive = isEventActive(eventConfig);
+  const ownedEventEggCount = eventState?.ownedEggCount ?? 0;
+  const isEventEggQueued = gameState.queuedEggMonsterId === eventConfig.freeEggMonsterId;
+  const isEventEggActive = gameState.currentMonsterId === eventConfig.freeEggMonsterId;
   const hasResidualAccess = Boolean(
-    eventState?.ownedEggCount ||
-      gameState.queuedEggMonsterId === eventConfig.freeEggMonsterId ||
-      gameState.currentMonsterId === eventConfig.freeEggMonsterId
+    ownedEventEggCount ||
+      isEventEggQueued ||
+      isEventEggActive
   );
 
   if (!isVisible && !hasResidualAccess) {
@@ -359,14 +362,20 @@ export default function EventShopDetailPage() {
           </div>
           <div className="event-progress-item">
             <span>イベントたまご</span>
-            <strong>{eventState?.ownedEggCount ?? 0}個</strong>
+            <strong>{ownedEventEggCount}個</strong>
           </div>
           <div className="event-progress-item">
             <span>状態</span>
-            <strong>{getEventStatusLabel(eventConfig)}</strong>
+            <strong>{isEventEggQueued ? "予約済み" : isEventEggActive ? "育成中" : getEventStatusLabel(eventConfig)}</strong>
           </div>
         </div>
-        <div className="event-progress-note">{getRemainingDaysLabel(eventConfig)} / 開催中のみ交換できます。</div>
+        <div className="event-progress-note">
+          {isEventEggQueued
+            ? "春の芽吹きたまごを予約済みです。今のモンスターとお別れした次のサイクルで育成が始まります。"
+            : isEventEggActive
+              ? "春の芽吹きたまごを育成中です。タスクを達成すると春モンスターへ進化します。"
+              : `${getRemainingDaysLabel(eventConfig)} / 開催中のみ交換できます。`}
+        </div>
       </section>
 
       {purchaseModal ? (
@@ -394,19 +403,20 @@ export default function EventShopDetailPage() {
         <div className="event-egg-row">
           <img src={getMonsterImage(previewMonster?.monsterId ?? eventConfig.freeEggMonsterId)} alt="春の芽吹きたまご" className="event-egg-thumb" />
           <div className="event-egg-meta">
-            <p>まずは無料で1個受け取れます。受け取ったあとに「次のたまごに予約する」を押すと、次の育成サイクルで春の芽吹きたまごから春モンスターが出現します。</p>
+            <p>まずは無料で1個受け取れます。受け取ったあとに「次のたまごに予約する」を押すと、いまのモンスターとお別れした次の育成サイクルで春の芽吹きたまごから春モンスターが出現します。</p>
             <div className="task-global-menu">
               <button className="quest-btn task-global-menu-button task-global-menu-button-primary" onClick={onClaimFreeEgg} disabled={!isActive || Boolean(eventState?.hasClaimedFreeEgg)}>
                 {eventState?.hasClaimedFreeEgg ? "受け取り済み" : "無料で受け取る"}
               </button>
-              <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={onQueueEgg} disabled={(eventState?.ownedEggCount ?? 0) <= 0 || !isActive}>
-                次のたまごに予約する
+              <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={onQueueEgg} disabled={isEventEggQueued || ownedEventEggCount <= 0 || !isActive}>
+                {isEventEggQueued ? "予約済み" : "次のたまごに予約する"}
               </button>
-              <button className="quest-btn task-global-menu-button task-global-menu-button-accent" onClick={() => setShowStartNowConfirm(true)} disabled={(eventState?.ownedEggCount ?? 0) <= 0 || !isActive}>
+              <button className="quest-btn task-global-menu-button task-global-menu-button-accent" onClick={() => setShowStartNowConfirm(true)} disabled={ownedEventEggCount <= 0 || !isActive}>
                 いますぐ卵を育てる
               </button>
             </div>
-            {gameState.queuedEggMonsterId === eventConfig.freeEggMonsterId && <p className="shop-note shop-note-strong">次のたまごに春の芽吹きたまごを予約しています。</p>}
+            {isEventEggQueued && <p className="shop-note shop-note-strong">予約済みです。今のモンスターとお別れした次のサイクルで、春の芽吹きたまごから育成が始まります。</p>}
+            {isEventEggActive && <p className="shop-note shop-note-strong">春の芽吹きたまごを育成中です。タスクを達成すると春モンスターへ進化します。</p>}
           </div>
         </div>
       </section>

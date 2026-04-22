@@ -79,10 +79,13 @@ export default function EventDetailPage() {
   const eventState = gameState.eventStates[eventConfig.eventId];
   const isVisible = isEventAnnouncementVisible(eventConfig);
   const isActive = isEventActive(eventConfig);
+  const ownedEventEggCount = eventState?.ownedEggCount ?? 0;
+  const isEventEggQueued = gameState.queuedEggMonsterId === eventConfig.freeEggMonsterId;
+  const isEventEggActive = gameState.currentMonsterId === eventConfig.freeEggMonsterId;
   const hasResidualAccess = Boolean(
-    eventState?.ownedEggCount ||
-      gameState.queuedEggMonsterId === eventConfig.freeEggMonsterId ||
-      gameState.currentMonsterId === eventConfig.freeEggMonsterId
+    ownedEventEggCount ||
+      isEventEggQueued ||
+      isEventEggActive
   );
 
   if (!isVisible && !hasResidualAccess) {
@@ -251,19 +254,20 @@ export default function EventDetailPage() {
         <div className="event-egg-row">
           <img src={getMonsterImage(eventConfig.freeEggMonsterId)} alt="春の芽吹きたまご" className="event-egg-thumb" />
           <div className="event-egg-meta">
-            <p>無料で1個受け取れます。春モンスターを育てるには、受け取ったあとに「次のたまごに予約する」を押してください。いまのモンスターがお別れした次のサイクルで、春の芽吹きたまごから育成が始まります。</p>
+            <p>無料で1個受け取れます。春モンスターを育てるには、受け取ったあとに「次のたまごに予約する」を押してください。予約すると、いまのモンスターとお別れした次のサイクルで春の芽吹きたまごから育成が始まります。</p>
             <div className="task-global-menu">
               <button className="quest-btn task-global-menu-button task-global-menu-button-primary" onClick={onClaimFreeEgg} disabled={!isActive || Boolean(eventState?.hasClaimedFreeEgg)}>
                 {eventState?.hasClaimedFreeEgg ? "受け取り済み" : "無料で受け取る"}
               </button>
-              <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={onQueueEgg} disabled={(eventState?.ownedEggCount ?? 0) <= 0}>
-                次のたまごに予約する
+              <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={onQueueEgg} disabled={isEventEggQueued || ownedEventEggCount <= 0}>
+                {isEventEggQueued ? "予約済み" : "次のたまごに予約する"}
               </button>
-              <button className="quest-btn task-global-menu-button task-global-menu-button-accent" onClick={() => setShowStartNowConfirm(true)} disabled={(eventState?.ownedEggCount ?? 0) <= 0}>
+              <button className="quest-btn task-global-menu-button task-global-menu-button-accent" onClick={() => setShowStartNowConfirm(true)} disabled={ownedEventEggCount <= 0}>
                 いますぐ卵を育てる
               </button>
             </div>
-            {gameState.queuedEggMonsterId === eventConfig.freeEggMonsterId && <p className="shop-note shop-note-strong">次のたまごに春の芽吹きたまごを予約しています。</p>}
+            {isEventEggQueued && <p className="shop-note shop-note-strong">予約済みです。今のモンスターとお別れした次のサイクルで、春の芽吹きたまごから育成が始まります。</p>}
+            {isEventEggActive && <p className="shop-note shop-note-strong">春の芽吹きたまごを育成中です。タスクを達成すると春モンスターへ進化します。</p>}
           </div>
         </div>
       </section>
