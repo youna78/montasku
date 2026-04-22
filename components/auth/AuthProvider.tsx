@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { onAuthStateChanged, reload, type User } from "firebase/auth";
 import {
   consumeGoogleRedirectResult,
@@ -15,6 +15,7 @@ import {
   getFirebaseAuth
 } from "@/lib/firebase/auth";
 import { ensureUserDocument } from "@/lib/firebase/firestore";
+import { trackEvent } from "@/lib/analytics/gtag";
 import { isFirebaseConfigured } from "@/lib/firebase/client";
 import type { AuthUserProfile } from "@/types/auth";
 
@@ -104,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [infoMessage, setInfoMessage] = useState("");
   const [showDailyPrompt, setShowDailyPrompt] = useState(false);
   const configured = isFirebaseConfigured();
+  const lastTrackedUidRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -142,13 +144,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           if (!nextUser) {
             setUser(null);
+            lastTrackedUidRef.current = null;
             return;
           }
 
           // Reflect the latest email verification state after users return from their inbox.
           await reload(nextUser);
           await ensureUserDocument(nextUser);
-          setUser(toAuthUser(nextUser));
+          const authUser = toAuthUser(nextUser);
+          if (lastTrackedUidRef.current !== authUser.uid) {
+            trackEvent("login", {
+              method: authUser.providerIds[0] ?? "unknown"
+            });
+            lastTrackedUidRef.current = authUser.uid;
+          }
+          setUser(authUser);
           setErrorMessage("");
           setInfoMessage("");
         } catch (error) {
@@ -237,6 +247,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setErrorMessage("");
           setInfoMessage("");
           await signUpWithEmail(email, password);
+          trackEvent("sign_up", {
+            method: "password"
+          });
           await sendVerificationEmail();
           setInfoMessage("確認メールを送信しました。メールをご確認ください。");
           return true;

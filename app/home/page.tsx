@@ -11,6 +11,7 @@ import { HOME_ANNOUNCEMENTS } from "@/lib/game/announcements";
 import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage } from "@/lib/game/assets";
 import { getEventStatusLabel, getRemainingDaysLabel, getVisibleHomeEvents, isEventActive } from "@/lib/game/events";
 import { getBackgroundImagePath, getDecorationShopItem, getFramePreviewImagePath, getFrameThemeClass } from "@/lib/game/shop";
+import { getGeneralNotificationIds, getNotificationReadIds } from "@/lib/game/notificationReads";
 import { playSfx } from "@/lib/game/sfx";
 import { progressToNextLevel, shouldRouteToDailyReview } from "@/lib/game/state";
 import { resolveLevelFromExp } from "@/lib/game/leveling";
@@ -44,12 +45,26 @@ export default function HomePage() {
   const [evolutionScene, setEvolutionScene] = useState<EvolutionScene | null>(null);
   const [showEventIntro, setShowEventIntro] = useState(false);
   const [dismissedEventIntroId, setDismissedEventIntroId] = useState<string | null>(null);
+  const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!feedback) return;
     const timer = window.setTimeout(() => setFeedback(""), 1200);
     return () => window.clearTimeout(timer);
   }, [feedback]);
+
+  useEffect(() => {
+    const refreshReadNotificationIds = () => setReadNotificationIds(getNotificationReadIds());
+    refreshReadNotificationIds();
+    window.addEventListener("focus", refreshReadNotificationIds);
+    window.addEventListener("pageshow", refreshReadNotificationIds);
+    document.addEventListener("visibilitychange", refreshReadNotificationIds);
+    return () => {
+      window.removeEventListener("focus", refreshReadNotificationIds);
+      window.removeEventListener("pageshow", refreshReadNotificationIds);
+      document.removeEventListener("visibilitychange", refreshReadNotificationIds);
+    };
+  }, []);
 
   useEffect(() => {
     if (!gameState) return;
@@ -101,7 +116,9 @@ export default function HomePage() {
 
   const currentMonster = monsters.find((m) => m.monsterId === gameState.currentMonsterId);
   const activeAnnouncements = HOME_ANNOUNCEMENTS.filter((announcement) => announcement.active);
-  const notificationCount = activeAnnouncements.length + visibleEvents.length + (gameState.pendingDailyReview ? 1 : 0);
+  const generalNotificationIds = getGeneralNotificationIds(activeAnnouncements, visibleEvents);
+  const unreadGeneralNotificationCount = generalNotificationIds.filter((notificationId) => !readNotificationIds.includes(notificationId)).length;
+  const notificationCount = unreadGeneralNotificationCount + (gameState.pendingDailyReview ? 1 : 0);
   const activeTaskIdsInOrder = gameState.activeTasks
     .filter((t) => t.enabled)
     .sort((a, b) => a.sortOrder - b.sortOrder)

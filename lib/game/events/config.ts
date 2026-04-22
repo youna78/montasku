@@ -38,7 +38,7 @@ export const SPRING_EASTER_EVENT: GameEventConfig = {
       rewardType: "frame",
       currencyType: "free_coin",
       price: 500,
-      imagePath: "/img/deco_frame/frame_clover_01.png",
+      imagePath: "/img/deco_frame/frame_clover_01_aligned_01.png",
       grantValue: "spring_clover",
       rarity: "rare",
       availability: "active_only"

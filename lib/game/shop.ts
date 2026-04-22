@@ -283,7 +283,7 @@ export const SHOP_FRAMES: ShopFrameItem[] = [
     description: "いまの雰囲気をそのまま楽しめる基本フレームです。",
     price: 0,
     previewClassName: "frame-preview-gold",
-    imagePath: "/img/deco_frame/frame_classic_gold_01.png"
+    imagePath: "/img/deco_frame/frame_classic_gold_01_aligned_01.png"
   },
   {
     itemId: "sky_crystal",
@@ -291,7 +291,7 @@ export const SHOP_FRAMES: ShopFrameItem[] = [
     description: "青みのある光で、すっきりした印象に変わるフレームです。",
     price: 300,
     previewClassName: "frame-preview-sky",
-    imagePath: "/img/deco_frame/frame_sky_crystal_01.png"
+    imagePath: "/img/deco_frame/frame_sky_crystal_01_aligned_01.png"
   },
   {
     itemId: "rose_charm",
@@ -299,7 +299,7 @@ export const SHOP_FRAMES: ShopFrameItem[] = [
     description: "やさしいピンク系で、少し華やかな雰囲気になるフレームです。",
     price: 300,
     previewClassName: "frame-preview-rose",
-    imagePath: "/img/deco_frame/frame_rose_charm_01.png"
+    imagePath: "/img/deco_frame/frame_rose_charm_01_aligned_01.png"
   },
   {
     itemId: "spring_clover",
@@ -307,7 +307,7 @@ export const SHOP_FRAMES: ShopFrameItem[] = [
     description: "若草色のやさしい春イベントフレームです。",
     price: 0,
     previewClassName: "frame-preview-clover",
-    imagePath: "/img/deco_frame/frame_clover_01.png",
+    imagePath: "/img/deco_frame/frame_clover_01_aligned_01.png",
     availability: "event_limited"
   },
   {
@@ -316,7 +316,7 @@ export const SHOP_FRAMES: ShopFrameItem[] = [
     description: "淡い花びらをあしらった春イベントフレームです。",
     price: 0,
     previewClassName: "frame-preview-sakura",
-    imagePath: "/img/deco_frame/frame_sakura_01.png",
+    imagePath: "/img/deco_frame/frame_sakura_01_aligned_01.png",
     availability: "event_limited"
   }
 ].map((item) => applyFrameMaster(item as ShopFrameItem));
@@ -557,7 +557,7 @@ export const SHOP_PAID_FRAMES: ShopPaidFrameItem[] = [
     price: 400,
     currencyType: "paid_coin",
     previewClassName: "frame-preview-starlight",
-    imagePath: "/img/deco_frame/frame_starlight_01.png"
+    imagePath: "/img/deco_frame/frame_starlight_01_aligned_01.png"
   }
 ].map((item) => applyFrameMaster(item as ShopPaidFrameItem));
 

@@ -7,12 +7,17 @@ import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { HOME_ANNOUNCEMENTS } from "@/lib/game/announcements";
 import { getEventStatusLabel, getRemainingDaysLabel, getVisibleHomeEvents } from "@/lib/game/events";
+import { getGeneralNotificationIds, markNotificationIdsRead } from "@/lib/game/notificationReads";
 import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { useGame } from "@/lib/game/useGame";
 
 export default function NotificationsPage() {
   const router = useRouter();
   const { monsters, gameState, isLoading } = useGame();
+  const activeAnnouncements = HOME_ANNOUNCEMENTS.filter((announcement) => announcement.active);
+  const visibleEvents = getVisibleHomeEvents();
+  const generalNotificationIds = getGeneralNotificationIds(activeAnnouncements, visibleEvents);
+  const generalNotificationIdsKey = generalNotificationIds.join("|");
 
   useEffect(() => {
     if (!gameState) return;
@@ -29,12 +34,14 @@ export default function NotificationsPage() {
     }
   }, [gameState, router]);
 
+  useEffect(() => {
+    markNotificationIdsRead(generalNotificationIds);
+  }, [generalNotificationIdsKey]);
+
   if (isLoading || !gameState) {
     return <main>Loading...</main>;
   }
 
-  const activeAnnouncements = HOME_ANNOUNCEMENTS.filter((announcement) => announcement.active);
-  const visibleEvents = getVisibleHomeEvents();
   const hasDailyReviewNotification = Boolean(gameState.pendingDailyReview);
 
   return (

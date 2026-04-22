@@ -2236,6 +2236,7 @@ a.quest-btn[aria-disabled="true"] {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  align-items: stretch;
 }
 
 .shop-grid-single-centered {
@@ -2245,10 +2246,10 @@ a.quest-btn[aria-disabled="true"] {
 
 .shop-grid-card {
   display: grid;
-  grid-template-rows: minmax(92px, 1fr) auto auto;
+  grid-template-rows: 96px minmax(54px, auto) auto;
   gap: 10px;
-  align-content: stretch;
-  aspect-ratio: 1 / 1;
+  align-content: start;
+  min-height: 244px;
 }
 
 .shop-grid-single-centered .shop-grid-card {
@@ -2265,7 +2266,7 @@ a.quest-btn[aria-disabled="true"] {
 .shop-grid-preview {
   position: relative;
   width: 100%;
-  height: 100%;
+  height: 96px;
   border: 2px solid #8f6b34;
   border-radius: 6px;
   background-size: cover;
@@ -2391,7 +2392,12 @@ a.quest-btn[aria-disabled="true"] {
   }
 
   .shop-grid-card {
-    grid-template-rows: minmax(84px, 1fr) auto auto;
+    grid-template-rows: 86px minmax(58px, auto) auto;
+    min-height: 236px;
+  }
+
+  .shop-grid-preview {
+    height: 86px;
   }
 
   .shop-grid-button {

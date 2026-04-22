@@ -320,6 +320,25 @@ export function useGame(): UseGameResult {
 
       const result = runCompleteTask({ state: current, task, monsters, levelingRows });
       commitState(result.nextState);
+      if (!result.alreadyCompleted) {
+        trackEvent("task_complete", {
+          task_id: taskId,
+          source: "task_button",
+          exp: result.gainedExp,
+          free_coins: result.gainedFreeCoins,
+          level_up: result.levelUp,
+          evolved: result.evolved,
+          tutorial: !current.hasSeenTutorial || current.isInTutorialFlow,
+          monster_id: current.currentMonsterId
+        });
+        if (result.evolved) {
+          trackEvent("monster_evolved", {
+            previous_monster_id: result.previousMonsterId,
+            next_monster_id: result.nextMonsterId,
+            level: result.nextState.currentMonsterLevel
+          });
+        }
+      }
       return result;
     },
     [commitState, monsters, tasks, levelingRows]
@@ -387,6 +406,12 @@ export function useGame(): UseGameResult {
       if (!current) return null;
       const result = runEquipBackground(current, backgroundId);
       commitState(result.nextState);
+      if (result.equipped) {
+        trackEvent("item_equipped", {
+          item_id: backgroundId,
+          item_type: "background"
+        });
+      }
       return result;
     },
     [commitState]
@@ -599,6 +624,12 @@ export function useGame(): UseGameResult {
       if (!current) return null;
       const result = runEquipFrame(current, frameId);
       commitState(result.nextState);
+      if (result.equipped) {
+        trackEvent("item_equipped", {
+          item_id: frameId,
+          item_type: "frame"
+        });
+      }
       return result;
     },
     [commitState]
@@ -610,6 +641,11 @@ export function useGame(): UseGameResult {
       if (!current) return null;
       const result = runUnequipFrame(current);
       commitState(result.nextState);
+      if (result.equipped) {
+        trackEvent("item_unequipped", {
+          item_type: "frame"
+        });
+      }
       return result;
     },
     [commitState]
@@ -621,6 +657,14 @@ export function useGame(): UseGameResult {
       if (!current) return null;
       const result = runUseAttributeCharm(current, attribute, variant);
       commitState(result.nextState);
+      if (result.used) {
+        trackEvent("item_used", {
+          item_id: `${variant}_charm_${attribute}`,
+          item_type: "attribute_charm",
+          attribute,
+          variant
+        });
+      }
       return result;
     },
     [commitState]
@@ -632,6 +676,12 @@ export function useGame(): UseGameResult {
       if (!current) return null;
       const result = runUseBoosterItem(current, itemId);
       commitState(result.nextState);
+      if (result.used) {
+        trackEvent("item_used", {
+          item_id: itemId,
+          item_type: "booster"
+        });
+      }
       return result;
     },
     [commitState]
@@ -643,6 +693,12 @@ export function useGame(): UseGameResult {
       if (!current) return null;
       const result = runToggleDecoration(current, itemId);
       commitState(result.nextState);
+      if (result.toggled) {
+        trackEvent(result.active ? "item_equipped" : "item_unequipped", {
+          item_id: itemId,
+          item_type: "decoration"
+        });
+      }
       return result;
     },
     [commitState]
@@ -654,6 +710,12 @@ export function useGame(): UseGameResult {
       if (!current) return null;
       const result = runEquipDecoration(current, itemId);
       commitState(result.nextState);
+      if (result.toggled && result.active) {
+        trackEvent("item_equipped", {
+          item_id: itemId,
+          item_type: "decoration"
+        });
+      }
       return result;
     },
     [commitState]
@@ -665,6 +727,12 @@ export function useGame(): UseGameResult {
       if (!current) return null;
       const result = runUnequipDecoration(current, itemId);
       commitState(result.nextState);
+      if (result.toggled && !result.active) {
+        trackEvent("item_unequipped", {
+          item_id: itemId,
+          item_type: "decoration"
+        });
+      }
       return result;
     },
     [commitState]
@@ -685,6 +753,13 @@ export function useGame(): UseGameResult {
         levelingRows
       });
       commitState(result.nextState);
+      trackEvent("daily_review_answer", {
+        task_id: taskId,
+        completed: didComplete,
+        rewarded: result.rewarded,
+        exp: result.gainedExp,
+        free_coins: result.gainedFreeCoins
+      });
       return result;
     },
     [commitState, monsters, tasks, levelingRows]
@@ -694,24 +769,33 @@ export function useGame(): UseGameResult {
     const current = gameStateRef.current;
     if (!current) return;
     commitState(runSkipDailyReview(current));
+    trackEvent("daily_review_skip");
   }, [commitState]);
 
   const finishDailyReview = useCallback(() => {
     const current = gameStateRef.current;
     if (!current) return;
     commitState(runFinishDailyReview(current));
+    trackEvent("daily_review_finish");
   }, [commitState]);
 
   const finishBirthEvent = useCallback(() => {
     const current = gameStateRef.current;
     if (!current) return;
+    const wasTutorial = !current.hasSeenTutorial || current.isInTutorialFlow;
     commitState(runFinishBirthEvent(current, monsters, levelingRows));
+    if (wasTutorial) {
+      trackEvent("tutorial_complete");
+    }
   }, [commitState, monsters, levelingRows]);
 
   const finishEndEvent = useCallback(() => {
     const current = gameStateRef.current;
     if (!current) return;
     commitState(runFinishEndEvent(current, monsters));
+    trackEvent("monster_cycle_restart", {
+      previous_monster_id: current.currentMonsterId
+    });
   }, [commitState, monsters]);
 
   const claimEventFreeEgg = useCallback(
@@ -720,6 +804,12 @@ export function useGame(): UseGameResult {
       if (!current) return null;
       const result = runClaimEventFreeEgg(current, eventId);
       commitState(result.nextState);
+      if (result.claimed) {
+        trackEvent("event_egg_claimed", {
+          event_id: eventId,
+          source: "free_claim"
+        });
+      }
       return result;
     },
     [commitState]
@@ -731,6 +821,11 @@ export function useGame(): UseGameResult {
       if (!current) return null;
       const result = runQueueEventEgg(current, eventId);
       commitState(result.nextState);
+      if (result.used) {
+        trackEvent("event_egg_queued", {
+          event_id: eventId
+        });
+      }
       return result;
     },
     [commitState]
@@ -742,6 +837,12 @@ export function useGame(): UseGameResult {
       if (!current) return null;
       const result = runForceStartEventEgg(current, eventId, monsters);
       commitState(result.nextState);
+      if (result.started) {
+        trackEvent("event_egg_started", {
+          event_id: eventId,
+          mode: "start_now"
+        });
+      }
       return result;
     },
     [commitState, monsters]
@@ -753,6 +854,13 @@ export function useGame(): UseGameResult {
       if (!current) return null;
       const result = runPurchaseEventReward(current, eventId, itemId);
       commitState(result.nextState);
+      if (result.purchased) {
+        trackEvent("shop_purchase", {
+          item_id: itemId,
+          item_type: "event_reward",
+          event_id: eventId
+        });
+      }
       if (user && result.purchased) {
         const currencyType = itemId.includes("_paid") || itemId.includes("_egg_paid") ? "paid_coin" : "free_coin";
         const record = buildPurchaseHistoryRecord({
@@ -775,12 +883,16 @@ export function useGame(): UseGameResult {
     const current = gameStateRef.current;
     if (!current) return;
     commitState(runMarkEventIntroPopupSeen(current, eventId));
+    trackEvent("event_intro_seen", {
+      event_id: eventId
+    });
   }, [commitState]);
 
   const startTutorialFlow = useCallback(() => {
     const current = gameStateRef.current;
     if (!current) return;
     commitState(runStartTutorialFlow(current));
+    trackEvent("tutorial_begin");
   }, [commitState]);
 
   return {

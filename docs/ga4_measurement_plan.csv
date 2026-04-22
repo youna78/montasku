@@ -1,0 +1,22 @@
+event_name,trigger,main_params,purpose,status
+page_view,route_change,page_path page_location page_title,画面別の閲覧数と導線確認,implemented
+login,Firebase auth state changes,method,Google/Apple/メールログイン利用状況,implemented
+sign_up,email signup success,method,メール新規登録数,implemented
+tutorial_begin,tutorial start button,,チュートリアル開始率,implemented
+tutorial_complete,birth event completes tutorial,,チュートリアル完了率,implemented
+task_complete,task completion,task_id source exp free_coins level_up evolved tutorial monster_id,タスク達成頻度と育成進行,implemented
+coin_earned,task/login/daily review reward,source amount task_id,無料コイン獲得量,implemented
+monster_evolved,task completion causes evolution,previous_monster_id next_monster_id level,進化到達状況,implemented
+daily_review_answer,daily review answer,task_id completed rewarded exp free_coins,前日振り返り利用状況,implemented
+daily_review_skip,daily review later/skip,,前日振り返り離脱,implemented
+daily_review_finish,daily review completion,,前日振り返り完了,implemented
+shop_purchase,free/paid coin shop item purchase,item_id item_type currency_type price event_id,ショップ購入傾向,implemented
+begin_checkout,Stripe checkout start,item_id item_type value currency,決済開始数,implemented
+item_equipped,equip background/frame/decoration,item_id item_type,装備変更傾向,implemented
+item_unequipped,unequip frame/decoration,item_id item_type,装備解除傾向,implemented
+item_used,use booster/charm,item_id item_type attribute variant,ブースト/おまもり利用状況,implemented
+event_intro_seen,event intro popup marked seen,event_id,イベント導線接触,implemented
+event_egg_claimed,event free egg claim,event_id source,イベント無料卵受取,implemented
+event_egg_queued,event egg queued,event_id,イベント卵予約利用,implemented
+event_egg_started,event egg start now,event_id mode,イベント卵即時開始利用,implemented
+monster_cycle_restart,end event finish,previous_monster_id,育成サイクル継続,implemented

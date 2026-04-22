@@ -147,7 +147,15 @@ export async function signInWithGoogle() {
     return signInWithGoogleRedirect();
   }
 
-  return signInWithGooglePopup();
+  try {
+    return await signInWithGooglePopup();
+  } catch (error) {
+    const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
+    if (code === "auth/popup-blocked" || code === "auth/cancelled-popup-request") {
+      return signInWithGoogleRedirect();
+    }
+    throw error;
+  }
 }
 
 export async function signInWithApple() {
@@ -164,7 +172,15 @@ export async function signInWithApple() {
     return signInWithAppleRedirect();
   }
 
-  return signInWithApplePopup();
+  try {
+    return await signInWithApplePopup();
+  } catch (error) {
+    const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
+    if (code === "auth/popup-blocked" || code === "auth/cancelled-popup-request") {
+      return signInWithAppleRedirect();
+    }
+    throw error;
+  }
 }
 
 export async function consumeGoogleRedirectResult() {
