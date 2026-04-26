@@ -37,6 +37,7 @@ export type ShopPaidCoinItem = {
   title: string;
   description: string;
   priceJpy: number;
+  appStoreProductId?: string;
   paidCoinsGranted: number;
   bonusPaidCoins: number;
   totalPaidCoins: number;
@@ -421,6 +422,7 @@ export const SHOP_PAID_COIN_ITEMS: ShopPaidCoinItem[] = [
     title: "モンタコイン 120枚",
     description: "まず試しやすい、いちばん小さなモンタコインパックです。",
     priceJpy: 100,
+    appStoreProductId: "montasku_coin_120",
     paidCoinsGranted: 100,
     bonusPaidCoins: 20,
     totalPaidCoins: 120,
@@ -435,6 +437,7 @@ export const SHOP_PAID_COIN_ITEMS: ShopPaidCoinItem[] = [
     title: "モンタコイン 380枚",
     description: "少しお得に買える、定番のモンタコインパックです。",
     priceJpy: 300,
+    appStoreProductId: "montasku_coin_380",
     paidCoinsGranted: 300,
     bonusPaidCoins: 80,
     totalPaidCoins: 380,
@@ -449,6 +452,7 @@ export const SHOP_PAID_COIN_ITEMS: ShopPaidCoinItem[] = [
     title: "モンタコイン 700枚",
     description: "継続して遊ぶ人向けの、少し大きめなモンタコインパックです。",
     priceJpy: 600,
+    appStoreProductId: "montasku_coin_700",
     paidCoinsGranted: 600,
     bonusPaidCoins: 100,
     totalPaidCoins: 700,
@@ -463,6 +467,7 @@ export const SHOP_PAID_COIN_ITEMS: ShopPaidCoinItem[] = [
     title: "モンタコイン 1600枚",
     description: "イベント時やまとめ買い向けの、大きなモンタコインパックです。",
     priceJpy: 1000,
+    appStoreProductId: "montasku_coin_1600",
     paidCoinsGranted: 1000,
     bonusPaidCoins: 600,
     totalPaidCoins: 1600,
@@ -615,6 +620,12 @@ export const SHOP_COMING_SOON_ITEMS: ShopComingSoonItem[] = [];
 
 export function getPaidCoinShopItem(itemId: string): ShopPaidCoinItem | null {
   return SHOP_PAID_COIN_ITEMS.find((item) => item.itemId === itemId && item.status === "confirmed") ?? null;
+}
+
+export function getPaidCoinShopItemByAppStoreProductId(appStoreProductId: string): ShopPaidCoinItem | null {
+  return SHOP_PAID_COIN_ITEMS.find(
+    (item) => item.appStoreProductId === appStoreProductId && item.status === "confirmed"
+  ) ?? null;
 }
 
 export function getBackgroundShopItem(backgroundId: string): ShopBackgroundItem | null {

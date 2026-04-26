@@ -11,6 +11,13 @@ import { getFirebaseAuth } from "@/lib/firebase/auth";
 import { getVisibleHomeEvents, isEventActive } from "@/lib/game/events";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { getNativePlatform, isNativeMobileApp } from "@/lib/platform/capacitor";
+import type { AppStoreProductMap } from "@/lib/iap/appStorePurchases";
+import {
+  createAppAccountToken,
+  finishAppStoreTransaction,
+  loadAppStoreProducts,
+  purchaseAppStoreProduct
+} from "@/lib/iap/appStorePurchases";
 import {
   getBackgroundImagePath,
   getBoosterShopItem,
@@ -90,11 +97,15 @@ export default function ShopPage() {
   const [bundleConfirm, setBundleConfirm] = useState<BundleConfirmState | null>(null);
   const [purchaseConfirm, setPurchaseConfirm] = useState<PurchaseConfirmState | null>(null);
   const [isNativeApp, setIsNativeApp] = useState(false);
+  const [nativePlatform, setNativePlatform] = useState<"web" | "ios" | "android">("web");
   const [nativePlatformLabel, setNativePlatformLabel] = useState("アプリ");
+  const [appStoreProducts, setAppStoreProducts] = useState<AppStoreProductMap>({});
+  const [appStoreProductError, setAppStoreProductError] = useState("");
 
   useEffect(() => {
     setIsNativeApp(isNativeMobileApp());
     const platform = getNativePlatform();
+    setNativePlatform(platform === "ios" || platform === "android" ? platform : "web");
     if (platform === "ios") {
       setNativePlatformLabel("iOSアプリ");
     } else if (platform === "android") {
@@ -160,6 +171,31 @@ export default function ShopPage() {
   );
   const paidBoosters = useMemo(() => SHOP_BOOSTER_ITEMS.filter((item) => item.currencyType === "paid_coin"), []);
   const freeBoosters = useMemo(() => SHOP_BOOSTER_ITEMS.filter((item) => item.currencyType === "free_coin"), []);
+
+  useEffect(() => {
+    if (!isNativeApp || nativePlatform !== "ios") return;
+    let isCancelled = false;
+
+    async function loadProducts() {
+      try {
+        setAppStoreProductError("");
+        const products = await loadAppStoreProducts(paidCoinPacks);
+        if (!isCancelled) {
+          setAppStoreProducts(products);
+        }
+      } catch (error) {
+        console.error("[shop] failed to load App Store products", error);
+        if (!isCancelled) {
+          setAppStoreProductError("App Storeの商品情報を取得できませんでした。");
+        }
+      }
+    }
+
+    void loadProducts();
+    return () => {
+      isCancelled = true;
+    };
+  }, [isNativeApp, nativePlatform, paidCoinPacks]);
 
   if (isLoading || !gameState) {
     return <main>Loading...</main>;
@@ -497,6 +533,82 @@ export default function ShopPage() {
     }
   };
 
+  const getAppStoreProduct = (item: (typeof SHOP_PAID_COIN_ITEMS)[number]) =>
+    item.appStoreProductId ? appStoreProducts[item.appStoreProductId] ?? null : null;
+
+  const getPaidCoinTitle = (item: (typeof SHOP_PAID_COIN_ITEMS)[number]) =>
+    nativePlatform === "ios" ? getAppStoreProduct(item)?.title ?? item.title : item.title;
+
+  const getPaidCoinPriceLabel = (item: (typeof SHOP_PAID_COIN_ITEMS)[number]) => {
+    if (nativePlatform === "ios") {
+      return getAppStoreProduct(item)?.priceString ?? "価格取得中";
+    }
+    return `${item.priceJpy} 円`;
+  };
+
+  const onStartAppStorePurchase = async (item: (typeof SHOP_PAID_COIN_ITEMS)[number]) => {
+    try {
+      const currentUser = getFirebaseAuth().currentUser;
+      if (!currentUser) {
+        setMessage("ログインすると購入できます");
+        router.push("/settings");
+        return;
+      }
+
+      if (!item.appStoreProductId || !getAppStoreProduct(item)) {
+        setMessage("App Storeの商品情報を取得できませんでした");
+        return;
+      }
+
+      setCheckoutItemId(item.itemId);
+      const appAccountToken = await createAppAccountToken(currentUser.uid);
+
+      trackEvent("begin_checkout", {
+        item_id: item.itemId,
+        item_type: item.productType,
+        value: item.priceJpy,
+        currency: "JPY",
+        payment_provider: "app_store"
+      });
+
+      const transaction = await purchaseAppStoreProduct(item, appAccountToken);
+      const idToken = await currentUser.getIdToken();
+      const response = await fetch("/api/app-store/fulfill", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          appStoreProductId: item.appStoreProductId,
+          transactionId: transaction.transactionId,
+          appAccountToken
+        })
+      });
+      const payload = (await response.json()) as { error?: string; grantedPaidCoins?: number };
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "購入の反映に失敗しました。");
+      }
+
+      await finishAppStoreTransaction(transaction.transactionId);
+      trackEvent("purchase", {
+        item_id: item.itemId,
+        item_type: item.productType,
+        value: item.priceJpy,
+        currency: "JPY",
+        payment_provider: "app_store"
+      });
+      setMessage(`${item.totalPaidCoins} モンタコインを購入しました`);
+      window.setTimeout(() => window.location.reload(), 900);
+    } catch (error) {
+      console.error("[shop] failed to complete App Store purchase", error);
+      setMessage(error instanceof Error ? error.message : "購入に失敗しました");
+    } finally {
+      setCheckoutItemId(null);
+    }
+  };
+
   const freeCards = activeFreeCategoryTab === "background"
     ? SHOP_EVERGREEN_BACKGROUNDS.map((item) => {
         const owned = gameState.ownedBackgroundIds.includes(item.itemId);
@@ -656,44 +768,72 @@ export default function ShopPage() {
           ];
 
   const paidCards = activePaidCategoryTab === "coin"
-    ? paidCoinPacks.map((item) => (
-        <section className="card decorated-card shop-grid-card" key={item.itemId}>
-          <div className="shop-grid-preview shop-grid-preview-paid">
-            <div className="shop-badge-stack">
-              <span className="shop-paid-badge">有料</span>
-                          </div>
-            <img src={item.imagePath} alt={item.title} className="shop-paid-pack-icon" />
-            <div className="shop-paid-amount">{item.totalPaidCoins}</div>
-            <div className="shop-paid-label">モンタコイン</div>
-          </div>
-          <div className="shop-grid-meta">
-            <h2>{item.title}</h2>
-            <p>{item.description}</p>
-            <div className="shop-grid-price">{item.priceJpy} 円{item.bonusPaidCoins > 0 ? ` / +${item.bonusPaidCoins} おまけ` : ""}</div>
-          </div>
-          {isNativeApp ? (
-            <p className="shop-note shop-note-strong">{nativePlatformLabel}版での購入は準備中です。</p>
-          ) : (
-            <button
-              className="quest-btn shop-grid-button task-global-menu-button-accent"
-              onClick={() =>
-                requestPurchase(
-                  {
-                    title: item.title,
-                    priceLabel: `${item.priceJpy} 円`,
-                    message: "決済ページへ移動します。購入しますか？",
-                    confirmLabel: "決済へ進む"
-                  },
-                  () => onStartPaidCheckout(item)
-                )
-              }
-              disabled={checkoutItemId === item.itemId || !user}
-            >
-              {!user ? "ログインで購入可能" : checkoutItemId === item.itemId ? "移動中..." : "Stripe で購入"}
-            </button>
-          )}
-        </section>
-      ))
+    ? paidCoinPacks.map((item) => {
+        const appStoreProduct = getAppStoreProduct(item);
+        const priceLabel = getPaidCoinPriceLabel(item);
+        const title = getPaidCoinTitle(item);
+        const isAppStoreReady = nativePlatform !== "ios" || Boolean(appStoreProduct);
+
+        return (
+          <section className="card decorated-card shop-grid-card" key={item.itemId}>
+            <div className="shop-grid-preview shop-grid-preview-paid">
+              <div className="shop-badge-stack">
+                <span className="shop-paid-badge">有料</span>
+              </div>
+              <img src={item.imagePath} alt={title} className="shop-paid-pack-icon" />
+              <div className="shop-paid-amount">{item.totalPaidCoins}</div>
+              <div className="shop-paid-label">モンタコイン</div>
+            </div>
+            <div className="shop-grid-meta">
+              <h2>{title}</h2>
+              <p>{item.description}</p>
+              <div className="shop-grid-price">{priceLabel}{item.bonusPaidCoins > 0 ? ` / +${item.bonusPaidCoins} おまけ` : ""}</div>
+            </div>
+            {isNativeApp && nativePlatform === "ios" ? (
+              <>
+                {appStoreProductError ? <p className="shop-note shop-note-strong">{appStoreProductError}</p> : null}
+                <button
+                  className="quest-btn shop-grid-button task-global-menu-button-accent"
+                  onClick={() =>
+                    requestPurchase(
+                      {
+                        title,
+                        priceLabel,
+                        message: "Appleの購入画面へ進みます。購入しますか？",
+                        confirmLabel: "購入へ進む"
+                      },
+                      () => onStartAppStorePurchase(item)
+                    )
+                  }
+                  disabled={checkoutItemId === item.itemId || !user || !isAppStoreReady}
+                >
+                  {!user ? "ログインで購入可能" : checkoutItemId === item.itemId ? "処理中..." : "Appleで購入"}
+                </button>
+              </>
+            ) : isNativeApp ? (
+              <p className="shop-note shop-note-strong">{nativePlatformLabel}版での購入は準備中です。</p>
+            ) : (
+              <button
+                className="quest-btn shop-grid-button task-global-menu-button-accent"
+                onClick={() =>
+                  requestPurchase(
+                    {
+                      title: item.title,
+                      priceLabel: `${item.priceJpy} 円`,
+                      message: "決済ページへ移動します。購入しますか？",
+                      confirmLabel: "決済へ進む"
+                    },
+                    () => onStartPaidCheckout(item)
+                  )
+                }
+                disabled={checkoutItemId === item.itemId || !user}
+              >
+                {!user ? "ログインで購入可能" : checkoutItemId === item.itemId ? "移動中..." : "Stripe で購入"}
+              </button>
+            )}
+          </section>
+        );
+      })
     : activePaidCategoryTab === "background"
       ? SHOP_PAID_BACKGROUNDS.length > 0
         ? SHOP_PAID_BACKGROUNDS.map((item) => {
