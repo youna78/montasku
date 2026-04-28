@@ -563,6 +563,12 @@ export default function ShopPage() {
     }
 
     const idToken = await currentUser.getIdToken();
+    console.info("[shop] App Store transaction received", {
+      productIdentifier: appStoreProductId,
+      transactionId: transaction.transactionId,
+      hasSignedTransactionInfo: Boolean(transaction.jwsRepresentation)
+    });
+
     const response = await fetch("/api/app-store/fulfill", {
       method: "POST",
       headers: {
@@ -572,13 +578,14 @@ export default function ShopPage() {
       body: JSON.stringify({
         appStoreProductId,
         transactionId: transaction.transactionId,
-        appAccountToken
+        appAccountToken,
+        signedTransactionInfo: transaction.jwsRepresentation ?? null
       })
     });
     const payload = (await response.json().catch(() => null)) as { error?: string; grantedPaidCoins?: number } | null;
 
     if (!response.ok) {
-      throw new Error(payload?.error ?? "購入の反映に失敗しました。");
+      throw new Error(`${payload?.error ?? "購入の反映に失敗しました。"} (${response.status})`);
     }
 
     await finishAppStoreTransaction(transaction.transactionId);
@@ -622,7 +629,10 @@ export default function ShopPage() {
       setMessage(`${grantedPaidCoins || item.totalPaidCoins} モンタコインを反映しました`);
       window.setTimeout(() => window.location.reload(), 900);
     } catch (error) {
-      console.error("[shop] failed to complete App Store purchase", error);
+      console.error(
+        "[shop] failed to complete App Store purchase",
+        error instanceof Error ? { message: error.message, stack: error.stack } : error
+      );
       setMessage(error instanceof Error ? error.message : "購入に失敗しました");
     } finally {
       setCheckoutItemId(null);
@@ -659,7 +669,10 @@ export default function ShopPage() {
       );
       window.setTimeout(() => window.location.reload(), 900);
     } catch (error) {
-      console.error("[shop] failed to restore App Store purchases", error);
+      console.error(
+        "[shop] failed to restore App Store purchases",
+        error instanceof Error ? { message: error.message, stack: error.stack } : error
+      );
       setMessage(error instanceof Error ? error.message : "購入の確認に失敗しました");
     } finally {
       setIsRestoringAppStorePurchases(false);

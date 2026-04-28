@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getFirebaseAdminAuth, getFirebaseAdminFirestore } from "@/lib/firebase/admin";
 import { getPaidCoinShopItemByAppStoreProductId } from "@/lib/game/shop";
-import { fetchAppStoreTransactionInfo } from "@/lib/server/appStore";
+import { decodeSignedTransactionInfo, fetchAppStoreTransactionInfo } from "@/lib/server/appStore";
 
 export const runtime = "nodejs";
 
@@ -10,12 +10,30 @@ type RequestBody = {
   appStoreProductId?: string;
   transactionId?: string;
   appAccountToken?: string | null;
+  signedTransactionInfo?: string | null;
 };
 
 function getBearerToken(request: Request): string | null {
   const header = request.headers.get("authorization");
   if (!header?.startsWith("Bearer ")) return null;
   return header.slice("Bearer ".length).trim();
+}
+
+async function resolveTransactionInfo(transactionId: string, signedTransactionInfo?: string | null) {
+  try {
+    return await fetchAppStoreTransactionInfo(transactionId);
+  } catch (lookupError) {
+    if (!signedTransactionInfo) {
+      throw lookupError;
+    }
+
+    console.warn("[app-store] falling back to StoreKit signed transaction info", lookupError);
+    const transactionInfo = decodeSignedTransactionInfo(signedTransactionInfo);
+    if (transactionInfo.transactionId !== transactionId) {
+      throw new Error("StoreKit signed transaction ID mismatch.");
+    }
+    return transactionInfo;
+  }
 }
 
 export async function POST(request: Request) {
@@ -39,7 +57,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "商品が見つかりません。" }, { status: 400 });
     }
 
-    const transactionInfo = await fetchAppStoreTransactionInfo(transactionId);
+    const transactionInfo = await resolveTransactionInfo(transactionId, body.signedTransactionInfo);
     const bundleId = process.env.APP_STORE_BUNDLE_ID;
 
     if (bundleId && transactionInfo.bundleId !== bundleId) {
