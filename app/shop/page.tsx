@@ -16,7 +16,8 @@ import {
   createAppAccountToken,
   finishAppStoreTransaction,
   loadAppStoreProducts,
-  purchaseAppStoreProduct
+  purchaseAppStoreProduct,
+  restoreAppStorePurchases
 } from "@/lib/iap/appStorePurchases";
 import {
   getBackgroundImagePath,
@@ -101,6 +102,7 @@ export default function ShopPage() {
   const [nativePlatformLabel, setNativePlatformLabel] = useState("アプリ");
   const [appStoreProducts, setAppStoreProducts] = useState<AppStoreProductMap>({});
   const [appStoreProductError, setAppStoreProductError] = useState("");
+  const [isRestoringAppStorePurchases, setIsRestoringAppStorePurchases] = useState(false);
 
   useEffect(() => {
     setIsNativeApp(isNativeMobileApp());
@@ -546,6 +548,43 @@ export default function ShopPage() {
     return `${item.priceJpy} 円`;
   };
 
+  const fulfillAppStoreTransaction = async (
+    transaction: Awaited<ReturnType<typeof purchaseAppStoreProduct>>,
+    appAccountToken: string
+  ) => {
+    const currentUser = getFirebaseAuth().currentUser;
+    if (!currentUser) {
+      throw new Error("ログインが必要です。");
+    }
+
+    const appStoreProductId = transaction.productIdentifier;
+    if (!appStoreProductId) {
+      throw new Error("購入商品の情報を取得できませんでした。");
+    }
+
+    const idToken = await currentUser.getIdToken();
+    const response = await fetch("/api/app-store/fulfill", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`
+      },
+      body: JSON.stringify({
+        appStoreProductId,
+        transactionId: transaction.transactionId,
+        appAccountToken
+      })
+    });
+    const payload = (await response.json().catch(() => null)) as { error?: string; grantedPaidCoins?: number } | null;
+
+    if (!response.ok) {
+      throw new Error(payload?.error ?? "購入の反映に失敗しました。");
+    }
+
+    await finishAppStoreTransaction(transaction.transactionId);
+    return payload?.grantedPaidCoins ?? 0;
+  };
+
   const onStartAppStorePurchase = async (item: (typeof SHOP_PAID_COIN_ITEMS)[number]) => {
     try {
       const currentUser = getFirebaseAuth().currentUser;
@@ -572,26 +611,7 @@ export default function ShopPage() {
       });
 
       const transaction = await purchaseAppStoreProduct(item, appAccountToken);
-      const idToken = await currentUser.getIdToken();
-      const response = await fetch("/api/app-store/fulfill", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`
-        },
-        body: JSON.stringify({
-          appStoreProductId: item.appStoreProductId,
-          transactionId: transaction.transactionId,
-          appAccountToken
-        })
-      });
-      const payload = (await response.json()) as { error?: string; grantedPaidCoins?: number };
-
-      if (!response.ok) {
-        throw new Error(payload.error ?? "購入の反映に失敗しました。");
-      }
-
-      await finishAppStoreTransaction(transaction.transactionId);
+      const grantedPaidCoins = await fulfillAppStoreTransaction(transaction, appAccountToken);
       trackEvent("purchase", {
         item_id: item.itemId,
         item_type: item.productType,
@@ -599,13 +619,50 @@ export default function ShopPage() {
         currency: "JPY",
         payment_provider: "app_store"
       });
-      setMessage(`${item.totalPaidCoins} モンタコインを購入しました`);
+      setMessage(`${grantedPaidCoins || item.totalPaidCoins} モンタコインを反映しました`);
       window.setTimeout(() => window.location.reload(), 900);
     } catch (error) {
       console.error("[shop] failed to complete App Store purchase", error);
       setMessage(error instanceof Error ? error.message : "購入に失敗しました");
     } finally {
       setCheckoutItemId(null);
+    }
+  };
+
+  const onRestoreAppStorePurchases = async () => {
+    try {
+      const currentUser = getFirebaseAuth().currentUser;
+      if (!currentUser) {
+        setMessage("ログインすると購入を確認できます");
+        router.push("/settings");
+        return;
+      }
+
+      setIsRestoringAppStorePurchases(true);
+      const appAccountToken = await createAppAccountToken(currentUser.uid);
+      const purchases = await restoreAppStorePurchases(paidCoinPacks, appAccountToken);
+
+      if (purchases.length === 0) {
+        setMessage("未反映の購入は見つかりませんでした");
+        return;
+      }
+
+      let grantedTotal = 0;
+      for (const purchase of purchases) {
+        grantedTotal += await fulfillAppStoreTransaction(purchase, appAccountToken);
+      }
+
+      setMessage(
+        grantedTotal > 0
+          ? `${grantedTotal} モンタコインを反映しました`
+          : "購入はすでに反映済みです"
+      );
+      window.setTimeout(() => window.location.reload(), 900);
+    } catch (error) {
+      console.error("[shop] failed to restore App Store purchases", error);
+      setMessage(error instanceof Error ? error.message : "購入の確認に失敗しました");
+    } finally {
+      setIsRestoringAppStorePurchases(false);
     }
   };
 
@@ -1216,6 +1273,17 @@ export default function ShopPage() {
                 </>
               ) : null}
               <p className="shop-note">決済完了後、モンタコインは自動反映されます。少し待ってから表示をご確認ください。</p>
+              {isNativeApp && nativePlatform === "ios" && user ? (
+                <div className="notification-card-actions">
+                  <button
+                    className="quest-btn settings-menu-button settings-menu-button-secondary"
+                    onClick={onRestoreAppStorePurchases}
+                    disabled={isRestoringAppStorePurchases}
+                  >
+                    {isRestoringAppStorePurchases ? "購入を確認中..." : "未反映の購入を確認"}
+                  </button>
+                </div>
+              ) : null}
             </div>
           </section>
 

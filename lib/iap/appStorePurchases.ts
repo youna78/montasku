@@ -58,6 +58,16 @@ export async function purchaseAppStoreProduct(item: ShopPaidCoinItem, appAccount
   });
 }
 
+export async function restoreAppStorePurchases(items: ShopPaidCoinItem[], appAccountToken: string): Promise<Transaction[]> {
+  const { purchases } = await NativePurchases.getPurchases({
+    productType: PURCHASE_TYPE.INAPP,
+    appAccountToken
+  });
+
+  const productIds = new Set(getAppStoreProductIds(items));
+  return purchases.filter((purchase) => productIds.has(purchase.productIdentifier));
+}
+
 export async function finishAppStoreTransaction(transactionId: string): Promise<void> {
   await NativePurchases.acknowledgePurchase({ purchaseToken: transactionId });
 }
