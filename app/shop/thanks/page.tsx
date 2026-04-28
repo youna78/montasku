@@ -12,13 +12,25 @@ type CheckoutSummary = {
   lines: string[];
 } | null;
 
+type AppStoreSummary = {
+  coins: number;
+} | null;
+
 export default function ShopThanksPage() {
   const { gameState, monsters, isLoading } = useGame();
   const [summary, setSummary] = useState<CheckoutSummary>(null);
+  const [appStoreSummary, setAppStoreSummary] = useState<AppStoreSummary>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
+    const provider = params.get("provider");
+    if (provider === "app_store") {
+      const coins = Number(params.get("coins") ?? "0");
+      setAppStoreSummary({ coins: Number.isFinite(coins) ? coins : 0 });
+      return;
+    }
+
     const sessionId = params.get("session_id");
     if (!sessionId) return;
 
@@ -57,9 +69,24 @@ export default function ShopThanksPage() {
       <section className="card decorated-card legal-page-card">
         <div className="legal-section">
           <h2>ご購入ありがとうございます</h2>
-          <p>
-            Stripe の決済ページから戻ってきた方向けのページです。決済が完了していれば、モンタコインは自動で反映されます。
-          </p>
+          {appStoreSummary ? (
+            <>
+              <p>Appleのアプリ内課金が完了しました。</p>
+              {appStoreSummary.coins > 0 ? (
+                <p>
+                  今回の購入内容:
+                  {" "}
+                  <strong>モンタコイン {appStoreSummary.coins}枚</strong>
+                </p>
+              ) : (
+                <p>購入済みの内容を確認しました。</p>
+              )}
+            </>
+          ) : (
+            <p>
+              Stripe の決済ページから戻ってきた方向けのページです。決済が完了していれば、モンタコインは自動で反映されます。
+            </p>
+          )}
           {summary ? (
             <p>
               今回の購入内容:

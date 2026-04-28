@@ -77,6 +77,15 @@ function normalizeIosViewportAfterNativeDialog() {
   });
 }
 
+function buildAppStoreThanksUrl(grantedPaidCoins: number, fallbackPaidCoins: number): string {
+  const coins = grantedPaidCoins || fallbackPaidCoins;
+  const params = new URLSearchParams({
+    provider: "app_store",
+    coins: String(coins)
+  });
+  return `/shop/thanks?${params.toString()}`;
+}
+
 export default function ShopPage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -649,12 +658,8 @@ export default function ShopPage() {
         currency: "JPY",
         payment_provider: "app_store"
       });
-      setMessage(`${grantedPaidCoins || item.totalPaidCoins} モンタコインを反映しました`);
       normalizeIosViewportAfterNativeDialog();
-      window.setTimeout(() => {
-        normalizeIosViewportAfterNativeDialog();
-        window.location.reload();
-      }, 900);
+      router.replace(buildAppStoreThanksUrl(grantedPaidCoins, item.totalPaidCoins));
     } catch (error) {
       console.error(
         "[shop] failed to complete App Store purchase",
@@ -689,16 +694,8 @@ export default function ShopPage() {
         grantedTotal += await fulfillAppStoreTransaction(purchase, appAccountToken);
       }
 
-      setMessage(
-        grantedTotal > 0
-          ? `${grantedTotal} モンタコインを反映しました`
-          : "購入はすでに反映済みです"
-      );
       normalizeIosViewportAfterNativeDialog();
-      window.setTimeout(() => {
-        normalizeIosViewportAfterNativeDialog();
-        window.location.reload();
-      }, 900);
+      router.replace(buildAppStoreThanksUrl(grantedTotal, 0));
     } catch (error) {
       console.error(
         "[shop] failed to restore App Store purchases",
