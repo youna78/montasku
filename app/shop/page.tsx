@@ -67,6 +67,16 @@ const CHARM_BUTTON_CLASS: Record<(typeof SHOP_ATTRIBUTE_CHARMS)[number]["attribu
   create: "task-global-menu-button-create"
 };
 
+function normalizeIosViewportAfterNativeDialog() {
+  if (typeof window === "undefined") return;
+
+  window.requestAnimationFrame(() => {
+    window.scrollBy(0, 1);
+    window.scrollBy(0, -1);
+    document.documentElement.style.setProperty("--native-viewport-nudge", `${Date.now()}`);
+  });
+}
+
 export default function ShopPage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -173,6 +183,19 @@ export default function ShopPage() {
   );
   const paidBoosters = useMemo(() => SHOP_BOOSTER_ITEMS.filter((item) => item.currencyType === "paid_coin"), []);
   const freeBoosters = useMemo(() => SHOP_BOOSTER_ITEMS.filter((item) => item.currencyType === "free_coin"), []);
+
+  useEffect(() => {
+    if (!isNativeApp || nativePlatform !== "ios") return;
+
+    const normalizeOnReturn = () => normalizeIosViewportAfterNativeDialog();
+    window.addEventListener("focus", normalizeOnReturn);
+    document.addEventListener("visibilitychange", normalizeOnReturn);
+
+    return () => {
+      window.removeEventListener("focus", normalizeOnReturn);
+      document.removeEventListener("visibilitychange", normalizeOnReturn);
+    };
+  }, [isNativeApp, nativePlatform]);
 
   useEffect(() => {
     if (!isNativeApp || nativePlatform !== "ios") return;
@@ -627,7 +650,11 @@ export default function ShopPage() {
         payment_provider: "app_store"
       });
       setMessage(`${grantedPaidCoins || item.totalPaidCoins} モンタコインを反映しました`);
-      window.setTimeout(() => window.location.reload(), 900);
+      normalizeIosViewportAfterNativeDialog();
+      window.setTimeout(() => {
+        normalizeIosViewportAfterNativeDialog();
+        window.location.reload();
+      }, 900);
     } catch (error) {
       console.error(
         "[shop] failed to complete App Store purchase",
@@ -667,7 +694,11 @@ export default function ShopPage() {
           ? `${grantedTotal} モンタコインを反映しました`
           : "購入はすでに反映済みです"
       );
-      window.setTimeout(() => window.location.reload(), 900);
+      normalizeIosViewportAfterNativeDialog();
+      window.setTimeout(() => {
+        normalizeIosViewportAfterNativeDialog();
+        window.location.reload();
+      }, 900);
     } catch (error) {
       console.error(
         "[shop] failed to restore App Store purchases",
@@ -1273,8 +1304,10 @@ export default function ShopPage() {
           <section className="card decorated-card">
             <div className="shop-paid-intro">
               <p className="shop-note shop-note-strong">
-                {isNativeApp
-                  ? `${nativePlatformLabel}版のモンタコイン購入は準備中です。所持しているモンタコインは、背景やフレーム、アイテム、セット商品に使えます。`
+                {isNativeApp && nativePlatform === "ios"
+                  ? "モンタコインは、Appleのアプリ内課金で購入できます。所持しているモンタコインは、背景やフレーム、アイテム、セット商品に使えます。"
+                  : isNativeApp
+                    ? `${nativePlatformLabel}版のモンタコイン購入は準備中です。所持しているモンタコインは、背景やフレーム、アイテム、セット商品に使えます。`
                   : "モンタコインは、Stripe で購入できる有料コインです。チャージしたあと、背景やフレーム、アイテム、セット商品に使えます。"}
               </p>
               {!user ? (
