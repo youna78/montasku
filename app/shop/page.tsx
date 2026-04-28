@@ -16,8 +16,7 @@ import {
   createAppAccountToken,
   finishAppStoreTransaction,
   loadAppStoreProducts,
-  purchaseAppStoreProduct,
-  restoreAppStorePurchases
+  purchaseAppStoreProduct
 } from "@/lib/iap/appStorePurchases";
 import {
   getBackgroundImagePath,
@@ -121,7 +120,6 @@ export default function ShopPage() {
   const [nativePlatformLabel, setNativePlatformLabel] = useState("アプリ");
   const [appStoreProducts, setAppStoreProducts] = useState<AppStoreProductMap>({});
   const [appStoreProductError, setAppStoreProductError] = useState("");
-  const [isRestoringAppStorePurchases, setIsRestoringAppStorePurchases] = useState(false);
 
   useEffect(() => {
     setIsNativeApp(isNativeMobileApp());
@@ -668,42 +666,6 @@ export default function ShopPage() {
       setMessage(error instanceof Error ? error.message : "購入に失敗しました");
     } finally {
       setCheckoutItemId(null);
-    }
-  };
-
-  const onRestoreAppStorePurchases = async () => {
-    try {
-      const currentUser = getFirebaseAuth().currentUser;
-      if (!currentUser) {
-        setMessage("ログインすると購入を確認できます");
-        router.push("/settings");
-        return;
-      }
-
-      setIsRestoringAppStorePurchases(true);
-      const appAccountToken = await createAppAccountToken(currentUser.uid);
-      const purchases = await restoreAppStorePurchases(paidCoinPacks, appAccountToken);
-
-      if (purchases.length === 0) {
-        setMessage("未反映の購入は見つかりませんでした");
-        return;
-      }
-
-      let grantedTotal = 0;
-      for (const purchase of purchases) {
-        grantedTotal += await fulfillAppStoreTransaction(purchase, appAccountToken);
-      }
-
-      normalizeIosViewportAfterNativeDialog();
-      router.replace(buildAppStoreThanksUrl(grantedTotal, 0));
-    } catch (error) {
-      console.error(
-        "[shop] failed to restore App Store purchases",
-        error instanceof Error ? { message: error.message, stack: error.stack } : error
-      );
-      setMessage(error instanceof Error ? error.message : "購入の確認に失敗しました");
-    } finally {
-      setIsRestoringAppStorePurchases(false);
     }
   };
 
@@ -1316,17 +1278,6 @@ export default function ShopPage() {
                 </>
               ) : null}
               <p className="shop-note">決済完了後、モンタコインは自動反映されます。少し待ってから表示をご確認ください。</p>
-              {isNativeApp && nativePlatform === "ios" && user ? (
-                <div className="notification-card-actions">
-                  <button
-                    className="quest-btn settings-menu-button settings-menu-button-secondary"
-                    onClick={onRestoreAppStorePurchases}
-                    disabled={isRestoringAppStorePurchases}
-                  >
-                    {isRestoringAppStorePurchases ? "購入を確認中..." : "未反映の購入を確認"}
-                  </button>
-                </div>
-              ) : null}
             </div>
           </section>
 
