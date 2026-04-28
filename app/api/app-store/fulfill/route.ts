@@ -126,6 +126,15 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("[app-store] failed to fulfill purchase", error);
-    return NextResponse.json({ error: "購入の反映に失敗しました。" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "";
+    const isSandboxLookupIssue = message.includes("App Store transaction lookup failed");
+    return NextResponse.json(
+      {
+        error: isSandboxLookupIssue
+          ? "購入情報の確認に失敗しました。少し待ってからもう一度お試しください。"
+          : "購入の反映に失敗しました。"
+      },
+      { status: 500 }
+    );
   }
 }
