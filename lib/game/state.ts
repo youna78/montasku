@@ -849,7 +849,12 @@ function applyInitialBirthProgress(state: GameState, monsters: MonsterMaster[]):
     };
   }
 
-  const birthMonsterId = resolveBirthMonsterId(state.attributeTotals, monsters) ?? state.currentMonsterId;
+  const currentMonster = monsters.find((monster) => monster.monsterId === state.currentMonsterId);
+  const birthMonsterId =
+    currentMonster?.stage === "egg"
+      ? state.currentMonsterId
+      : resolveBirthMonsterId(state.attributeTotals, monsters) ?? state.currentMonsterId;
+
   return {
     ...state,
     onboardingCompletedTaskCount,

@@ -8,6 +8,17 @@ export default function ContactPage() {
         モンタスクに関するご意見、ご要望、不具合報告などは、専用のお問い合わせフォームから受け付けています。
       </div>
 
+      <div className="support-route-list">
+        <div className="support-route-item">
+          <strong>軽微な改善</strong>
+          <span>文言、表示崩れ、アイコン、タスク追加の希望など</span>
+        </div>
+        <div className="support-route-item">
+          <strong>重い改修</strong>
+          <span>課金、同期、イベント、アプリ内フォーム化など</span>
+        </div>
+      </div>
+
       <div className="legal-section">
         <h2>1. お問い合わせ方法</h2>
         <p>下記のボタンから、お問い合わせフォームへ進めます。返信が必要な内容は、フォーム内の案内に沿ってご記入ください。</p>

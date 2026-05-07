@@ -83,7 +83,7 @@ export default function TaskAddPage() {
 
   return (
     <main
-      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      className={`page-shell page-rpg ${getFrameThemeClass(gameState.selectedFrameId)}`}
       style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
     >
       <div className="title-panel">タスク追加</div>
@@ -104,11 +104,20 @@ export default function TaskAddPage() {
         </div>
       </section>
 
+      <section className="card decorated-card screen-summary-card">
+        <img src="/img/icon/generated_sfc/icon_sfc_tasks_01.png" alt="" className="screen-summary-monster" />
+        <div className="screen-summary-copy">
+          <strong>公式クエストを追加</strong>
+          <span>生活に合うタスクを選んで、毎日のクエストに入れましょう。</span>
+          <div className="task-progress-strip">
+            <span>タスク数 {limits.current}/{limits.max}</span>
+            <span>{isAtMaxTasks ? "上限です" : "追加できます"}</span>
+          </div>
+        </div>
+      </section>
+
       <section className="card decorated-card">
         <p>公式タスク一覧から追加できます。</p>
-        <div>
-          タスク数: {limits.current} / {limits.max}
-        </div>
         {isAtMaxTasks && <div>上限に達しているため追加できません。</div>}
         <div className="settings-links rpg-link-grid">
           <Link href="/task-settings" className="ui-link-button quest-btn quest-btn-secondary">
@@ -120,16 +129,16 @@ export default function TaskAddPage() {
       {message && <div className="toast">{message}</div>}
       {errorMessage && <div className="toast">{errorMessage}</div>}
 
-      <section className="card decorated-card">
-        <h2>追加可能クエスト</h2>
+      <section className="card decorated-card task-board-card">
+        <h2 className="screen-section-title">追加可能クエスト</h2>
         {addableTasks.length === 0 ? (
           <div>追加可能なタスクがありません。</div>
         ) : (
           <ul className="quest-list">
             {addableTasks.map((task) => (
-              <li className="row quest-item task-row" key={task.taskId}>
+              <li className="row quest-item task-row task-row-rpg" key={task.taskId}>
                 <div className="row-tight">
-                  <img src="/img/icon/icon_quest_task_01.png" alt="quest" className="quest-icon" />
+                  <img src="/img/icon/generated_sfc/icon_sfc_tasks_01.png" alt="" className="quest-icon quest-icon-large" />
                   <div>
                     <div>{task.name}</div>
                     <small>{task.category}</small>

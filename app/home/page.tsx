@@ -8,7 +8,7 @@ import { EvolutionOverlay } from "@/components/common/EvolutionOverlay";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { trackEvent } from "@/lib/analytics/gtag";
 import { HOME_ANNOUNCEMENTS } from "@/lib/game/announcements";
-import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage } from "@/lib/game/assets";
+import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage, getMonsterMotionAsset } from "@/lib/game/assets";
 import { getEventStatusLabel, getRemainingDaysLabel, getVisibleHomeEvents, isEventActive } from "@/lib/game/events";
 import { getBackgroundImagePath, getDecorationShopItem, getFramePreviewImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { getGeneralNotificationIds, getNotificationReadIds } from "@/lib/game/notificationReads";
@@ -145,6 +145,8 @@ export default function HomePage() {
   ];
 
   const growthStageLabel = GROWTH_STAGE_LABELS[growthStage] ?? growthStage;
+  const monsterMotionKind = growthStage === "egg" ? "sway" : feedback ? "happy" : "walk";
+  const monsterMotionAsset = getMonsterMotionAsset(currentMonster?.monsterId, monsterMotionKind);
   const monsterMotionClass = growthStage === "egg" ? "monster-img-alive" : "monster-img-walk-hop";
   const activeDecorations = gameState.selectedDecorationIds
     .map((itemId) => getDecorationShopItem(itemId))
@@ -198,7 +200,32 @@ export default function HomePage() {
       className={`page-shell page-home ${getFrameThemeClass(gameState.selectedFrameId)}`}
       style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
     >
-      <div className="title-panel">ホーム</div>
+      <header className="home-rpg-hud" aria-label="プレイヤー情報">
+        <div className="home-profile-chip">
+          <img src={getMonsterImage(currentMonster?.monsterId)} alt="" className="home-profile-monster" />
+          <div className="home-profile-copy">
+            <strong>Lv. {gameState.currentMonsterLevel}</strong>
+            <span>EXP {progress.required > 0 ? `${progress.current}/${progress.required}` : "MAX"}</span>
+            <div className="home-exp-track" aria-hidden="true">
+              <div className="home-exp-fill" style={{ width: progress.required > 0 ? `${toPercent(progress.current, progress.required)}%` : "100%" }} />
+            </div>
+          </div>
+        </div>
+        <div className="home-wallet-chip">
+          <span>
+            <img src="/img/icon/generated_sfc/icon_sfc_free_coin_01.png" alt="" />
+            <span className="home-wallet-label">フリー</span>
+            {gameState.freeCoins}
+          </span>
+          <span>
+            <img src="/img/icon/icon_paid_coin_01.png" alt="" />
+            <span className="home-wallet-label">モンタ</span>
+            {gameState.paidCoinBalance}
+          </span>
+        </div>
+      </header>
+
+      <div className="title-panel home-title-panel">ホーム</div>
       {feedback && <div className="toast">{feedback}</div>}
 
       {activeEvent && (
@@ -217,9 +244,13 @@ export default function HomePage() {
         </Link>
       )}
 
-      <section className="card decorated-card">
+      <section className="card decorated-card home-hero-card">
         <div className="home-stage-layout">
           <div className="monster-stage" style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}>
+            <div className="home-stage-caption">
+              <span>{currentMonster?.name ?? "モンスター"}</span>
+              <small>{growthStageLabel}</small>
+            </div>
             <div className="monster-stage-overlay" />
             {activeFrameImagePath ? (
               <div className="monster-stage-frame">
@@ -235,32 +266,45 @@ export default function HomePage() {
               </div>
             ))}
             <div className="monster-wrap">
-              <img src={getMonsterImage(currentMonster?.monsterId)} alt={currentMonster?.name ?? "monster"} className={`monster-img ${monsterMotionClass}`} />
+              {monsterMotionAsset ? (
+                <div
+                  role="img"
+                  aria-label={currentMonster?.name ?? "monster"}
+                  className="monster-img monster-sprite"
+                  style={{
+                    backgroundImage: `url("${monsterMotionAsset.imagePath}")`,
+                    animationDuration: `${monsterMotionAsset.durationMs}ms`
+                  }}
+                />
+              ) : (
+                <img src={getMonsterImage(currentMonster?.monsterId)} alt={currentMonster?.name ?? "monster"} className={`monster-img ${monsterMotionClass}`} />
+              )}
             </div>
           </div>
           <div className="home-stage-actions">
             <Link href="/notifications" className="home-notification-button">
               <span className="home-notification-icon">
-                <img src="/img/icon/icon_notification_01.png" alt="" className="home-notification-icon-image" />
+                <img src="/img/icon/generated_sfc/icon_sfc_notification_01.png" alt="" className="home-notification-icon-image" />
               </span>
               <span className="home-notification-label">おしらせ</span>
               {notificationCount > 0 && <span className="home-notification-badge">{notificationCount}</span>}
             </Link>
             <Link href="/shop" className="home-notification-button home-shop-shortcut">
               <span className="home-notification-icon">
-                <img src="/img/icon/icon_shop_01.png" alt="" className="home-notification-icon-image" />
+                <img src="/img/icon/generated_sfc/icon_sfc_shop_01.png" alt="" className="home-notification-icon-image" />
               </span>
               <span className="home-notification-label">ショップ</span>
             </Link>
             <Link href="/inventory" className="home-notification-button home-inventory-shortcut">
               <span className="home-notification-icon">
-                <img src="/img/icon/icon_quest_reward_02.png" alt="" className="home-notification-icon-image" />
+                <img src="/img/icon/generated_sfc/icon_sfc_treasure_01.png" alt="" className="home-notification-icon-image" />
               </span>
               <span className="home-notification-label">持ち物</span>
             </Link>
           </div>
         </div>
-        <div className="status-panel">
+        <div className="status-panel home-status-panel">
+          <div className="home-panel-heading">ステータス</div>
           <div className="status-row">
             <span>現在のモンスター</span>
             <strong>{currentMonster?.name ?? "-"}</strong>
@@ -325,8 +369,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="card decorated-card">
-        <h2>属性バー</h2>
+      <section className="card decorated-card home-attributes-card">
+        <h2 className="home-section-title">属性バー</h2>
         {bars.map((bar) => (
           <div className="attr-item" key={bar.key}>
             <div className="row">
@@ -343,8 +387,8 @@ export default function HomePage() {
         ))}
       </section>
 
-      <section className="card decorated-card">
-        <h2>未達成タスク (最大3件)</h2>
+      <section className="card decorated-card home-quests-card">
+        <h2 className="home-section-title">今日のクエスト</h2>
         {remainingTasks.length === 0 ? (
           <div className="empty-quests-wrap">
             <img src="/img/illustration/illust_empty_tasks_01.png" alt="all done" className="empty-quests-img" />

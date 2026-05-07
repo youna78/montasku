@@ -34,7 +34,251 @@ const MONSTER_IMAGE_BY_ID: Record<number, string> = {
   33: "/img/monster/event_spring_final_01.png",
   34: "/img/monster/event_spring_final_02.png",
   35: "/img/monster/event_spring_final_03.png",
-  36: "/img/monster/event_spring_final_04.png"
+  36: "/img/monster/event_spring_final_04.png",
+  37: "/img/monster/event_june_egg_01_style16bit_pixel_05.png",
+  38: "/img/monster/event_june_baby_01_style16bit_pixel_01.png",
+  39: "/img/monster/event_june_baby_02_style16bit_pixel_01.png",
+  40: "/img/monster/event_june_child_01_style16bit_pixel_03.png",
+  41: "/img/monster/event_june_child_02_style16bit_pixel_02.png",
+  42: "/img/monster/event_june_child_03_style16bit_pixel_fix_01.png",
+  43: "/img/monster/event_june_adult_01_style16bit_pixel_04.png",
+  44: "/img/monster/event_june_adult_02_style16bit_pixel_04.png",
+  45: "/img/monster/event_june_adult_03_style16bit_pixel_skinfix_02.png",
+  46: "/img/monster/event_june_adult_04_style16bit_pixel_01.png",
+  47: "/img/monster/event_june_final_01_style16bit_pixel_03.png",
+  48: "/img/monster/event_june_final_02_style16bit_pixel_03.png",
+  49: "/img/monster/event_june_final_03_style16bit_pixel_01.png",
+  50: "/img/monster/event_june_final_04_style16bit_pixel_02.png"
+};
+
+export type MonsterMotionKind = "walk" | "happy" | "sway";
+
+export type MonsterMotionAsset = {
+  imagePath: string;
+  frameCount: 4;
+  columns: 2;
+  rows: 2;
+  durationMs: number;
+};
+
+const MONSTER_MOTION_BY_ID: Record<number, Partial<Record<MonsterMotionKind, MonsterMotionAsset>>> = {
+  37: {
+    sway: {
+      imagePath: "/img/monster/event_june_egg_01_sway_4f_style16bit_fix_02.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    }
+  },
+  38: {
+    walk: {
+      imagePath: "/img/monster/event_june_baby_01_walk_4f_style16bit_pose_02.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    },
+    happy: {
+      imagePath: "/img/monster/event_june_baby_01_happy_4f_style16bit_pose_01.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    }
+  },
+  39: {
+    walk: {
+      imagePath: "/img/monster/event_june_baby_02_walk_4f_style16bit_pose_02.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    },
+    happy: {
+      imagePath: "/img/monster/event_june_baby_02_happy_4f_style16bit_pose_01.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    }
+  },
+  40: {
+    walk: {
+      imagePath: "/img/monster/event_june_child_01_walk_4f_style16bit_pose_02.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    },
+    happy: {
+      imagePath: "/img/monster/event_june_child_01_happy_4f_style16bit_pose_01.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    }
+  },
+  41: {
+    walk: {
+      imagePath: "/img/monster/event_june_child_02_walk_4f_style16bit_pose_02.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    },
+    happy: {
+      imagePath: "/img/monster/event_june_child_02_happy_4f_style16bit_pose_01.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    }
+  },
+  42: {
+    walk: {
+      imagePath: "/img/monster/event_june_child_03_walk_4f_style16bit_pose_02.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    },
+    happy: {
+      imagePath: "/img/monster/event_june_child_03_happy_4f_style16bit_pose_01.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    }
+  },
+  43: {
+    walk: {
+      imagePath: "/img/monster/event_june_adult_01_walk_4f_style16bit_pose_02.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    },
+    happy: {
+      imagePath: "/img/monster/event_june_adult_01_happy_4f_style16bit_pose_01.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    }
+  },
+  44: {
+    walk: {
+      imagePath: "/img/monster/event_june_adult_02_walk_4f_style16bit_pose_02.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    },
+    happy: {
+      imagePath: "/img/monster/event_june_adult_02_happy_4f_style16bit_pose_02.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    }
+  },
+  45: {
+    walk: {
+      imagePath: "/img/monster/event_june_adult_03_walk_4f_style16bit_pose_02.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    },
+    happy: {
+      imagePath: "/img/monster/event_june_adult_03_happy_4f_style16bit_pose_01.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    }
+  },
+  46: {
+    walk: {
+      imagePath: "/img/monster/event_june_adult_04_walk_4f_style16bit_pose_02.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    },
+    happy: {
+      imagePath: "/img/monster/event_june_adult_04_happy_4f_style16bit_pose_01.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    }
+  },
+  47: {
+    walk: {
+      imagePath: "/img/monster/event_june_final_01_walk_4f_style16bit_pose_02.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    },
+    happy: {
+      imagePath: "/img/monster/event_june_final_01_happy_4f_style16bit_pose_01.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    }
+  },
+  48: {
+    walk: {
+      imagePath: "/img/monster/event_june_final_02_walk_4f_style16bit_pose_02.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    },
+    happy: {
+      imagePath: "/img/monster/event_june_final_02_happy_4f_style16bit_pose_01.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    }
+  },
+  49: {
+    walk: {
+      imagePath: "/img/monster/event_june_final_03_walk_4f_style16bit_pose_02.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    },
+    happy: {
+      imagePath: "/img/monster/event_june_final_03_happy_4f_style16bit_pose_01.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    }
+  },
+  50: {
+    walk: {
+      imagePath: "/img/monster/event_june_final_04_walk_4f_style16bit_pose_02.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    },
+    happy: {
+      imagePath: "/img/monster/event_june_final_04_happy_4f_style16bit_pose_01.png",
+      frameCount: 4,
+      columns: 2,
+      rows: 2,
+      durationMs: 1120
+    }
+  }
 };
 
 export const ATTRIBUTE_ICON_BY_KEY = {
@@ -45,10 +289,10 @@ export const ATTRIBUTE_ICON_BY_KEY = {
 } as const;
 
 export const TAB_ICON_BY_KEY = {
-  home: "/img/tab/tab_home_01.png",
-  tasks: "/img/tab/tab_tasks_01.png",
-  dex: "/img/tab/tab_dex_01.png",
-  settings: "/img/tab/tab_settings_01.png"
+  home: "/img/icon/generated_sfc/icon_sfc_home_01.png",
+  tasks: "/img/icon/generated_sfc/icon_sfc_tasks_01.png",
+  dex: "/img/icon/generated_sfc/icon_sfc_dex_01.png",
+  settings: "/img/icon/generated_sfc/icon_sfc_settings_01.png"
 } as const;
 
 export const END_EVENT_ASSET_BY_KEY = {
@@ -85,6 +329,11 @@ export function getStageBadge(stage?: string): string | null {
 export function getMonsterImage(monsterId?: number): string {
   if (!monsterId) return "/img/ui/ui_shadow_fallback_01.png";
   return MONSTER_IMAGE_BY_ID[monsterId] ?? "/img/ui/ui_shadow_fallback_01.png";
+}
+
+export function getMonsterMotionAsset(monsterId: number | undefined, kind: MonsterMotionKind): MonsterMotionAsset | null {
+  if (!monsterId) return null;
+  return MONSTER_MOTION_BY_ID[monsterId]?.[kind] ?? null;
 }
 
 export function getLetterItemImage(imagePath?: string): string {

@@ -121,11 +121,14 @@ export default function EventShopDetailPage() {
       isEventEggQueued ||
       isEventEggActive
   );
+  const previewMonster = monsters.find((monster) => monster.monsterId === eventConfig.freeEggMonsterId);
+  const freeEggName = previewMonster?.name ?? "イベントたまご";
+  const isSpringEvent = eventConfig.eventId === "spring_easter_2026";
 
   if (!isVisible && !hasResidualAccess) {
     return (
       <main
-        className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
+        className={`page-shell page-shop ${getFrameThemeClass(gameState.selectedFrameId)}`}
         style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
       >
         <div className="title-panel">イベントショップ</div>
@@ -153,19 +156,19 @@ export default function EventShopDetailPage() {
       setMessage(result.reason === "already_claimed" ? "無料たまごは受け取り済みです" : "いまは受け取れません");
       return;
     }
-    setMessage("春の芽吹きたまごを受け取りました");
+    setMessage(`${freeEggName}を受け取りました`);
   };
 
   const onQueueEgg = () => {
     const result = queueEventEgg(eventConfig.eventId);
     if (!result) return;
     if (!result.used) {
-      if (result.reason === "no_egg") setMessage("春の芽吹きたまごを持っていません");
+      if (result.reason === "no_egg") setMessage(`${freeEggName}を持っていません`);
       else if (result.reason === "already_queued") setMessage("次のたまごに予約済みです");
       else setMessage("イベントたまごを予約できませんでした");
       return;
     }
-    setMessage("次のたまごを春の芽吹きたまごに予約しました");
+    setMessage(`次のたまごを${freeEggName}に予約しました`);
   };
 
   const onForceStartEgg = () => {
@@ -173,12 +176,12 @@ export default function EventShopDetailPage() {
     setShowStartNowConfirm(false);
     if (!result) return;
     if (!result.started) {
-      if (result.reason === "no_egg") setMessage("春の芽吹きたまごを持っていません");
-      else if (result.reason === "already_active") setMessage("すでに春の芽吹きたまごを育成中です");
-      else setMessage("春の芽吹きたまごに切り替えできませんでした");
+      if (result.reason === "no_egg") setMessage(`${freeEggName}を持っていません`);
+      else if (result.reason === "already_active") setMessage(`すでに${freeEggName}を育成中です`);
+      else setMessage(`${freeEggName}に切り替えできませんでした`);
       return;
     }
-    setMessage("いまのモンスターとお別れして、春の芽吹きたまごに切り替えました");
+    setMessage(`いまのモンスターとお別れして、${freeEggName}に切り替えました`);
     router.push("/birth-event");
   };
 
@@ -326,12 +329,13 @@ export default function EventShopDetailPage() {
     }
   };
 
-  const previewMonster = monsters.find((monster) => monster.monsterId === eventConfig.freeEggMonsterId);
-  const starterCheckoutItem = SHOP_PAID_COIN_ITEMS.find((item) => item.itemId === "starter_bundle_boost_01" && item.status === "confirmed") ?? null;
+  const starterCheckoutItem = isSpringEvent
+    ? SHOP_PAID_COIN_ITEMS.find((item) => item.itemId === "starter_bundle_boost_01" && item.status === "confirmed") ?? null
+    : null;
 
   return (
     <main
-      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      className={`page-shell page-rpg page-shop ${getFrameThemeClass(gameState.selectedFrameId)}`}
       style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
     >
       <div className="title-panel">イベントショップ</div>
@@ -347,7 +351,7 @@ export default function EventShopDetailPage() {
       </section>
 
       <section className="card decorated-card quest-heading-card">
-        <p>春イベント限定の背景やフレーム、イベントたまごを交換できます。春モンスターを育てるには、受け取ったたまごを「次のたまごに予約する」でセットしてください。</p>
+        <p>イベント限定の背景やフレーム、イベントたまごを交換できます。イベントモンスターを育てるには、受け取ったたまごを「次のたまごに予約する」でセットしてください。</p>
       </section>
 
       <section className="card decorated-card event-progress-card">
@@ -371,9 +375,9 @@ export default function EventShopDetailPage() {
         </div>
         <div className="event-progress-note">
           {isEventEggQueued
-            ? "春の芽吹きたまごを予約済みです。今のモンスターとお別れした次のサイクルで育成が始まります。"
+            ? `${freeEggName}を予約済みです。今のモンスターとお別れした次のサイクルで育成が始まります。`
             : isEventEggActive
-              ? "春の芽吹きたまごを育成中です。タスクを達成すると春モンスターへ進化します。"
+              ? `${freeEggName}を育成中です。タスクを達成するとイベントモンスターへ進化します。`
               : `${getRemainingDaysLabel(eventConfig)} / 開催中のみ交換できます。`}
         </div>
       </section>
@@ -398,12 +402,12 @@ export default function EventShopDetailPage() {
       <section className="card decorated-card">
         <div className="notification-card-head">
           <span className="notification-badge notification-badge-event">イベントたまご</span>
-          <h2>春の芽吹きたまご</h2>
+          <h2>{freeEggName}</h2>
         </div>
         <div className="event-egg-row">
-          <img src={getMonsterImage(previewMonster?.monsterId ?? eventConfig.freeEggMonsterId)} alt="春の芽吹きたまご" className="event-egg-thumb" />
+          <img src={getMonsterImage(previewMonster?.monsterId ?? eventConfig.freeEggMonsterId)} alt={freeEggName} className="event-egg-thumb" />
           <div className="event-egg-meta">
-            <p>まずは無料で1個受け取れます。受け取ったあとに「次のたまごに予約する」を押すと、いまのモンスターとお別れした次の育成サイクルで春の芽吹きたまごから春モンスターが出現します。</p>
+            <p>まずは無料で1個受け取れます。受け取ったあとに「次のたまごに予約する」を押すと、いまのモンスターとお別れした次の育成サイクルで{freeEggName}からイベントモンスターが出現します。</p>
             <div className="task-global-menu">
               <button className="quest-btn task-global-menu-button task-global-menu-button-primary" onClick={onClaimFreeEgg} disabled={!isActive || Boolean(eventState?.hasClaimedFreeEgg)}>
                 {eventState?.hasClaimedFreeEgg ? "受け取り済み" : "無料で受け取る"}
@@ -415,8 +419,8 @@ export default function EventShopDetailPage() {
                 いますぐ卵を育てる
               </button>
             </div>
-            {isEventEggQueued && <p className="shop-note shop-note-strong">予約済みです。今のモンスターとお別れした次のサイクルで、春の芽吹きたまごから育成が始まります。</p>}
-            {isEventEggActive && <p className="shop-note shop-note-strong">春の芽吹きたまごを育成中です。タスクを達成すると春モンスターへ進化します。</p>}
+            {isEventEggQueued && <p className="shop-note shop-note-strong">予約済みです。今のモンスターとお別れした次のサイクルで、{freeEggName}から育成が始まります。</p>}
+            {isEventEggActive && <p className="shop-note shop-note-strong">{freeEggName}を育成中です。タスクを達成するとイベントモンスターへ進化します。</p>}
           </div>
         </div>
       </section>
@@ -424,7 +428,7 @@ export default function EventShopDetailPage() {
       <section className="card decorated-card">
         <div className="notification-card-head">
           <span className="notification-badge notification-badge-info">フリーコイン交換</span>
-          <h2>春限定アイテム</h2>
+          <h2>イベント限定アイテム</h2>
         </div>
         <div className="shop-grid">
           {eventConfig.freeCoinShopItems.map((item) => {
@@ -485,7 +489,7 @@ export default function EventShopDetailPage() {
                 <h2>{starterCheckoutItem.title}</h2>
                 <p>{starterCheckoutItem.description}</p>
                 <div className="shop-grid-description">
-                  500モンタコイン / 春の芽吹きたまご / EXPブースト 24時間
+                  500モンタコイン / {freeEggName} / EXPブースト 24時間
                 </div>
                 <div className="shop-grid-price">{starterCheckoutItem.priceJpy} 円</div>
               </div>
@@ -561,7 +565,7 @@ export default function EventShopDetailPage() {
         </div>
       </section>
 
-      {SHOP_EVENT_DECORATIONS.length > 0 ? (
+      {isSpringEvent && SHOP_EVENT_DECORATIONS.length > 0 ? (
         <>
           <section className="card decorated-card">
             <div className="notification-card-head">
@@ -611,7 +615,7 @@ export default function EventShopDetailPage() {
         </>
       ) : null}
 
-      {SHOP_EVENT_BUNDLES.length > 0 ? (
+      {isSpringEvent && SHOP_EVENT_BUNDLES.length > 0 ? (
         <>
           <section className="card decorated-card">
             <div className="notification-card-head">
@@ -667,15 +671,15 @@ export default function EventShopDetailPage() {
       {showStartNowConfirm ? (
         <div className="auth-email-modal-overlay">
           <div className="auth-email-modal-card event-confirm-modal-card">
-            <h2 className="auth-email-modal-title">春の芽吹きたまごに切り替える？</h2>
+            <h2 className="auth-email-modal-title">{freeEggName}に切り替える？</h2>
             <div className="event-confirm-egg-preview">
-              <img src={getMonsterImage(eventConfig.freeEggMonsterId)} alt="春の芽吹きたまご" />
+              <img src={getMonsterImage(eventConfig.freeEggMonsterId)} alt={freeEggName} />
             </div>
             <p className="shop-note">
-              いま育てているモンスターとはお別れして、春の芽吹きたまごから育成を始めます。
+              いま育てているモンスターとはお別れして、{freeEggName}から育成を始めます。
             </p>
             <p className="shop-note shop-note-strong">
-              いまのモンスターからは手紙を受け取り、春の芽吹きたまごの誕生イベントへ進みます。
+              いまのモンスターからは手紙を受け取り、{freeEggName}の誕生イベントへ進みます。
             </p>
             <div className="task-global-menu">
               <button className="quest-btn task-global-menu-button task-global-menu-button-accent" onClick={onForceStartEgg}>

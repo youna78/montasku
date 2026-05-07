@@ -48,9 +48,11 @@ export default function BirthEventPage() {
             resolveEggEvolutionMonsterId(currentMonster, gameState.attributeTotals, monsters)
         ) ?? currentMonster
       : currentMonster;
+  const eggMonsterImage = getMonsterImage(currentMonster?.monsterId);
+  const bornMonsterImage = getMonsterImage(bornMonster?.monsterId);
   const eventText =
     hatchPhase === "egg"
-      ? "タマゴが揺れている..."
+      ? `${currentMonster?.name ?? "タマゴ"} が揺れている...`
       : hatchPhase === "crack"
         ? "ピシッ...タマゴにヒビが入った！"
         : `${bornMonster?.name ?? "スライム"} が誕生した！`;
@@ -65,9 +67,9 @@ export default function BirthEventPage() {
       <div className="title-panel">誕生イベント</div>
       <section className="card decorated-card">
         <div className={`hatch-scene phase-${hatchPhase}`}>
-          <img src="/img/ui/ui_hatch_symbol_01.png" alt="egg" className="hatch-egg" />
+          {hatchPhase !== "born" && <img src={eggMonsterImage} alt={currentMonster?.name ?? "egg"} className="hatch-egg" />}
           <img src="/img/effect/fx_smoke_01.png" alt="smoke" className="hatch-smoke" />
-          <img src={getMonsterImage(bornMonster?.monsterId)} alt={bornMonster?.name ?? "monster"} className="hatch-monster" />
+          {hatchPhase === "born" && <img src={bornMonsterImage} alt={bornMonster?.name ?? "monster"} className="hatch-monster" />}
         </div>
         <p style={{ textAlign: "center" }}>{eventText}</p>
         <div className="centered-button-wrap">

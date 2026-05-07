@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { isNativeMobileApp } from "@/lib/platform/capacitor";
+import { getClientPlatform, isNativeMobileApp } from "@/lib/platform/capacitor";
 import { useAuth } from "./AuthProvider";
 
 const LAST_AUTH_EMAIL_KEY = "habit-monster-last-auth-email";
@@ -36,13 +36,17 @@ export function AuthCard() {
   const [password, setPassword] = useState("");
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [isNativeApp, setIsNativeApp] = useState(false);
+  const [nativePlatform, setNativePlatform] = useState("unknown");
   const accountName =
     user?.displayName?.trim() ||
     (user?.email ? user.email.split("@")[0] : "") ||
     "メールユーザー";
+  const shouldShowAppleLogin = nativePlatform !== "unknown" && nativePlatform !== "android";
 
   useEffect(() => {
-    setIsNativeApp(isNativeMobileApp());
+    const nativeApp = isNativeMobileApp();
+    setIsNativeApp(nativeApp);
+    setNativePlatform(getClientPlatform());
   }, []);
 
   const openEmailModal = (nextMode: "login" | "signup") => {
@@ -106,7 +110,7 @@ export function AuthCard() {
           </p>
           <div className="auth-privacy-note">
             <p>
-              GoogleまたはAppleでログインすると、アカウント識別のために氏名、メールアドレス、ユーザーIDを取得します。
+              {shouldShowAppleLogin ? "GoogleまたはApple" : "Google"}でログインすると、アカウント識別のために氏名、メールアドレス、ユーザーIDを取得します。
             </p>
             <p>
               取得した情報は、ログイン機能の提供、データ保存、機種変更時の引き継ぎのために利用します。
@@ -124,9 +128,11 @@ export function AuthCard() {
           <button className="quest-btn quest-btn-primary auth-card-button" onClick={() => void signInWithGoogle()}>
             Googleでログイン
           </button>
-          <button className="quest-btn quest-btn-apple auth-card-button" onClick={() => void signInWithApple()}>
-            Appleでログイン
-          </button>
+          {shouldShowAppleLogin && (
+            <button className="quest-btn quest-btn-apple auth-card-button" onClick={() => void signInWithApple()}>
+              Appleでログイン
+            </button>
+          )}
           <div className="auth-divider">または</div>
           <div className="auth-mode-toggle">
             <button

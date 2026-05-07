@@ -66,7 +66,7 @@ export default function TaskRemovePage() {
 
   return (
     <main
-      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      className={`page-shell page-rpg ${getFrameThemeClass(gameState.selectedFrameId)}`}
       style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
     >
       <div className="title-panel">タスク削除</div>
@@ -87,11 +87,16 @@ export default function TaskRemovePage() {
         </div>
       </section>
 
-      <section className="card decorated-card">
-        <div>
-          タスク数: {limits.current} / {limits.max}
+      <section className="card decorated-card screen-summary-card">
+        <img src="/img/icon/generated_sfc/icon_sfc_treasure_01.png" alt="" className="screen-summary-monster" />
+        <div className="screen-summary-copy">
+          <strong>クエストを整理</strong>
+          <span>今の生活に合わないタスクを外せます。</span>
+          <div className="task-progress-strip">
+            <span>タスク数 {limits.current}/{limits.max}</span>
+            <span>最低 {limits.min}件は必要</span>
+          </div>
         </div>
-        <div>最低必要数: {limits.min}</div>
         <div className="settings-links rpg-link-grid">
           <Link href="/task-settings" className="ui-link-button quest-btn quest-btn-secondary">
             タスク設定へ戻る
@@ -101,13 +106,13 @@ export default function TaskRemovePage() {
 
       {message && <div className="toast">{message}</div>}
 
-      <section className="card decorated-card">
-        <h2>削除対象クエスト</h2>
+      <section className="card decorated-card task-board-card">
+        <h2 className="screen-section-title">削除対象クエスト</h2>
         <ul className="quest-list">
           {activeTasks.map((task, index) => (
-            <li className="row quest-item task-row" key={task.taskId}>
+            <li className="row quest-item task-row task-row-rpg" key={task.taskId}>
               <div className="row-tight">
-                <img src="/img/icon/icon_quest_task_01.png" alt="quest" className="quest-icon" />
+                <img src="/img/icon/generated_sfc/icon_sfc_tasks_01.png" alt="" className="quest-icon quest-icon-large" />
                 <span>
                   {index + 1}. {task.name}
                 </span>

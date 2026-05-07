@@ -17,6 +17,7 @@ import {
 import { ensureUserDocument } from "@/lib/firebase/firestore";
 import { trackEvent } from "@/lib/analytics/gtag";
 import { isFirebaseConfigured } from "@/lib/firebase/client";
+import { getNativePlatform, isNativeMobileApp } from "@/lib/platform/capacitor";
 import type { AuthUserProfile } from "@/types/auth";
 
 const DAILY_LOGIN_PROMPT_KEY = "habit-monster-google-login-prompt-last-shown";
@@ -56,6 +57,7 @@ function toAuthUser(user: User): AuthUserProfile {
 function toAuthErrorMessage(error: unknown, fallback: string): string {
   const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
   const nativeMessage = error instanceof Error ? error.message : "";
+  const nativePlatform = isNativeMobileApp() ? getNativePlatform() : "web";
 
   switch (code) {
     case "auth/invalid-email":
@@ -78,7 +80,9 @@ function toAuthErrorMessage(error: unknown, fallback: string): string {
     case "auth/unauthorized-domain":
       return "このドメインは Firebase の承認済みドメインに登録されていません。";
     case "auth/native-google-credential-missing":
-      return "Android の Google ログイン情報を取得できませんでした。もう一度お試しください。";
+      return nativePlatform === "ios"
+        ? "iOS の Googleログイン情報を取得できませんでした。GoogleService-Info.plist とURLスキームを確認してください。"
+        : "Android の Google ログイン情報を取得できませんでした。もう一度お試しください。";
     case "auth/native-apple-credential-missing":
       return "Appleログイン情報を取得できませんでした。もう一度お試しください。";
     default:
@@ -88,8 +92,11 @@ function toAuthErrorMessage(error: unknown, fallback: string): string {
       if (nativeMessage.includes("canceled") || nativeMessage.includes("cancelled") || nativeMessage.includes("キャンセル")) {
         return "ログインがキャンセルされました。";
       }
-      if (nativeMessage.includes("10") || nativeMessage.includes("DEVELOPER_ERROR")) {
+      if (nativePlatform === "android" && (nativeMessage.includes("10") || nativeMessage.includes("DEVELOPER_ERROR"))) {
         return "Android の Googleログイン設定に問題があります。Firebase の SHA-1 / SHA-256、google-services.json、パッケージ名を確認してください。";
+      }
+      if (nativePlatform === "ios" && nativeMessage.includes("Google")) {
+        return "iOS の Googleログイン設定に問題があります。GoogleService-Info.plist、URLスキーム、FirebaseのiOSアプリ設定を確認してください。";
       }
       if (nativeMessage) {
         return `${fallback}（${nativeMessage}）`;

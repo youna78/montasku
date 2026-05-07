@@ -16,7 +16,7 @@ import {
   signOut
 } from "firebase/auth";
 import { getFirebaseApp } from "./client";
-import { isNativeMobileApp } from "@/lib/platform/capacitor";
+import { getNativePlatform, isNativeMobileApp } from "@/lib/platform/capacitor";
 
 let persistenceReady: Promise<void> | null = null;
 
@@ -66,20 +66,19 @@ export async function signInWithGoogleNative() {
   await ensurePersistence();
   const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
   let result;
+  const useCredentialManager = getNativePlatform() === "android" ? false : undefined;
   try {
     result = await FirebaseAuthentication.signInWithGoogle({
       skipNativeAuth: true,
-      scopes: ["email", "profile"],
-      useCredentialManager: true
+      useCredentialManager
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
-    if (!message.includes("Cannot find a matching credential") && !message.includes("NoCredential")) {
+    if (useCredentialManager === false || (!message.includes("Cannot find a matching credential") && !message.includes("NoCredential"))) {
       throw error;
     }
     result = await FirebaseAuthentication.signInWithGoogle({
       skipNativeAuth: true,
-      scopes: ["email", "profile"],
       useCredentialManager: false
     });
   }
