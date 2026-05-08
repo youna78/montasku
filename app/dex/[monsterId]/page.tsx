@@ -5,9 +5,8 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
-import { getMonsterImage } from "@/lib/game/assets";
+import { getMonsterImage, getRarityBadge, getStageBadge } from "@/lib/game/assets";
 import { isEventMonster } from "@/lib/game/events";
-import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 
@@ -44,16 +43,11 @@ export default function DexDetailPage() {
 
   if (!Number.isFinite(monsterId)) {
     return (
-      <main className={`page-shell page-rpg page-dex ${getFrameThemeClass(gameState.selectedFrameId)}`}>
-        <div className="title-panel">図鑑詳細</div>
-        <section className="card decorated-card dex-detail-card">
-          <h2 className="screen-section-title">図鑑詳細</h2>
+      <main>
+        <h1>図鑑詳細</h1>
+        <section className="card">
           <p>不正なモンスターIDです。</p>
-          <div className="settings-links rpg-link-grid section-bottom-action">
-            <Link href="/dex" className="ui-link-button quest-btn quest-btn-secondary">
-              図鑑へ戻る
-            </Link>
-          </div>
+          <Link href="/dex">図鑑へ戻る</Link>
         </section>
         <DevDebugPanel gameState={gameState} monsters={monsters} />
         <BottomNav />
@@ -63,16 +57,11 @@ export default function DexDetailPage() {
 
   if (!gameState.discoveredMonsterIds.includes(monsterId)) {
     return (
-      <main className={`page-shell page-rpg page-dex ${getFrameThemeClass(gameState.selectedFrameId)}`}>
-        <div className="title-panel">図鑑詳細</div>
-        <section className="card decorated-card dex-detail-card">
-          <h2 className="screen-section-title">図鑑詳細</h2>
+      <main>
+        <h1>図鑑詳細</h1>
+        <section className="card">
           <p>未取得のモンスターです。</p>
-          <div className="settings-links rpg-link-grid section-bottom-action">
-            <Link href="/dex" className="ui-link-button quest-btn quest-btn-secondary">
-              図鑑へ戻る
-            </Link>
-          </div>
+          <Link href="/dex">図鑑へ戻る</Link>
         </section>
         <DevDebugPanel gameState={gameState} monsters={monsters} />
         <BottomNav />
@@ -81,56 +70,25 @@ export default function DexDetailPage() {
   }
 
   const monster = monsters.find((m) => m.monsterId === monsterId);
+  const rarityBadge = getRarityBadge(monster?.rarity);
+  const stageBadge = getStageBadge(monster?.stage);
+
   return (
-    <main className={`page-shell page-rpg page-dex ${getFrameThemeClass(gameState.selectedFrameId)}`}>
+    <main className="page-shell page-dex">
       <div className="title-panel">図鑑詳細</div>
-      <section className="card decorated-card dex-detail-card">
-        <h2 className="screen-section-title">モンスター詳細</h2>
-        <div className="home-stage-layout dex-detail-stage-layout">
-          <div
-            className="monster-stage dex-detail-stage"
-            style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
-          >
-            <div className="home-stage-caption dex-detail-stage-caption">
-              <small>#{monster?.monsterId ?? "???"}</small>
-            </div>
-            <div className="monster-wrap dex-detail-monster-wrap">
-              <img src={getMonsterImage(monster?.monsterId)} alt={monster?.name ?? "monster"} className="monster-img dex-detail-monster-image" />
-            </div>
-          </div>
+      <section className="card decorated-card">
+        <div className="monster-wrap">
+          <img src={getMonsterImage(monster?.monsterId)} alt={monster?.name ?? "monster"} className="monster-img" />
         </div>
+        <div className="badge-wrap">
+          {stageBadge && <img src={stageBadge} alt="stage" className="badge-img" />}
+          {rarityBadge && <img src={rarityBadge} alt="rarity" className="badge-img wide" />}
+        </div>
+        <h2>{monster?.name}</h2>
         {monster && isEventMonster(monster.monsterId) && <p className="event-monster-note">春イベント限定モンスター</p>}
-        <div className="status-panel compact-status-panel dex-detail-status">
-          <div className="status-row">
-            <span>名前</span>
-            <strong>{monster?.name}</strong>
-          </div>
-          <div className="status-row">
-            <span>No.</span>
-            <strong>#{monster?.monsterId}</strong>
-          </div>
-          <div className="status-row">
-            <span>成長段階</span>
-            <strong>{monster?.stage}</strong>
-          </div>
-          <div className="status-row">
-            <span>レア度</span>
-            <strong>{monster?.rarity}</strong>
-          </div>
-          <div className="status-row">
-            <span>属性</span>
-            <strong>{monster?.attribute}</strong>
-          </div>
-          <div className="status-row dex-detail-description-row">
-            <span>説明</span>
-            <strong>{monster?.description}</strong>
-          </div>
-        </div>
-        <div className="settings-links rpg-link-grid section-bottom-action dex-detail-actions">
-          <Link href="/dex" className="ui-link-button quest-btn quest-btn-secondary">
-            図鑑へ戻る
-          </Link>
-        </div>
+        <p>属性: {monster?.attribute}</p>
+        <p>{monster?.description}</p>
+        <Link href="/dex">図鑑へ戻る</Link>
       </section>
       <DevDebugPanel gameState={gameState} monsters={monsters} />
       <BottomNav />

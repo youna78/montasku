@@ -159,7 +159,7 @@ export default function InventoryPage() {
 
   return (
     <main
-      className={`page-shell page-rpg ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
       style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
     >
       <div className="title-panel">持ち物</div>

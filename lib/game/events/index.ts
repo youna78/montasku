@@ -1,7 +1,7 @@
 import type { GameEventConfig } from "@/types/event";
-import { GAME_EVENTS, JUNE_SHRINE_EVENT, SPRING_EASTER_EVENT, createInitialUserEventState, normalizeUserEventState } from "./config";
+import { GAME_EVENTS, SPRING_EASTER_EVENT, createInitialUserEventState, normalizeUserEventState } from "./config";
 
-export { GAME_EVENTS, JUNE_SHRINE_EVENT, SPRING_EASTER_EVENT, createInitialUserEventState, normalizeUserEventState };
+export { GAME_EVENTS, SPRING_EASTER_EVENT, createInitialUserEventState, normalizeUserEventState };
 
 export function getEventById(eventId: string): GameEventConfig | null {
   return GAME_EVENTS.find((event) => event.eventId === eventId) ?? null;
@@ -44,5 +44,5 @@ export function getEventStatusLabel(event: GameEventConfig, now: Date = new Date
 }
 
 export function isEventMonster(monsterId: number): boolean {
-  return GAME_EVENTS.some((event) => event.rewardPreviewMonsterIds.includes(monsterId));
+  return SPRING_EASTER_EVENT.rewardPreviewMonsterIds.includes(monsterId);
 }

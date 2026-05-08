@@ -46,21 +46,10 @@ export default function TaskSettingsPage() {
 
   return (
     <main
-      className={`page-shell page-rpg ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
       style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
     >
       <div className="title-panel">タスク設定</div>
-      <section className="card decorated-card screen-summary-card">
-        <img src="/img/icon/generated_sfc/icon_sfc_tasks_01.png" alt="" className="screen-summary-monster" />
-        <div className="screen-summary-copy">
-          <strong>クエスト管理</strong>
-          <span>毎日のタスクを追加・削除・並び替えできます。</span>
-          <div className="task-progress-strip">
-            <span>設定中 {limits.current}/{limits.max}</span>
-            <span>最低 {limits.min}件</span>
-          </div>
-        </div>
-      </section>
       <section className="card decorated-card">
         <div className="task-global-menu">
           <Link href="/task-add" className="ui-link-button task-global-menu-button task-global-menu-button-primary">
@@ -75,31 +64,25 @@ export default function TaskSettingsPage() {
         </div>
       </section>
 
-      <section className="card decorated-card task-board-card">
-        <h2 className="screen-section-title">現在設定中クエスト</h2>
+      <section className="card decorated-card">
+        <div>
+          タスク数: {limits.current} / {limits.max}
+        </div>
+        <div>最小必要数: {limits.min}</div>
+      </section>
+
+      <section className="card decorated-card">
+        <h2>現在設定中クエスト</h2>
         <ul className="quest-list">
           {activeTasks.map((task, index) => (
-            <li key={task.taskId} className="quest-item task-row-rpg">
-              <img src="/img/icon/generated_sfc/icon_sfc_tasks_01.png" alt="" className="quest-icon quest-icon-large" />
+            <li key={task.taskId} className="quest-item">
+              <img src="/img/icon/icon_quest_task_01.png" alt="quest" className="quest-icon" />
               <span>
                 {index + 1}. {task.name}
               </span>
             </li>
           ))}
         </ul>
-      </section>
-
-      <section className="card decorated-card support-route-card">
-        <h2 className="screen-section-title">要望を送る</h2>
-        <p>ほしいタスクや改善案がある時は、リクエストフォームから送れます。</p>
-        <a
-          href="https://docs.google.com/forms/d/e/1FAIpQLSflbsd5RHq5IBKaTU7k6aIFPJjhk1GINQ0VqSjwSYRFBtUvJA/viewform?usp=publish-editor"
-          target="_blank"
-          rel="noreferrer"
-          className="ui-link-button settings-menu-button settings-menu-button-accent"
-        >
-          タスク追加リクエスト
-        </a>
       </section>
 
       <section className="card decorated-card">

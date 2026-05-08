@@ -7,7 +7,7 @@ import { BottomNav } from "@/components/common/BottomNav";
 import { EvolutionOverlay } from "@/components/common/EvolutionOverlay";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { trackEvent } from "@/lib/analytics/gtag";
-import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage } from "@/lib/game/assets";
+import { ATTRIBUTE_ICON_BY_KEY } from "@/lib/game/assets";
 import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { playSfx } from "@/lib/game/sfx";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
@@ -20,8 +20,6 @@ type EvolutionScene = {
   previousMonsterId: number;
   nextMonsterId: number;
 };
-
-const TASK_FREE_COINS = 2;
 
 export default function TasksPage() {
   const router = useRouter();
@@ -64,8 +62,6 @@ export default function TasksPage() {
     .map((active) => tasks.find((task) => task.taskId === active.taskId))
     .filter((task): task is TaskMaster => Boolean(task));
   const isTutorialMode = !gameState.hasSeenTutorial || gameState.isInTutorialFlow;
-  const currentMonster = monsters.find((monster) => monster.monsterId === gameState.currentMonsterId);
-  const completedToday = activeTasks.filter((task) => gameState.completedTaskIdsToday.includes(task.taskId)).length;
 
   const onComplete = (taskId: number) => {
     const result = completeTask(taskId);
@@ -111,27 +107,33 @@ export default function TasksPage() {
 
   return (
     <main
-      className={`page-shell page-rpg page-tasks ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
       style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
     >
       <div className="title-panel">タスク</div>
-      <section className="card decorated-card screen-summary-card">
-        <img src={getMonsterImage(currentMonster?.monsterId)} alt="" className="screen-summary-monster" />
-        <div className="screen-summary-copy">
-          <strong>今日のクエスト</strong>
-          <span>各タスクは1日1回だけ達成できます。</span>
-          <div className="task-progress-strip">
-            <span>達成 {completedToday}/{activeTasks.length}</span>
-            <span>無料コイン {gameState.freeCoins}</span>
-            <Link href="/shop" className="task-summary-shop-button">
-              ショップ
-            </Link>
+      <section className="card decorated-card quest-heading-card">
+        <p>各タスクは1日1回のみ達成できます。</p>
+      </section>
+      <section className="card decorated-card">
+        <div className="status-panel compact-status-panel">
+          <div className="status-row">
+            <span>無料コイン</span>
+            <strong>{gameState.freeCoins}</strong>
           </div>
+          {gameState.lastLoginBonusDate === gameState.lastPlayedDate && gameState.lastLoginBonusCoins > 0 && (
+            <div className="status-row">
+              <span>ログインボーナス</span>
+              <strong>+{gameState.lastLoginBonusCoins}</strong>
+            </div>
+          )}
         </div>
       </section>
       {!isTutorialMode && (
         <section className="card decorated-card">
           <div className="task-global-menu">
+            <Link href="/shop" className="ui-link-button task-global-menu-button settings-menu-button-neutral">
+              ショップ
+            </Link>
             <Link href="/task-add" className="ui-link-button task-global-menu-button task-global-menu-button-primary">
               追加
             </Link>
@@ -147,55 +149,41 @@ export default function TasksPage() {
 
       {feedback && <div className="reward-popup reward-popup-top">{feedback}</div>}
 
-      <section className="card decorated-card task-board-card">
-        <h2 className="screen-section-title">クエスト一覧</h2>
-        <ul className="quest-list">
-          {activeTasks.map((task) => {
-            const completed = gameState.completedTaskIdsToday.includes(task.taskId);
+      {activeTasks.map((task) => {
+        const completed = gameState.completedTaskIdsToday.includes(task.taskId);
 
-            return (
-              <li className={`quest-item task-row-rpg ${completed ? "task-row-completed" : ""}`} key={task.taskId}>
-                <div className="task-row-main">
-                  <img src="/img/icon/generated_sfc/icon_sfc_tasks_01.png" alt="" className="quest-icon quest-icon-large" />
-                  <div>
-                    <div className="task-row-title">{task.name}</div>
-                    <small className="task-meta">
-                      <span className="task-reward-line">
-                        <span className="task-reward-chip">EXP +{task.baseExp}</span>
-                        <span className="task-reward-chip">
-                          <img src="/img/icon/generated_sfc/icon_sfc_free_coin_01.png" alt="" className="task-reward-icon" />
-                          コイン +{TASK_FREE_COINS}
-                        </span>
-                      </span>
-                      <span className="task-stat-line">
-                        <span className="task-attr-chip">
-                          <img src={ATTRIBUTE_ICON_BY_KEY.power} alt="power" className="attr-icon" />
-                          {task.power}
-                        </span>
-                        <span className="task-attr-chip">
-                          <img src={ATTRIBUTE_ICON_BY_KEY.heal} alt="heal" className="attr-icon" />
-                          {task.heal}
-                        </span>
-                        <span className="task-attr-chip">
-                          <img src={ATTRIBUTE_ICON_BY_KEY.knowledge} alt="knowledge" className="attr-icon" />
-                          {task.knowledge}
-                        </span>
-                        <span className="task-attr-chip">
-                          <img src={ATTRIBUTE_ICON_BY_KEY.create} alt="create" className="attr-icon" />
-                          {task.create}
-                        </span>
-                      </span>
-                    </small>
-                  </div>
-                </div>
-                <button className={`quest-btn ${completed ? "quest-btn-secondary" : "quest-btn-primary"}`} disabled={completed} onClick={() => onComplete(task.taskId)}>
-                  {completed ? "達成済み" : "達成"}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+        return (
+          <section className="card decorated-card" key={task.taskId}>
+            <div className="row">
+              <div>
+                <div>{task.name}</div>
+                <small className="task-meta">
+                  <span>EXP +{task.baseExp}</span>
+                  <span className="task-attr-chip">
+                    <img src={ATTRIBUTE_ICON_BY_KEY.power} alt="power" className="attr-icon" />
+                    {task.power}
+                  </span>
+                  <span className="task-attr-chip">
+                    <img src={ATTRIBUTE_ICON_BY_KEY.heal} alt="heal" className="attr-icon" />
+                    {task.heal}
+                  </span>
+                  <span className="task-attr-chip">
+                    <img src={ATTRIBUTE_ICON_BY_KEY.knowledge} alt="knowledge" className="attr-icon" />
+                    {task.knowledge}
+                  </span>
+                  <span className="task-attr-chip">
+                    <img src={ATTRIBUTE_ICON_BY_KEY.create} alt="create" className="attr-icon" />
+                    {task.create}
+                  </span>
+                </small>
+              </div>
+              <button className="primary" disabled={completed} onClick={() => onComplete(task.taskId)}>
+                {completed ? "達成済み" : "達成"}
+              </button>
+            </div>
+          </section>
+        );
+      })}
 
       <DevDebugPanel gameState={gameState} monsters={monsters} />
       {!isTutorialMode && <BottomNav />}

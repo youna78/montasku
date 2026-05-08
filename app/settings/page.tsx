@@ -46,21 +46,14 @@ export default function SettingsPage() {
 
   return (
     <main
-      className={`page-shell page-rpg page-settings ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
       style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
     >
       <div className="title-panel">設定</div>
       <AuthCard />
       <section className="card decorated-card">
-        <div className="screen-summary-card settings-summary-card">
-          <img src="/img/icon/generated_sfc/icon_sfc_settings_01.png" alt="" className="screen-summary-monster" />
-          <div className="screen-summary-copy">
-            <strong>遊びの設定</strong>
-            <span>タスク設定、ショップ、持ち物などここから確認できます。</span>
-          </div>
-        </div>
         <div className="settings-menu-grid centered-actions">
-          <Link href="/task-settings" className="ui-link-button settings-menu-button settings-menu-button-neutral">
+          <Link href="/task-settings" className="ui-link-button settings-menu-button settings-menu-button-primary">
             タスク設定へ
           </Link>
           <Link href="/shop" className="ui-link-button settings-menu-button settings-menu-button-neutral">
@@ -69,21 +62,20 @@ export default function SettingsPage() {
           <Link href="/inventory" className="ui-link-button settings-menu-button settings-menu-button-neutral">
             持ち物
           </Link>
-          <Link href="/letters" className="ui-link-button settings-menu-button settings-menu-button-neutral">
+          <Link href="/letters" className="ui-link-button settings-menu-button settings-menu-button-secondary">
             てがみ
           </Link>
           <a
             href="https://docs.google.com/forms/d/e/1FAIpQLSflbsd5RHq5IBKaTU7k6aIFPJjhk1GINQ0VqSjwSYRFBtUvJA/viewform?usp=publish-editor"
             target="_blank"
             rel="noreferrer"
-            className="ui-link-button settings-menu-button settings-menu-button-neutral"
+            className="ui-link-button settings-menu-button settings-menu-button-accent"
           >
             タスク追加リクエスト
           </a>
         </div>
       </section>
       <section className="card decorated-card">
-        <h2 className="screen-section-title">問い合わせ・規約</h2>
         <div className="settings-menu-grid centered-actions">
           <Link href="/privacy" className="ui-link-button settings-menu-button settings-menu-button-neutral">
             プライバシーポリシー

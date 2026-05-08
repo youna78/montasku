@@ -1,7 +1,6 @@
 import type { GameEventConfig, UserEventState } from "@/types/event";
 
 export const SPRING_EASTER_EVENT_ID = "spring_easter_2026";
-export const JUNE_SHRINE_EVENT_ID = "june_shrine_2026";
 
 export const SPRING_EASTER_EVENT: GameEventConfig = {
   eventId: SPRING_EASTER_EVENT_ID,
@@ -79,45 +78,7 @@ export const SPRING_EASTER_EVENT: GameEventConfig = {
   }
 };
 
-export const JUNE_SHRINE_EVENT: GameEventConfig = {
-  eventId: JUNE_SHRINE_EVENT_ID,
-  slug: "june-shrine",
-  name: "梅雨の神社",
-  startsAt: "2026-06-01T00:00:00+09:00",
-  endsAt: "2026-06-30T23:59:59+09:00",
-  announcementStartsAt: "2026-05-25T00:00:00+09:00",
-  targetUsers: "all",
-  heroImagePath: "/img/illustration/icatch_june_shrine_renewal_01.png",
-  bannerLabel: "イベント開催中",
-  description: "雨の神社に特別なモンスター登場！タスクを達成して育ててみよう",
-  notice: "期間限定です。イベントショップは開催中のみ利用できます。",
-  freeEggMonsterId: 37,
-  freeEggClaimCount: 1,
-  rewardPreviewMonsterIds: [37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50],
-  featuredMonsterIds: [38, 39, 42, 46],
-  freeCoinShopItems: [],
-  paidCoinShopItems: [
-    {
-      itemId: "june_shrine_event_egg_paid",
-      title: "梅雨の雨宿りたまご",
-      description: "梅雨イベントの進化ラインで育てられる特別なたまごです。",
-      rewardType: "event_egg",
-      currencyType: "paid_coin",
-      price: 500,
-      imagePath: "/img/monster/event_june_egg_01_style16bit_pixel_05.png",
-      grantValue: "37",
-      rarity: "rare",
-      availability: "active_only"
-    }
-  ],
-  mission: {
-    loginDaysRequired: 7,
-    dailyLoginBonusFreeCoins: 2,
-    loginRewardTitle: "梅雨イベント完走"
-  }
-};
-
-export const GAME_EVENTS: GameEventConfig[] = [SPRING_EASTER_EVENT, JUNE_SHRINE_EVENT];
+export const GAME_EVENTS: GameEventConfig[] = [SPRING_EASTER_EVENT];
 
 export function createInitialUserEventState(eventId: string): UserEventState {
   return {

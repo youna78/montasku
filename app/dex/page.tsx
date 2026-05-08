@@ -7,7 +7,6 @@ import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getMonsterImage, getRarityBadge } from "@/lib/game/assets";
 import { isEventMonster } from "@/lib/game/events";
-import { getFrameThemeClass } from "@/lib/game/shop";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 
@@ -38,30 +37,16 @@ export default function DexPage() {
     return <main>Loading...</main>;
   }
 
-  const discoveredCount = gameState.discoveredMonsterIds.length;
-
   return (
-    <main className={`page-shell page-rpg page-dex ${getFrameThemeClass(gameState.selectedFrameId)}`}>
+    <main className="page-shell page-dex">
       <div className="title-panel">図鑑</div>
-      <section className="card decorated-card screen-summary-card">
-        <img src="/img/icon/generated_sfc/icon_sfc_dex_01.png" alt="" className="screen-summary-monster" />
-        <div className="screen-summary-copy">
-          <strong>モンスター図鑑</strong>
-          <span>出会ったモンスターの記録を見返せます。</span>
-          <div className="task-progress-strip">
-            <span>発見 {discoveredCount}/{monsters.length}</span>
-            <span>イベント限定も記録</span>
-          </div>
-        </div>
-      </section>
-      <section className="card decorated-card dex-board-card">
-        <h2 className="screen-section-title">発見した仲間</h2>
+      <section className="card decorated-card">
         {monsters.map((monster) => {
           const unlocked = gameState.discoveredMonsterIds.includes(monster.monsterId);
           const rarityBadge = getRarityBadge(monster.rarity);
           return (
-            <div key={monster.monsterId} className={`dex-row dex-row-rpg ${unlocked ? "" : "dex-row-locked"}`}>
-              <span className="dex-number">#{monster.monsterId}</span>
+            <div key={monster.monsterId} className="dex-row">
+              <span>#{monster.monsterId}</span>
               <img
                 src={unlocked ? getMonsterImage(monster.monsterId) : "/img/ui/ui_shadow_fallback_01.png"}
                 alt={unlocked ? monster.name : "unknown"}
@@ -69,17 +54,8 @@ export default function DexPage() {
               />
               <div className="dex-row-main">
                 {unlocked ? <Link href={`/dex/${monster.monsterId}`}>{monster.name}</Link> : <span>???</span>}
-                {unlocked ? (
-                  <>
-                    {rarityBadge && <img src={rarityBadge} alt={monster.rarity} className="rarity-badge-small" />}
-                    {isEventMonster(monster.monsterId) && <span className="event-dex-badge">春イベント</span>}
-                  </>
-                ) : (
-                  <>
-                    <span className="dex-unknown-badge">未発見</span>
-                    <small className="dex-row-subtext">まだ記録がありません</small>
-                  </>
-                )}
+                {unlocked && rarityBadge && <img src={rarityBadge} alt={monster.rarity} className="rarity-badge-small" />}
+                {unlocked && isEventMonster(monster.monsterId) && <span className="event-dex-badge">春イベント</span>}
               </div>
             </div>
           );

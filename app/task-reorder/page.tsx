@@ -66,7 +66,7 @@ export default function TaskReorderPage() {
 
   return (
     <main
-      className={`page-shell page-rpg ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
       style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
     >
       <div className="title-panel">タスク並び替え</div>
@@ -87,15 +87,9 @@ export default function TaskReorderPage() {
         </div>
       </section>
 
-      <section className="card decorated-card screen-summary-card">
-        <img src="/img/icon/generated_sfc/icon_sfc_tasks_01.png" alt="" className="screen-summary-monster" />
-        <div className="screen-summary-copy">
-          <strong>表示順を変更</strong>
-          <span>ホームやタスク画面に出る順番を整えます。</span>
-          <div className="task-progress-strip">
-            <span>タスク数 {limits.current}/{limits.max}</span>
-            <span>上から順に表示</span>
-          </div>
+      <section className="card decorated-card">
+        <div>
+          タスク数: {limits.current} / {limits.max}
         </div>
         <div className="settings-links rpg-link-grid">
           <Link href="/task-settings" className="ui-link-button quest-btn quest-btn-secondary">
@@ -106,13 +100,13 @@ export default function TaskReorderPage() {
 
       {message && <div className="toast">{message}</div>}
 
-      <section className="card decorated-card task-board-card">
-        <h2 className="screen-section-title">並び替え対象クエスト</h2>
+      <section className="card decorated-card">
+        <h2>並び替え対象クエスト</h2>
         <ul className="quest-list">
           {activeTasks.map((task, index) => (
-            <li className="row quest-item task-row task-row-rpg" key={task.taskId}>
+            <li className="row quest-item task-row" key={task.taskId}>
               <div className="row-tight">
-                <img src="/img/icon/generated_sfc/icon_sfc_tasks_01.png" alt="" className="quest-icon quest-icon-large" />
+                <img src="/img/icon/icon_quest_task_01.png" alt="quest" className="quest-icon" />
                 <span>
                   {index + 1}. {task.name}
                 </span>
