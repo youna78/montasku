@@ -35,3 +35,17 @@ monster_id,name,attribute,stage,rarity,unlock_lv,unlock_condition,evolution_from
 34,フラワーネズミ,special,final,rare,70,knowledge,ハルネズミ,,花を纏わせているネズミモンスター。意外と可愛くて人気が高い,TRUE
 35,ハルノツカイ,special,final,rare,70,power,ハルリュウ,,春を運んでくる龍。見たものは未来永劫幸せになると言われる,TRUE
 36,ジクウノタビビト,special,final,rare,70,create,イースターラビット,,卵を集めるために時空を歪めることに成功したうさぎモンスター。常に時計を持っている,TRUE
+37,梅雨の雨宿りたまご,special,egg,rare,0,june_event1_start,,まめしばもどき|黒まめしばもどき,葉っぱで雨宿りしている梅雨イベントの特別なたまご,TRUE
+38,まめしばもどき,special,baby,rare,5,heal|knowledge,梅雨の雨宿りたまご,おかげ犬もどき|おつかいいぬもどき|きつねみこ,神社の駒使い。本人は犬ではないと言い張っているが真偽は定かではない。骨が好き,TRUE
+39,黒まめしばもどき,special,baby,rare,5,power|create,梅雨の雨宿りたまご,おかげ犬もどき|おつかいいぬもどき|きつねみこ,神社の駒使い。本人は犬ではないと言い張っているが真偽は定かではない。肉が好き,TRUE
+40,おかげ犬もどき,special,child,rare,20,heal,まめしばもどき|黒まめしばもどき,こまいぬもどき,主人の代わりに神社にお参りする犬に見えるが、本人はモンスターと言い張っている,TRUE
+41,おつかいいぬもどき,special,child,rare,20,knowledge,まめしばもどき|黒まめしばもどき,けろべろすもどき,小さなお使いができる賢い犬。本人はモンスターと言い張っているが。。。,TRUE
+42,きつねみこ,special,child,rare,20,power,まめしばもどき|黒まめしばもどき,梅雨の神使,神社の巫女様。童のような姿をしているが、狐の耳と尻尾が隠せていない,TRUE
+43,こまいぬもどき,special,adult,rare,40,heal,おかげ犬もどき,神社の守り神,神社を守る犬もどき。ただ訪問者が来ると嬉しくて尻尾が揺れるらしい,TRUE
+44,けろべろすもどき,special,adult,rare,40,knowledge,おつかいいぬもどき,神社のケロベロス,まめしばの顔が三つある犬モンスター。人が来ると全員嬉しくなってしまう,TRUE
+45,梅雨の神使,special,adult,rare,40,power,きつねみこ,女狐神主,成人の女性のような姿をしているが、まだ少し耳と尻尾が出てしまっている狐。,TRUE
+46,狐の神主,special,adult,rare,40,create,きつねみこ,狐の雷神,成人の男性のような姿でこの神社を守る神主。油揚げに目がない,TRUE
+47,神社の守り神,special,final,rare,70,heal,こまいぬもどき,,立派に成長した犬もどき。スカーフを巻いた忍者の格好をして神社を静かに見守っている。,TRUE
+48,神社のケロベロス,special,final,rare,70,knowledge,けろべろすもどき,,神社を守ってくれるケロベロス。連帯感が強い。,TRUE
+49,女狐神主,special,final,rare,70,power,梅雨の神使,,九尾となった女狐。凄まじい力で神社を守っている。,TRUE
+50,狐の雷神,special,final,rare,70,create,狐の神主,,九尾でさらに雷神となった狐。神社に危害を加えるものは容赦しない。,TRUE

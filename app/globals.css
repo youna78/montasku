@@ -738,6 +738,34 @@ button:disabled {
   animation: monster-walk-hop 1.35s steps(2, end) infinite;
 }
 
+.monster-sprite {
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-size: 200% 200%;
+  animation-name: monster-sprite-4f;
+  animation-timing-function: step-end;
+  animation-iteration-count: infinite;
+}
+
+@keyframes monster-sprite-4f {
+  0%,
+  24.99% {
+    background-position: 0 0;
+  }
+  25%,
+  49.99% {
+    background-position: 100% 0;
+  }
+  50%,
+  74.99% {
+    background-position: 0 100%;
+  }
+  75%,
+  100% {
+    background-position: 100% 100%;
+  }
+}
+
 @keyframes monster-hop {
   0% {
     transform: translateY(0) scaleX(1) scaleY(1);
@@ -782,7 +810,8 @@ button:disabled {
 
 @media (prefers-reduced-motion: reduce) {
   .monster-img-alive,
-  .monster-img-walk-hop {
+  .monster-img-walk-hop,
+  .monster-sprite {
     animation: none;
   }
 
