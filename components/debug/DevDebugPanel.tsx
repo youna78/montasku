@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import type { GameState } from "@/types/game";
 import type { MonsterMaster } from "@/types/master";
+import { getVirtualGameNow } from "@/lib/game/virtualTime";
 
 type Props = {
   gameState: GameState;
@@ -14,10 +16,14 @@ export function DevDebugPanel({ gameState, monsters }: Props) {
   }
 
   const currentMonster = monsters.find((m) => m.monsterId === gameState.currentMonsterId);
+  const virtualNow = getVirtualGameNow();
 
   return (
     <section className="debug-panel">
       <strong>DEBUG</strong>
+      <div>
+        virtualNow: {virtualNow ?? "-"} / <Link href="/dev/calendar">検証カレンダー</Link>
+      </div>
       <div>currentMonsterId: {gameState.currentMonsterId}</div>
       <div>currentMonsterName: {currentMonster?.name ?? "-"}</div>
       <div>currentMonsterLevel: {gameState.currentMonsterLevel}</div>

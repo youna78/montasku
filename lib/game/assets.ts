@@ -1,3 +1,5 @@
+import { getGameNow } from "@/lib/game/virtualTime";
+
 const MONSTER_IMAGE_BY_ID: Record<number, string> = {
   1: "/img/monster/monster_egg_01.png",
   2: "/img/monster/monster_baby_heal_01.png",
@@ -398,7 +400,7 @@ const MONSTER_MOTION_BY_ID: Record<number, Partial<Record<MonsterMotionKind, Mon
   }
 };
 
-function isMonsterRenewalActive(now: Date = new Date()): boolean {
+function isMonsterRenewalActive(now: Date = getGameNow()): boolean {
   return now.getTime() >= new Date(MONSTER_RENEWAL_STARTS_AT).getTime();
 }
 
