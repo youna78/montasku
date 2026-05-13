@@ -37,7 +37,20 @@ const MONSTER_IMAGE_BY_ID: Record<number, string> = {
   34: "/img/monster/event_spring_final_02.png",
   35: "/img/monster/event_spring_final_03.png",
   36: "/img/monster/event_spring_final_04.png",
-  37: "/img/monster/event_june_egg_01.png"
+  37: "/img/monster/event_june_egg_01.png",
+  38: "/img/monster/event_june_mameshiba_modoki_01.png",
+  39: "/img/monster/event_june_black_mameshiba_modoki_01.png",
+  40: "/img/monster/event_june_okage_inu_modoki_01.png",
+  41: "/img/monster/event_june_otsukai_inu_modoki_01.png",
+  42: "/img/monster/event_june_kitsune_miko_01.png",
+  43: "/img/monster/event_june_komainu_modoki_01.png",
+  44: "/img/monster/event_june_keroberos_modoki_01.png",
+  45: "/img/monster/event_june_shinshi_01.png",
+  46: "/img/monster/event_june_kitsune_kannushi_01.png",
+  47: "/img/monster/event_june_shrine_guardian_01.png",
+  48: "/img/monster/event_june_shrine_keroberos_01.png",
+  49: "/img/monster/event_june_female_kitsune_kannushi_01.png",
+  50: "/img/monster/event_june_kitsune_raijin_01.png"
 };
 
 const MONSTER_RENEWAL_STARTS_AT = "2026-06-01T00:00:00+09:00";
@@ -140,7 +153,24 @@ const MONSTER_RENEWAL_MOTION_BY_ID: Record<number, Partial<Record<MonsterMotionK
   33: { walk: createRenewalMotion("monster_renewal_33_spring_seraphim", "walk"), happy: createRenewalMotion("monster_renewal_33_spring_seraphim", "happy") },
   34: { walk: createRenewalMotion("monster_renewal_34_flower_mouse", "walk"), happy: createRenewalMotion("monster_renewal_34_flower_mouse", "happy") },
   35: { walk: createRenewalMotion("monster_renewal_35_spring_messenger_dragon", "walk"), happy: createRenewalMotion("monster_renewal_35_spring_messenger_dragon", "happy") },
-  36: { walk: createRenewalMotion("monster_renewal_36_space_time_traveler", "walk"), happy: createRenewalMotion("monster_renewal_36_space_time_traveler", "happy") }
+  36: { walk: createRenewalMotion("monster_renewal_36_space_time_traveler", "walk"), happy: createRenewalMotion("monster_renewal_36_space_time_traveler", "happy") },
+  37: {
+    sway: { ...FOUR_FRAME_MOTION, imagePath: "/img/monster/event_june_egg_sway_4f.png" },
+    happy: { ...FOUR_FRAME_MOTION, imagePath: "/img/monster/event_june_egg_happy_4f.png" }
+  },
+  38: { walk: createRenewalMotion("event_june_mameshiba_modoki", "walk"), happy: createRenewalMotion("event_june_mameshiba_modoki", "happy") },
+  39: { walk: createRenewalMotion("event_june_black_mameshiba_modoki", "walk"), happy: createRenewalMotion("event_june_black_mameshiba_modoki", "happy") },
+  40: { walk: createRenewalMotion("event_june_okage_inu_modoki", "walk"), happy: createRenewalMotion("event_june_okage_inu_modoki", "happy") },
+  41: { walk: createRenewalMotion("event_june_otsukai_inu_modoki", "walk"), happy: createRenewalMotion("event_june_otsukai_inu_modoki", "happy") },
+  42: { walk: createRenewalMotion("event_june_kitsune_miko", "walk"), happy: createRenewalMotion("event_june_kitsune_miko", "happy") },
+  43: { walk: createRenewalMotion("event_june_komainu_modoki", "walk"), happy: createRenewalMotion("event_june_komainu_modoki", "happy") },
+  44: { walk: createRenewalMotion("event_june_keroberos_modoki", "walk"), happy: createRenewalMotion("event_june_keroberos_modoki", "happy") },
+  45: { walk: createRenewalMotion("event_june_shinshi", "walk"), happy: createRenewalMotion("event_june_shinshi", "happy") },
+  46: { walk: createRenewalMotion("event_june_kitsune_kannushi", "walk"), happy: createRenewalMotion("event_june_kitsune_kannushi", "happy") },
+  47: { walk: createRenewalMotion("event_june_shrine_guardian", "walk"), happy: createRenewalMotion("event_june_shrine_guardian", "happy") },
+  48: { walk: createRenewalMotion("event_june_shrine_keroberos", "walk"), happy: createRenewalMotion("event_june_shrine_keroberos", "happy") },
+  49: { walk: createRenewalMotion("event_june_female_kitsune_kannushi", "walk"), happy: createRenewalMotion("event_june_female_kitsune_kannushi", "happy") },
+  50: { walk: createRenewalMotion("event_june_kitsune_raijin", "walk"), happy: createRenewalMotion("event_june_kitsune_raijin", "happy") }
 };
 
 function isMonsterRenewalActive(now: Date = getGameNow()): boolean {
