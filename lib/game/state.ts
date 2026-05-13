@@ -14,6 +14,7 @@ import type {
 import type { LevelingMaster, MonsterMaster, TaskMaster } from "@/types/master";
 import { LETTER_ITEM_IMAGES } from "./assets";
 import { GAME_EVENTS, getEventById, isEventActive, normalizeUserEventState } from "./events";
+import { getGameNow } from "./virtualTime";
 import { evaluateEvolution, resolveBirthMonsterId, resolveEggEvolutionMonsterId } from "./evolution";
 import { getAttributeCharmItem, getBoosterShopItem, getDecorationShopItem, getPaidBackgroundShopItem, getPaidBundleShopItem, getPaidFrameShopItem } from "./shop";
 import {
@@ -488,7 +489,7 @@ function reindexActiveTasksInCurrentOrder(activeTasks: GameState["activeTasks"])
 }
 
 function todayLocalDate(): string {
-  const now = new Date();
+  const now = getGameNow();
   const year = now.getFullYear();
   const month = `${now.getMonth() + 1}`.padStart(2, "0");
   const day = `${now.getDate()}`.padStart(2, "0");

@@ -274,6 +274,22 @@ export const SHOP_BACKGROUNDS: ShopBackgroundItem[] = [
     price: 0,
     imagePath: "/img/background/bg_spring_meadow_01.png",
     availability: "event_limited"
+  },
+  {
+    itemId: "june_shrine_meadow",
+    title: "雨宿り神社",
+    description: "梅雨の時期の神社イベント限定の背景です。",
+    price: 0,
+    imagePath: "/img/background/bg_june_shrine_01.png",
+    availability: "event_limited"
+  },
+  {
+    itemId: "june_shrine_night",
+    title: "夜の雨宿り神社",
+    description: "雨の夜に灯りがともる神社イベント限定の背景です。",
+    price: 0,
+    imagePath: "/img/background/bg_june_shrine_night_01.png",
+    availability: "event_limited"
   }
 ].map((item) => applyBackgroundMaster(item as ShopBackgroundItem));
 
@@ -318,6 +334,24 @@ export const SHOP_FRAMES: ShopFrameItem[] = [
     price: 0,
     previewClassName: "frame-preview-sakura",
     imagePath: "/img/deco_frame/frame_sakura_01_aligned_01.png",
+    availability: "event_limited"
+  },
+  {
+    itemId: "spring_rain",
+    title: "梅雨フレーム",
+    description: "雨粒と神社飾りをあしらった梅雨イベントフレームです。",
+    price: 0,
+    previewClassName: "frame-preview-june-rain",
+    imagePath: "/img/deco_frame/frame_june_rain_01_aligned_01.png",
+    availability: "event_limited"
+  },
+  {
+    itemId: "june_shrine_azisai",
+    title: "あじさいフレーム",
+    description: "あじさいと雨粒をあしらった梅雨イベントフレームです。",
+    price: 0,
+    previewClassName: "frame-preview-june-azisai",
+    imagePath: "/img/deco_frame/frame_june_azisai_01_aligned_01.png",
     availability: "event_limited"
   }
 ].map((item) => applyFrameMaster(item as ShopFrameItem));
@@ -682,6 +716,10 @@ export function getFrameThemeClass(frameId: string): string {
       return "theme-frame-clover";
     case "spring_sakura":
       return "theme-frame-sakura";
+    case "spring_rain":
+      return "theme-frame-june-rain";
+    case "june_shrine_azisai":
+      return "theme-frame-june-azisai";
     case "paid_frame_starlight_01":
       return "theme-frame-starlight";
     case "classic_gold":

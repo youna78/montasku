@@ -1,6 +1,7 @@
 import type { GameEventConfig, UserEventState } from "@/types/event";
 
 export const SPRING_EASTER_EVENT_ID = "spring_easter_2026";
+export const JUNE_SHRINE_EVENT_ID = "june_shrine_2026";
 
 export const SPRING_EASTER_EVENT: GameEventConfig = {
   eventId: SPRING_EASTER_EVENT_ID,
@@ -78,7 +79,83 @@ export const SPRING_EASTER_EVENT: GameEventConfig = {
   }
 };
 
-export const GAME_EVENTS: GameEventConfig[] = [SPRING_EASTER_EVENT];
+export const JUNE_SHRINE_EVENT: GameEventConfig = {
+  eventId: JUNE_SHRINE_EVENT_ID,
+  slug: "june-shrine",
+  name: "梅雨の神社訪問",
+  startsAt: "2026-06-01T00:00:00+09:00",
+  endsAt: "2026-06-30T23:59:59+09:00",
+  announcementStartsAt: "2026-05-28T00:00:00+09:00",
+  targetUsers: "all",
+  heroImagePath: "/img/illustration/icatch_june_shrine_01.png",
+  bannerLabel: "イベント開催中",
+  description: "梅雨限定のモンスター登場！タスクを達成して育ててみよう",
+  notice: "期間限定です。イベントショップは開催中のみ利用できます。",
+  freeEggMonsterId: 37,
+  freeEggClaimCount: 1,
+  rewardPreviewMonsterIds: [37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50],
+  featuredMonsterIds: [38, 39],
+  freeCoinShopItems: [
+    {
+      itemId: "june_shrine_bg_free",
+      title: "雨宿り神社",
+      description: "梅雨の時期の神社イベント限定の背景です。",
+      rewardType: "background",
+      currencyType: "free_coin",
+      price: 500,
+      imagePath: "/img/background/bg_june_shrine_01.png",
+      grantValue: "june_shrine_meadow",
+      rarity: "rare",
+      availability: "active_only"
+    },
+    {
+      itemId: "june_shrine_frame_free",
+      title: "梅雨フレーム",
+      description: "梅雨の神社イベント限定の傘などが入ったフレームです。",
+      rewardType: "frame",
+      currencyType: "free_coin",
+      price: 500,
+      imagePath: "/img/deco_frame/frame_june_rain_01_aligned_01.png",
+      grantValue: "spring_rain",
+      rarity: "rare",
+      availability: "active_only"
+    }
+  ],
+  paidCoinShopItems: [
+    {
+      itemId: "june_shrine_egg_paid",
+      title: "梅雨の雨宿りたまご",
+      description: "梅雨の神社イベントの進化ラインで育てられる特別なたまごです。",
+      rewardType: "event_egg",
+      currencyType: "paid_coin",
+      price: 500,
+      imagePath: "/img/monster/event_june_egg_01.png",
+      grantValue: "37",
+      rarity: "rare",
+      availability: "active_only"
+    },
+    {
+      itemId: "june_shrine_bg_night_paid",
+      title: "夜の雨宿り神社",
+      description: "梅雨の神社イベント限定背景です。",
+      rewardType: "background",
+      currencyType: "paid_coin",
+      price: 500,
+      imagePath: "/img/background/bg_june_shrine_night_01.png",
+      grantValue: "june_shrine_night",
+      rarity: "rare",
+      availability: "active_only"
+    }
+  ],
+  mission: {
+    loginDaysRequired: 7,
+    dailyLoginBonusFreeCoins: 2,
+    loginRewardFrameId: "june_shrine_azisai",
+    loginRewardTitle: "あじさいフレーム"
+  }
+};
+
+export const GAME_EVENTS: GameEventConfig[] = [SPRING_EASTER_EVENT, JUNE_SHRINE_EVENT];
 
 export function createInitialUserEventState(eventId: string): UserEventState {
   return {

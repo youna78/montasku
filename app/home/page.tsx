@@ -8,7 +8,7 @@ import { EvolutionOverlay } from "@/components/common/EvolutionOverlay";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { trackEvent } from "@/lib/analytics/gtag";
 import { HOME_ANNOUNCEMENTS } from "@/lib/game/announcements";
-import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage } from "@/lib/game/assets";
+import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage, getMonsterMotionAsset } from "@/lib/game/assets";
 import { getEventStatusLabel, getRemainingDaysLabel, getVisibleHomeEvents, isEventActive } from "@/lib/game/events";
 import { getBackgroundImagePath, getDecorationShopItem, getFramePreviewImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { getGeneralNotificationIds, getNotificationReadIds } from "@/lib/game/notificationReads";
@@ -42,6 +42,7 @@ export default function HomePage() {
   const router = useRouter();
   const { tasks, monsters, levelingRows, gameState, isLoading, completeTask, markEventIntroPopupSeen } = useGame();
   const [feedback, setFeedback] = useState("");
+  const [isMonsterCelebrating, setIsMonsterCelebrating] = useState(false);
   const [evolutionScene, setEvolutionScene] = useState<EvolutionScene | null>(null);
   const [showEventIntro, setShowEventIntro] = useState(false);
   const [dismissedEventIntroId, setDismissedEventIntroId] = useState<string | null>(null);
@@ -52,6 +53,12 @@ export default function HomePage() {
     const timer = window.setTimeout(() => setFeedback(""), 1200);
     return () => window.clearTimeout(timer);
   }, [feedback]);
+
+  useEffect(() => {
+    if (!isMonsterCelebrating) return;
+    const timer = window.setTimeout(() => setIsMonsterCelebrating(false), 1200);
+    return () => window.clearTimeout(timer);
+  }, [isMonsterCelebrating]);
 
   useEffect(() => {
     const refreshReadNotificationIds = () => setReadNotificationIds(getNotificationReadIds());
@@ -145,6 +152,10 @@ export default function HomePage() {
   ];
 
   const growthStageLabel = GROWTH_STAGE_LABELS[growthStage] ?? growthStage;
+  const monsterMotionKind = growthStage === "egg" ? (isMonsterCelebrating ? "happy" : "sway") : isMonsterCelebrating ? "happy" : "walk";
+  const monsterMotionAsset =
+    getMonsterMotionAsset(currentMonster?.monsterId, monsterMotionKind) ??
+    (growthStage === "egg" && monsterMotionKind === "happy" ? getMonsterMotionAsset(currentMonster?.monsterId, "sway") : null);
   const monsterMotionClass = growthStage === "egg" ? "monster-img-alive" : "monster-img-walk-hop";
   const activeDecorations = gameState.selectedDecorationIds
     .map((itemId) => getDecorationShopItem(itemId))
@@ -166,6 +177,7 @@ export default function HomePage() {
     if (result.evolved) fragments.push("進化");
     if (result.nextState.endEventPending) fragments.push("お別れ");
     setFeedback(fragments.join(" / "));
+    setIsMonsterCelebrating(result.levelUp);
 
     if (result.nextState.endEventPending) {
       window.setTimeout(() => {
@@ -235,7 +247,23 @@ export default function HomePage() {
               </div>
             ))}
             <div className="monster-wrap">
-              <img src={getMonsterImage(currentMonster?.monsterId)} alt={currentMonster?.name ?? "monster"} className={`monster-img ${monsterMotionClass}`} />
+              {monsterMotionAsset ? (
+                <div
+                  role="img"
+                  aria-label={currentMonster?.name ?? "monster"}
+                  className={`monster-motion-frame ${monsterMotionKind === "walk" ? "monster-motion-frame-walk" : ""}`}
+                >
+                  <div
+                    className="monster-img monster-sprite"
+                    style={{
+                      backgroundImage: `url("${monsterMotionAsset.imagePath}")`,
+                      animationDuration: `${monsterMotionAsset.durationMs}ms`
+                    }}
+                  />
+                </div>
+              ) : (
+                <img src={getMonsterImage(currentMonster?.monsterId)} alt={currentMonster?.name ?? "monster"} className={`monster-img ${monsterMotionClass}`} />
+              )}
             </div>
           </div>
           <div className="home-stage-actions">

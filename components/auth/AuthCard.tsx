@@ -34,6 +34,7 @@ export function AuthCard() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailFormMessage, setEmailFormMessage] = useState("");
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [isNativeApp, setIsNativeApp] = useState(false);
   const accountName =
@@ -47,6 +48,7 @@ export function AuthCard() {
 
   const openEmailModal = (nextMode: "login" | "signup") => {
     clearError();
+    setEmailFormMessage("");
     setMode(nextMode);
     if (typeof window !== "undefined") {
       const savedEmail = window.localStorage.getItem(LAST_AUTH_EMAIL_KEY);
@@ -58,7 +60,17 @@ export function AuthCard() {
 
   const onEmailSubmit = async () => {
     const normalizedEmail = email.trim();
-    if (!normalizedEmail || !password) return;
+    if (!normalizedEmail || !password) {
+      setEmailFormMessage(
+        !normalizedEmail && !password
+          ? "メールアドレスとパスワードを入力してください。"
+          : !normalizedEmail
+            ? "メールアドレスを入力してください。"
+            : "パスワードを入力してください。"
+      );
+      return;
+    }
+    setEmailFormMessage("");
 
     if (mode === "login") {
       const ok = await signInWithEmail(normalizedEmail, password);
@@ -178,7 +190,10 @@ export function AuthCard() {
                 className="auth-input"
                 placeholder="メールアドレス"
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  setEmailFormMessage("");
+                }}
                 autoComplete="email"
               />
               <input
@@ -186,7 +201,10 @@ export function AuthCard() {
                 className="auth-input"
                 placeholder="パスワード（6文字以上）"
                 value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  setEmailFormMessage("");
+                }}
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
               />
               <button className="quest-btn quest-btn-primary auth-card-button" onClick={() => void onEmailSubmit()}>
@@ -214,12 +232,14 @@ export function AuthCard() {
                 className="quest-btn quest-btn-secondary auth-card-button"
                 onClick={() => {
                   clearError();
+                  setEmailFormMessage("");
                   setIsEmailModalOpen(false);
                 }}
               >
                 閉じる
               </button>
             </div>
+            {emailFormMessage && <div className="auth-card-error">{emailFormMessage}</div>}
             {errorMessage && <div className="auth-card-error">{errorMessage}</div>}
           </div>
         </div>

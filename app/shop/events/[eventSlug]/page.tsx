@@ -153,19 +153,19 @@ export default function EventShopDetailPage() {
       setMessage(result.reason === "already_claimed" ? "無料たまごは受け取り済みです" : "いまは受け取れません");
       return;
     }
-    setMessage("春の芽吹きたまごを受け取りました");
+    setMessage(`${eventEggName}を受け取りました`);
   };
 
   const onQueueEgg = () => {
     const result = queueEventEgg(eventConfig.eventId);
     if (!result) return;
     if (!result.used) {
-      if (result.reason === "no_egg") setMessage("春の芽吹きたまごを持っていません");
+      if (result.reason === "no_egg") setMessage(`${eventEggName}を持っていません`);
       else if (result.reason === "already_queued") setMessage("次のたまごに予約済みです");
       else setMessage("イベントたまごを予約できませんでした");
       return;
     }
-    setMessage("次のたまごを春の芽吹きたまごに予約しました");
+    setMessage(`次のたまごを${eventEggName}に予約しました`);
   };
 
   const onForceStartEgg = () => {
@@ -173,12 +173,12 @@ export default function EventShopDetailPage() {
     setShowStartNowConfirm(false);
     if (!result) return;
     if (!result.started) {
-      if (result.reason === "no_egg") setMessage("春の芽吹きたまごを持っていません");
-      else if (result.reason === "already_active") setMessage("すでに春の芽吹きたまごを育成中です");
-      else setMessage("春の芽吹きたまごに切り替えできませんでした");
+      if (result.reason === "no_egg") setMessage(`${eventEggName}を持っていません`);
+      else if (result.reason === "already_active") setMessage(`すでに${eventEggName}を育成中です`);
+      else setMessage(`${eventEggName}に切り替えできませんでした`);
       return;
     }
-    setMessage("いまのモンスターとお別れして、春の芽吹きたまごに切り替えました");
+    setMessage(`いまのモンスターとお別れして、${eventEggName}に切り替えました`);
     router.push("/birth-event");
   };
 
@@ -327,7 +327,11 @@ export default function EventShopDetailPage() {
   };
 
   const previewMonster = monsters.find((monster) => monster.monsterId === eventConfig.freeEggMonsterId);
-  const starterCheckoutItem = SHOP_PAID_COIN_ITEMS.find((item) => item.itemId === "starter_bundle_boost_01" && item.status === "confirmed") ?? null;
+  const eventEggName = previewMonster?.name ?? "イベントたまご";
+  const isSpringEvent = eventConfig.eventId === "spring_easter_2026";
+  const starterCheckoutItem = isSpringEvent
+    ? SHOP_PAID_COIN_ITEMS.find((item) => item.itemId === "starter_bundle_boost_01" && item.status === "confirmed") ?? null
+    : null;
 
   return (
     <main
@@ -347,7 +351,7 @@ export default function EventShopDetailPage() {
       </section>
 
       <section className="card decorated-card quest-heading-card">
-        <p>春イベント限定の背景やフレーム、イベントたまごを交換できます。春モンスターを育てるには、受け取ったたまごを「次のたまごに予約する」でセットしてください。</p>
+        <p>イベント限定の背景やフレーム、イベントたまごを交換できます。イベントモンスターを育てるには、受け取ったたまごを「次のたまごに予約する」でセットしてください。</p>
       </section>
 
       <section className="card decorated-card event-progress-card">
@@ -371,9 +375,9 @@ export default function EventShopDetailPage() {
         </div>
         <div className="event-progress-note">
           {isEventEggQueued
-            ? "春の芽吹きたまごを予約済みです。今のモンスターとお別れした次のサイクルで育成が始まります。"
+            ? `${eventEggName}を予約済みです。今のモンスターとお別れした次のサイクルで育成が始まります。`
             : isEventEggActive
-              ? "春の芽吹きたまごを育成中です。タスクを達成すると春モンスターへ進化します。"
+              ? `${eventEggName}を育成中です。タスクを達成するとイベントモンスターへ進化します。`
               : `${getRemainingDaysLabel(eventConfig)} / 開催中のみ交換できます。`}
         </div>
       </section>
@@ -398,12 +402,12 @@ export default function EventShopDetailPage() {
       <section className="card decorated-card">
         <div className="notification-card-head">
           <span className="notification-badge notification-badge-event">イベントたまご</span>
-          <h2>春の芽吹きたまご</h2>
+          <h2>{eventEggName}</h2>
         </div>
         <div className="event-egg-row">
-          <img src={getMonsterImage(previewMonster?.monsterId ?? eventConfig.freeEggMonsterId)} alt="春の芽吹きたまご" className="event-egg-thumb" />
+          <img src={getMonsterImage(previewMonster?.monsterId ?? eventConfig.freeEggMonsterId)} alt={eventEggName} className="event-egg-thumb" />
           <div className="event-egg-meta">
-            <p>まずは無料で1個受け取れます。受け取ったあとに「次のたまごに予約する」を押すと、いまのモンスターとお別れした次の育成サイクルで春の芽吹きたまごから春モンスターが出現します。</p>
+            <p>まずは無料で1個受け取れます。受け取ったあとに「次のたまごに予約する」を押すと、いまのモンスターとお別れした次の育成サイクルで{eventEggName}からイベントモンスターが出現します。</p>
             <div className="task-global-menu">
               <button className="quest-btn task-global-menu-button task-global-menu-button-primary" onClick={onClaimFreeEgg} disabled={!isActive || Boolean(eventState?.hasClaimedFreeEgg)}>
                 {eventState?.hasClaimedFreeEgg ? "受け取り済み" : "無料で受け取る"}
@@ -415,8 +419,8 @@ export default function EventShopDetailPage() {
                 いますぐ卵を育てる
               </button>
             </div>
-            {isEventEggQueued && <p className="shop-note shop-note-strong">予約済みです。今のモンスターとお別れした次のサイクルで、春の芽吹きたまごから育成が始まります。</p>}
-            {isEventEggActive && <p className="shop-note shop-note-strong">春の芽吹きたまごを育成中です。タスクを達成すると春モンスターへ進化します。</p>}
+            {isEventEggQueued && <p className="shop-note shop-note-strong">予約済みです。今のモンスターとお別れした次のサイクルで、{eventEggName}から育成が始まります。</p>}
+            {isEventEggActive && <p className="shop-note shop-note-strong">{eventEggName}を育成中です。タスクを達成するとイベントモンスターへ進化します。</p>}
           </div>
         </div>
       </section>
@@ -424,13 +428,14 @@ export default function EventShopDetailPage() {
       <section className="card decorated-card">
         <div className="notification-card-head">
           <span className="notification-badge notification-badge-info">フリーコイン交換</span>
-          <h2>春限定アイテム</h2>
+          <h2>イベント限定アイテム</h2>
         </div>
         <div className="shop-grid">
           {eventConfig.freeCoinShopItems.map((item) => {
             const alreadyOwned = item.rewardType === "background"
               ? gameState.ownedBackgroundIds.includes(item.grantValue)
               : gameState.ownedFrameIds.includes(item.grantValue);
+            const insufficientCoins = gameState.freeCoins < item.price;
             return (
               <section className="card decorated-card shop-grid-card" key={item.itemId}>
                 <div className="shop-grid-preview" style={{ backgroundImage: `url("${item.imagePath}")` }}>
@@ -452,9 +457,9 @@ export default function EventShopDetailPage() {
                       () => onPurchase(item.itemId)
                     )
                   }
-                  disabled={alreadyOwned || !isActive}
+                  disabled={alreadyOwned || !isActive || insufficientCoins}
                 >
-                  {alreadyOwned ? "所持中" : "交換する"}
+                  {alreadyOwned ? "所持中" : insufficientCoins ? "コイン不足" : "交換する"}
                 </button>
               </section>
             );
@@ -462,17 +467,17 @@ export default function EventShopDetailPage() {
         </div>
       </section>
 
-      <section className="card decorated-card">
-        <div className="notification-card-head">
-          <span className="notification-badge notification-badge-event">モンタコイン交換</span>
-          <h2>特別ラインナップ</h2>
-        </div>
-        <p className="shop-note">
-          {isNativeApp
-            ? `${nativePlatformLabel}版のモンタコイン購入は準備中です。Web版で購入済みのモンタコインは、イベント限定アイテムにも使えます。`
-            : "モンタコインは、Stripe で購入できる有料コインです。必要なときは通常ショップのモンタコインページからチャージできます。"}
-        </p>
-        {starterCheckoutItem ? (
+      {starterCheckoutItem ? (
+        <section className="card decorated-card">
+          <div className="notification-card-head">
+            <span className="notification-badge notification-badge-event">モンタコイン交換</span>
+            <h2>特別ラインナップ</h2>
+          </div>
+          <p className="shop-note">
+            {isNativeApp
+              ? `${nativePlatformLabel}版のモンタコイン購入は準備中です。Web版で購入済みのモンタコインは、イベント限定アイテムにも使えます。`
+              : "モンタコインは、Stripe で購入できる有料コインです。必要なときは通常ショップのモンタコインページからチャージできます。"}
+          </p>
           <div className="shop-grid shop-grid-single-centered">
             <section className="card decorated-card shop-grid-card" key={starterCheckoutItem.itemId}>
               <div className="shop-grid-preview shop-grid-preview-paid">
@@ -512,8 +517,8 @@ export default function EventShopDetailPage() {
               )}
             </section>
           </div>
-        ) : null}
-      </section>
+        </section>
+      ) : null}
 
       <section className="card decorated-card">
         <div className="notification-card-head">
@@ -527,6 +532,7 @@ export default function EventShopDetailPage() {
               : item.rewardType === "frame"
                 ? gameState.ownedFrameIds.includes(item.grantValue)
                 : false;
+            const insufficientCoins = gameState.paidCoinBalance < item.price;
             return (
               <section className="card decorated-card shop-grid-card" key={item.itemId}>
                 <div className="shop-grid-preview" style={{ backgroundImage: `url("${item.imagePath}")` }}>
@@ -551,9 +557,9 @@ export default function EventShopDetailPage() {
                       () => onPurchase(item.itemId)
                     )
                   }
-                  disabled={alreadyOwned || !isActive}
+                  disabled={alreadyOwned || !isActive || insufficientCoins}
                 >
-                  {alreadyOwned ? "所持中" : "交換する"}
+                  {alreadyOwned ? "所持中" : insufficientCoins ? "コイン不足" : "交換する"}
                 </button>
               </section>
             );
@@ -561,7 +567,7 @@ export default function EventShopDetailPage() {
         </div>
       </section>
 
-      {SHOP_EVENT_DECORATIONS.length > 0 ? (
+      {isSpringEvent && SHOP_EVENT_DECORATIONS.length > 0 ? (
         <>
           <section className="card decorated-card">
             <div className="notification-card-head">
@@ -574,6 +580,7 @@ export default function EventShopDetailPage() {
           <section className="shop-grid">
             {SHOP_EVENT_DECORATIONS.map((item) => {
               const owned = gameState.ownedDecorationIds.includes(item.itemId);
+              const insufficientCoins = gameState.paidCoinBalance < item.price;
               return (
                 <section className="card decorated-card shop-grid-card" key={item.itemId}>
                   <div className="shop-grid-preview shop-decoration-preview">
@@ -600,9 +607,9 @@ export default function EventShopDetailPage() {
                         () => onPurchaseDecoration(item.itemId)
                       )
                     }
-                    disabled={owned || !isActive}
+                    disabled={owned || !isActive || insufficientCoins}
                   >
-                    {owned ? "所持中" : "交換する"}
+                    {owned ? "所持中" : insufficientCoins ? "コイン不足" : "交換する"}
                   </button>
                 </section>
               );
@@ -611,7 +618,7 @@ export default function EventShopDetailPage() {
         </>
       ) : null}
 
-      {SHOP_EVENT_BUNDLES.length > 0 ? (
+      {isSpringEvent && SHOP_EVENT_BUNDLES.length > 0 ? (
         <>
           <section className="card decorated-card">
             <div className="notification-card-head">
@@ -622,30 +629,33 @@ export default function EventShopDetailPage() {
           </section>
 
           <section className="shop-grid">
-            {SHOP_EVENT_BUNDLES.map((item) => (
-              <section className="card decorated-card shop-grid-card" key={item.itemId}>
-                <div className="shop-grid-preview shop-grid-preview-paid">
-                  <div className="shop-badge-stack">
-                    <span className="shop-paid-badge">限定</span>
+            {SHOP_EVENT_BUNDLES.map((item) => {
+              const insufficientCoins = gameState.paidCoinBalance < item.price;
+              return (
+                <section className="card decorated-card shop-grid-card" key={item.itemId}>
+                  <div className="shop-grid-preview shop-grid-preview-paid">
+                    <div className="shop-badge-stack">
+                      <span className="shop-paid-badge">限定</span>
+                    </div>
+                    <img src={item.imagePath} alt={item.title} className="shop-paid-pack-icon" />
                   </div>
-                  <img src={item.imagePath} alt={item.title} className="shop-paid-pack-icon" />
-                </div>
-                <div className="shop-grid-meta">
-                  <h2>{item.title}</h2>
-                  <div className="shop-grid-description">
-                    ピクニックバスケット / 花灯りランタン / 春の芽吹きたまご
+                  <div className="shop-grid-meta">
+                    <h2>{item.title}</h2>
+                    <div className="shop-grid-description">
+                      ピクニックバスケット / 花灯りランタン / 春の芽吹きたまご
+                    </div>
+                    <div className="shop-grid-price">{item.price} モンタコイン</div>
                   </div>
-                  <div className="shop-grid-price">{item.price} モンタコイン</div>
-                </div>
-                <button
-                  className="quest-btn shop-grid-button task-global-menu-button-accent"
-                  onClick={() => onRequestPurchaseBundle(item.itemId)}
-                  disabled={!isActive}
-                >
-                  交換する
-                </button>
-              </section>
-            ))}
+                  <button
+                    className="quest-btn shop-grid-button task-global-menu-button-accent"
+                    onClick={() => onRequestPurchaseBundle(item.itemId)}
+                    disabled={!isActive || insufficientCoins}
+                  >
+                    {insufficientCoins ? "コイン不足" : "交換する"}
+                  </button>
+                </section>
+              );
+            })}
           </section>
         </>
       ) : null}
@@ -667,15 +677,15 @@ export default function EventShopDetailPage() {
       {showStartNowConfirm ? (
         <div className="auth-email-modal-overlay">
           <div className="auth-email-modal-card event-confirm-modal-card">
-            <h2 className="auth-email-modal-title">春の芽吹きたまごに切り替える？</h2>
+            <h2 className="auth-email-modal-title">{eventEggName}に切り替える？</h2>
             <div className="event-confirm-egg-preview">
-              <img src={getMonsterImage(eventConfig.freeEggMonsterId)} alt="春の芽吹きたまご" />
+              <img src={getMonsterImage(eventConfig.freeEggMonsterId)} alt={eventEggName} />
             </div>
             <p className="shop-note">
-              いま育てているモンスターとはお別れして、春の芽吹きたまごから育成を始めます。
+              いま育てているモンスターとはお別れして、{eventEggName}から育成を始めます。
             </p>
             <p className="shop-note shop-note-strong">
-              いまのモンスターからは手紙を受け取り、春の芽吹きたまごの誕生イベントへ進みます。
+              いまのモンスターからは手紙を受け取り、{eventEggName}の誕生イベントへ進みます。
             </p>
             <div className="task-global-menu">
               <button className="quest-btn task-global-menu-button task-global-menu-button-accent" onClick={onForceStartEgg}>

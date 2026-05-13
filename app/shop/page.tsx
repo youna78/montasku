@@ -673,6 +673,7 @@ export default function ShopPage() {
     ? SHOP_EVERGREEN_BACKGROUNDS.map((item) => {
         const owned = gameState.ownedBackgroundIds.includes(item.itemId);
         const equipped = gameState.selectedBackgroundId === item.itemId;
+        const insufficientCoins = gameState.freeCoins < item.price;
         return (
           <section className="card decorated-card shop-grid-card" key={item.itemId}>
             <div className="shop-grid-preview" style={{ backgroundImage: `url("${item.imagePath}")` }}>
@@ -696,8 +697,9 @@ export default function ShopPage() {
                     () => onBuy(item.itemId, item.price)
                   )
                 }
+                disabled={insufficientCoins}
               >
-                購入する
+                {insufficientCoins ? "コイン不足" : "購入する"}
               </button>
             ) : (
               <button className={`quest-btn shop-grid-button ${equipped ? "task-global-menu-button-current task-global-menu-button-active" : "task-global-menu-button-secondary"}`} onClick={() => onEquip(item.itemId)}>
@@ -712,6 +714,7 @@ export default function ShopPage() {
           const owned = gameState.ownedFrameIds.includes(item.itemId);
           const equipped = gameState.selectedFrameId === item.itemId;
           const framePreviewImagePath = getFramePreviewImagePath(item.itemId);
+          const insufficientCoins = gameState.freeCoins < item.price;
           return (
             <section className="card decorated-card shop-grid-card" key={item.itemId}>
               <div className={`shop-grid-preview shop-frame-preview ${framePreviewImagePath ? "shop-frame-preview-image-only" : item.previewClassName}`}>
@@ -736,8 +739,9 @@ export default function ShopPage() {
                       () => onBuyFrame(item.itemId, item.price)
                     )
                   }
+                  disabled={insufficientCoins}
                 >
-                  購入する
+                  {insufficientCoins ? "コイン不足" : "購入する"}
                 </button>
               ) : (
                 <>
@@ -759,6 +763,7 @@ export default function ShopPage() {
             ...SHOP_ATTRIBUTE_CHARMS.map((item) => {
               const ownedCount = gameState.ownedCharmItemCounts[item.attribute] ?? 0;
               const equipped = gameState.activeAttributeCharm?.attribute === item.attribute && (gameState.activeAttributeCharm?.variant ?? "free") === "free";
+              const insufficientCoins = gameState.freeCoins < item.price;
               return (
                 <section className={`card decorated-card shop-grid-card charm-card-${item.attribute}`} key={item.itemId}>
                   <div className={`shop-grid-preview shop-charm-preview charm-preview-${item.attribute}`}>
@@ -782,8 +787,9 @@ export default function ShopPage() {
                         () => onBuyCharm(item.attribute)
                       )
                     }
+                    disabled={insufficientCoins}
                   >
-                    購入する
+                    {insufficientCoins ? "コイン不足" : "購入する"}
                   </button>
                 </section>
               );
@@ -791,6 +797,7 @@ export default function ShopPage() {
             ...freeBoosters.map((item) => {
               const ownedCount = gameState.ownedBoosterItemCounts[item.itemId] ?? 0;
               const isActive = gameState.activeExpBooster?.itemId === item.itemId;
+              const insufficientCoins = gameState.freeCoins < item.price;
               return (
                 <section className="card decorated-card shop-grid-card" key={item.itemId}>
                   <div className="shop-grid-preview shop-charm-preview shop-grid-preview-coming-soon">
@@ -814,8 +821,9 @@ export default function ShopPage() {
                         () => onBuyBooster(item.itemId)
                       )
                     }
+                    disabled={insufficientCoins}
                   >
-                    購入する
+                    {insufficientCoins ? "コイン不足" : "購入する"}
                   </button>
                 </section>
               );
@@ -899,6 +907,7 @@ export default function ShopPage() {
         ? SHOP_PAID_BACKGROUNDS.map((item) => {
             const owned = gameState.ownedBackgroundIds.includes(item.itemId);
             const equipped = gameState.selectedBackgroundId === item.itemId;
+            const insufficientCoins = gameState.paidCoinBalance < item.price;
             return (
               <section className="card decorated-card shop-grid-card" key={item.itemId}>
                 <div className="shop-grid-preview" style={{ backgroundImage: `url("${item.imagePath}")` }}>
@@ -923,8 +932,9 @@ export default function ShopPage() {
                         () => onBuyPaidBackground(item.itemId)
                       )
                     }
+                    disabled={insufficientCoins}
                   >
-                    購入する
+                    {insufficientCoins ? "コイン不足" : "購入する"}
                   </button>
                 ) : (
                   <button className={`quest-btn shop-grid-button ${equipped ? "task-global-menu-button-current task-global-menu-button-active" : "task-global-menu-button-secondary"}`} onClick={() => onEquip(item.itemId)}>
@@ -940,6 +950,7 @@ export default function ShopPage() {
             const owned = gameState.ownedFrameIds.includes(item.itemId);
             const equipped = gameState.selectedFrameId === item.itemId;
             const framePreviewImagePath = getFramePreviewImagePath(item.itemId);
+            const insufficientCoins = gameState.paidCoinBalance < item.price;
             return (
               <section className="card decorated-card shop-grid-card" key={item.itemId}>
                 <div className={`shop-grid-preview shop-frame-preview ${framePreviewImagePath ? "shop-frame-preview-image-only" : item.previewClassName}`}>
@@ -967,8 +978,9 @@ export default function ShopPage() {
                         () => onBuyPaidFrame(item.itemId)
                       )
                     }
+                    disabled={insufficientCoins}
                   >
-                    購入する
+                    {insufficientCoins ? "コイン不足" : "購入する"}
                   </button>
                 ) : (
                   <>
@@ -989,6 +1001,7 @@ export default function ShopPage() {
           ? SHOP_EVERGREEN_DECORATIONS.length > 0
             ? SHOP_EVERGREEN_DECORATIONS.map((item) => {
                 const owned = gameState.ownedDecorationIds.includes(item.itemId);
+                const insufficientCoins = gameState.paidCoinBalance < item.price;
                 return (
                   <section className="card decorated-card shop-grid-card" key={item.itemId}>
                     <div className="shop-grid-preview shop-decoration-preview">
@@ -1012,9 +1025,9 @@ export default function ShopPage() {
                           () => onBuyDecoration(item.itemId)
                         )
                       }
-                      disabled={owned}
+                      disabled={owned || insufficientCoins}
                     >
-                      {owned ? "所持中" : "購入する"}
+                      {owned ? "所持中" : insufficientCoins ? "コイン不足" : "購入する"}
                     </button>
                   </section>
                 );
@@ -1024,6 +1037,7 @@ export default function ShopPage() {
             ? [
                 ...SHOP_PAID_ATTRIBUTE_CHARMS.map((item) => {
                   const ownedCount = gameState.ownedPaidCharmItemCounts[item.attribute] ?? 0;
+                  const insufficientCoins = gameState.paidCoinBalance < item.price;
                   return (
                     <section className={`card decorated-card shop-grid-card charm-card-${item.attribute}`} key={item.itemId}>
                       <div className={`shop-grid-preview shop-charm-preview charm-preview-${item.attribute}`}>
@@ -1047,8 +1061,9 @@ export default function ShopPage() {
                             () => onBuyPaidCharm(item.attribute)
                           )
                         }
+                        disabled={insufficientCoins}
                       >
-                        購入する
+                        {insufficientCoins ? "コイン不足" : "購入する"}
                       </button>
                     </section>
                   );
@@ -1056,6 +1071,7 @@ export default function ShopPage() {
                 ...paidBoosters.map((item) => {
                   const ownedCount = gameState.ownedBoosterItemCounts[item.itemId] ?? 0;
                   const isActive = gameState.activeExpBooster?.itemId === item.itemId;
+                  const insufficientCoins = gameState.paidCoinBalance < item.price;
                   return (
                     <section className="card decorated-card shop-grid-card" key={item.itemId}>
                       <div className="shop-grid-preview shop-charm-preview shop-grid-preview-paid">
@@ -1080,8 +1096,9 @@ export default function ShopPage() {
                             () => onBuyBooster(item.itemId)
                           )
                         }
+                        disabled={insufficientCoins}
                       >
-                        購入する
+                        {insufficientCoins ? "コイン不足" : "購入する"}
                       </button>
                     </section>
                   );
@@ -1124,20 +1141,25 @@ export default function ShopPage() {
                     )}
                   </section>
                 )),
-                ...SHOP_EVERGREEN_BUNDLES.map((item) => (
-                  <section className="card decorated-card shop-grid-card" key={item.itemId}>
-                    <div className="shop-grid-preview shop-grid-preview-paid">
-                      <div className="shop-badge-stack"><span className="shop-paid-badge">モンタ</span></div>
-                      <img src={item.imagePath} alt={item.title} className="shop-paid-pack-icon" />
-                    </div>
-                    <div className="shop-grid-meta">
-                      <h2>{item.title}</h2>
-                      <p>{item.description}</p>
-                      <div className="shop-grid-price">{item.price} モンタコイン</div>
-                    </div>
-                    <button className="quest-btn shop-grid-button task-global-menu-button-accent" onClick={() => onRequestBuyPaidBundle(item.itemId)}>購入する</button>
-                  </section>
-                ))
+                ...SHOP_EVERGREEN_BUNDLES.map((item) => {
+                  const insufficientCoins = gameState.paidCoinBalance < item.price;
+                  return (
+                    <section className="card decorated-card shop-grid-card" key={item.itemId}>
+                      <div className="shop-grid-preview shop-grid-preview-paid">
+                        <div className="shop-badge-stack"><span className="shop-paid-badge">モンタ</span></div>
+                        <img src={item.imagePath} alt={item.title} className="shop-paid-pack-icon" />
+                      </div>
+                      <div className="shop-grid-meta">
+                        <h2>{item.title}</h2>
+                        <p>{item.description}</p>
+                        <div className="shop-grid-price">{item.price} モンタコイン</div>
+                      </div>
+                      <button className="quest-btn shop-grid-button task-global-menu-button-accent" onClick={() => onRequestBuyPaidBundle(item.itemId)} disabled={insufficientCoins}>
+                        {insufficientCoins ? "コイン不足" : "購入する"}
+                      </button>
+                    </section>
+                  );
+                })
               ];
 
   return (
