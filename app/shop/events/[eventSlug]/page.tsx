@@ -101,7 +101,7 @@ export default function EventShopDetailPage() {
 
   if (!eventConfig) {
     return (
-      <main>
+      <main className="page-shell page-rpg page-shop page-event-shop">
         <section className="card decorated-card">
           <p>イベントショップが見つかりませんでした。</p>
           <Link href="/shop">ショップへ戻る</Link>
@@ -125,7 +125,7 @@ export default function EventShopDetailPage() {
   if (!isVisible && !hasResidualAccess) {
     return (
       <main
-        className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
+        className={`page-shell page-rpg page-shop page-event-shop ${getFrameThemeClass(gameState.selectedFrameId)}`}
         style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
       >
         <div className="title-panel">イベントショップ</div>
@@ -335,7 +335,7 @@ export default function EventShopDetailPage() {
 
   return (
     <main
-      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      className={`page-shell page-rpg page-shop page-event-shop ${getFrameThemeClass(gameState.selectedFrameId)}`}
       style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
     >
       <div className="title-panel">イベントショップ</div>
@@ -665,7 +665,7 @@ export default function EventShopDetailPage() {
           <Link href={`/event/${eventConfig.slug}`} className="ui-link-button settings-menu-button settings-menu-button-secondary">
             イベント詳細へ
           </Link>
-          <Link href="/shop" className="ui-link-button settings-menu-button settings-menu-button-neutral">
+          <Link href="/shop" className="ui-link-button settings-menu-button settings-menu-button-secondary">
             通常ショップへ
           </Link>
         </div>

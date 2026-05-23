@@ -1163,7 +1163,7 @@ export default function ShopPage() {
               ];
 
   return (
-    <main className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`} style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}>
+    <main className={`page-shell page-rpg page-shop ${getFrameThemeClass(gameState.selectedFrameId)}`} style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}>
       <div className="title-panel">ショップ</div>
       <section className="card decorated-card quest-heading-card">
         <p>フリーコインやモンタコインで、見た目やアイテムをそろえられます。</p>

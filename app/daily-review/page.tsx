@@ -133,7 +133,7 @@ export default function DailyReviewPage() {
               <li key={task.taskId} className="quest-item review-task-item">
                 <div className="review-task-main">
                   <span className="row-tight">
-                    <img src="/img/icon/icon_quest_task_01.png" alt="quest" className="quest-icon" />
+                    <img src="/img/icon/sfc/sfc_task_01.png" alt="quest" className="quest-icon" />
                     <span>{task.name}</span>
                   </span>
                   <small className="task-meta">EXP +{task.baseExp}</small>

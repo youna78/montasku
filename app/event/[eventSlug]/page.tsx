@@ -7,7 +7,7 @@ import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getMonsterImage } from "@/lib/game/assets";
 import { getEventBySlug, getEventStatusLabel, getRemainingDaysLabel, isEventActive, isEventAnnouncementVisible } from "@/lib/game/events";
-import { getBackgroundImagePath, getFramePreviewImagePath, getFrameThemeClass } from "@/lib/game/shop";
+import { getFramePreviewImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 
@@ -67,7 +67,7 @@ export default function EventDetailPage() {
 
   if (!eventConfig) {
     return (
-      <main>
+      <main className="page-shell page-rpg page-event">
         <section className="card decorated-card">
           <p>イベントが見つかりませんでした。</p>
           <Link href="/home">ホームへ戻る</Link>
@@ -90,10 +90,7 @@ export default function EventDetailPage() {
 
   if (!isVisible && !hasResidualAccess) {
     return (
-      <main
-        className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
-        style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
-      >
+      <main className={`page-shell page-rpg page-event ${getFrameThemeClass(gameState.selectedFrameId)}`}>
         <div className="title-panel">イベント</div>
         <section className="card decorated-card notification-card">
           <div className="notification-card-head">
@@ -174,10 +171,7 @@ export default function EventDetailPage() {
   };
 
   return (
-    <main
-      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
-      style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
-    >
+    <main className={`page-shell page-rpg page-event ${getFrameThemeClass(gameState.selectedFrameId)}`}>
       <div className="title-panel">イベント</div>
       {message && <div className="toast">{message}</div>}
 

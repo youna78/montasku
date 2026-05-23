@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
+import { getMonsterImage } from "@/lib/game/assets";
 import { getBackgroundImagePath, getFramePreviewImagePath, getFrameThemeClass, SHOP_ATTRIBUTE_CHARMS, SHOP_BACKGROUNDS, SHOP_BOOSTER_ITEMS, SHOP_DECORATIONS, SHOP_FRAMES, SHOP_PAID_ATTRIBUTE_CHARMS, SHOP_PAID_BACKGROUNDS, SHOP_PAID_FRAMES } from "@/lib/game/shop";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
@@ -76,6 +77,29 @@ export default function InventoryPage() {
     () => SHOP_DECORATIONS.filter((item) => gameState?.ownedDecorationIds.includes(item.itemId)),
     [gameState]
   );
+
+  const currentMonster = monsters.find((monster) => monster.monsterId === gameState?.currentMonsterId);
+  const tabLabel: Record<InventoryTab, string> = {
+    background: "背景",
+    frame: "フレーム",
+    deco: "デコ",
+    item: "アイテム"
+  };
+  const ownedItemCount =
+    ownedBackgrounds.length +
+    ownedFrames.length +
+    ownedDecorations.length +
+    ownedCharms.length +
+    ownedPaidCharms.length +
+    ownedBoosters.length;
+  const currentTabCount =
+    tab === "background"
+      ? ownedBackgrounds.length
+      : tab === "frame"
+        ? ownedFrames.length
+        : tab === "deco"
+          ? ownedDecorations.length
+          : ownedCharms.length + ownedPaidCharms.length + ownedBoosters.length;
 
   if (isLoading || !gameState) {
     return <main>Loading...</main>;
@@ -159,37 +183,45 @@ export default function InventoryPage() {
 
   return (
     <main
-      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      className={`page-shell page-rpg page-shop page-inventory ${getFrameThemeClass(gameState.selectedFrameId)}`}
       style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
     >
       <div className="title-panel">持ち物</div>
 
-      <section className="card decorated-card quest-heading-card">
-        <p>購入した背景やフレームを、ここで切り替えできます。</p>
+      <section className="card decorated-card screen-summary-card inventory-summary-card">
+        <img src={getMonsterImage(currentMonster?.monsterId)} alt="" className="screen-summary-monster" />
+        <div className="screen-summary-copy">
+          <strong>持ち物をそうびする</strong>
+          <span>購入した背景、フレーム、デコ、アイテムをここで切り替えできます。</span>
+          <div className="task-progress-strip">
+            <span>所持 {ownedItemCount}</span>
+            <span>{tabLabel[tab]} {currentTabCount}</span>
+          </div>
+        </div>
       </section>
 
-      <section className="card decorated-card">
-        <div className="task-global-menu">
+      <section className="card decorated-card inventory-tabs-card">
+        <div className="shop-tab-row shop-subtab-row inventory-tab-row">
           <button
-            className={`quest-btn task-global-menu-button ${tab === "background" ? "task-global-menu-button-primary task-global-menu-button-active task-global-menu-button-current" : "task-global-menu-button-secondary"}`}
+            className={`quest-btn shop-tab-button task-global-menu-button ${tab === "background" ? "task-global-menu-button-primary task-global-menu-button-active task-global-menu-button-current" : "task-global-menu-button-secondary"}`}
             onClick={() => setTab("background")}
           >
             背景
           </button>
           <button
-            className={`quest-btn task-global-menu-button ${tab === "frame" ? "task-global-menu-button-accent task-global-menu-button-active task-global-menu-button-current" : "task-global-menu-button-secondary"}`}
+            className={`quest-btn shop-tab-button task-global-menu-button ${tab === "frame" ? "task-global-menu-button-accent task-global-menu-button-active task-global-menu-button-current" : "task-global-menu-button-secondary"}`}
             onClick={() => setTab("frame")}
           >
             フレーム
           </button>
           <button
-            className={`quest-btn task-global-menu-button ${tab === "deco" ? "task-global-menu-button-accent task-global-menu-button-active task-global-menu-button-current" : "task-global-menu-button-secondary"}`}
+            className={`quest-btn shop-tab-button task-global-menu-button ${tab === "deco" ? "task-global-menu-button-accent task-global-menu-button-active task-global-menu-button-current" : "task-global-menu-button-secondary"}`}
             onClick={() => setTab("deco")}
           >
             デコ
           </button>
           <button
-            className={`quest-btn task-global-menu-button ${tab === "item" ? "task-global-menu-button-primary task-global-menu-button-active task-global-menu-button-current" : "task-global-menu-button-secondary"}`}
+            className={`quest-btn shop-tab-button task-global-menu-button ${tab === "item" ? "task-global-menu-button-primary task-global-menu-button-active task-global-menu-button-current" : "task-global-menu-button-secondary"}`}
             onClick={() => setTab("item")}
           >
             アイテム
@@ -199,11 +231,12 @@ export default function InventoryPage() {
 
       {message && <div className="toast">{message}</div>}
 
-      {tab === "background" ? (
-        ownedBackgrounds.map((item) => {
-          const equipped = gameState.selectedBackgroundId === item.itemId;
-          return (
-            <section className="card decorated-card" key={item.itemId}>
+      <section className="shop-grid inventory-grid" aria-label={`${tabLabel[tab]}一覧`}>
+        {tab === "background" ? (
+          ownedBackgrounds.map((item) => {
+            const equipped = gameState.selectedBackgroundId === item.itemId;
+            return (
+              <section className="card decorated-card shop-grid-card inventory-grid-card" key={item.itemId}>
               <div className="shop-item-card">
                 <div className="shop-preview" style={{ backgroundImage: `url("${item.imagePath}")` }}>
                   {equipped && <span className="equipped-badge">使用中</span>}
@@ -221,15 +254,15 @@ export default function InventoryPage() {
                   {equipped ? "使用中" : "この背景を使う"}
                 </button>
               </div>
-            </section>
-          );
-        })
-      ) : tab === "frame" ? (
-        ownedFrames.map((item) => {
-          const equipped = gameState.selectedFrameId === item.itemId;
-          const framePreviewImagePath = getFramePreviewImagePath(item.itemId);
-          return (
-            <section className="card decorated-card" key={item.itemId}>
+              </section>
+            );
+          })
+        ) : tab === "frame" ? (
+          ownedFrames.map((item) => {
+            const equipped = gameState.selectedFrameId === item.itemId;
+            const framePreviewImagePath = getFramePreviewImagePath(item.itemId);
+            return (
+              <section className="card decorated-card shop-grid-card inventory-grid-card" key={item.itemId}>
               <div className="shop-item-card">
                 <div className={`shop-preview shop-frame-preview ${framePreviewImagePath ? "shop-frame-preview-image-only" : item.previewClassName}`}>
                   {framePreviewImagePath ? <img src={framePreviewImagePath} alt={item.title} className="shop-frame-image" /> : null}
@@ -256,14 +289,14 @@ export default function InventoryPage() {
                   </button>
                 ) : null}
               </div>
-            </section>
-          );
-        })
-      ) : tab === "deco" ? (
-        ownedDecorations.map((item) => {
-          const active = gameState.selectedDecorationIds.includes(item.itemId);
-          return (
-            <section className="card decorated-card" key={item.itemId}>
+              </section>
+            );
+          })
+        ) : tab === "deco" ? (
+          ownedDecorations.map((item) => {
+            const active = gameState.selectedDecorationIds.includes(item.itemId);
+            return (
+              <section className="card decorated-card shop-grid-card inventory-grid-card" key={item.itemId}>
               <div className="shop-item-card">
                 <div className="shop-preview shop-decoration-preview">
                   <img src={item.imagePath} alt={item.title} className="shop-decoration-image" />
@@ -282,21 +315,21 @@ export default function InventoryPage() {
                   {active ? "このデコを外す" : "このデコを使う"}
                 </button>
               </div>
-            </section>
-          );
-        })
-      ) : (
-        [...ownedCharms, ...ownedPaidCharms].map((item) => {
-          const equipped =
-            gameState.activeAttributeCharm?.attribute === item.attribute &&
-            (gameState.activeAttributeCharm?.variant ?? "free") === item.variant;
-          const ownedCount =
-            item.variant === "paid"
-              ? gameState.ownedPaidCharmItemCounts[item.attribute] ?? 0
-              : gameState.ownedCharmItemCounts[item.attribute] ?? 0;
+              </section>
+            );
+          })
+        ) : (
+          [...ownedCharms, ...ownedPaidCharms].map((item) => {
+            const equipped =
+              gameState.activeAttributeCharm?.attribute === item.attribute &&
+              (gameState.activeAttributeCharm?.variant ?? "free") === item.variant;
+            const ownedCount =
+              item.variant === "paid"
+                ? gameState.ownedPaidCharmItemCounts[item.attribute] ?? 0
+                : gameState.ownedCharmItemCounts[item.attribute] ?? 0;
 
-          return (
-            <section className={`card decorated-card charm-item-card charm-card-${item.attribute}`} key={item.itemId}>
+            return (
+              <section className={`card decorated-card shop-grid-card inventory-grid-card charm-item-card charm-card-${item.attribute}`} key={item.itemId}>
               <div className="shop-item-card">
                 <div className={`shop-preview shop-charm-preview charm-preview-${item.attribute}`}>
                   <img src={item.iconPath} alt={item.title} className="shop-charm-icon" />
@@ -322,14 +355,14 @@ export default function InventoryPage() {
                   {equipped ? "発動中" : "このアイテムを使う"}
                 </button>
               </div>
-            </section>
-          );
-        }).concat(
-          ownedBoosters.map((item) => {
-            const ownedCount = gameState.ownedBoosterItemCounts[item.itemId] ?? 0;
-            const isActive = gameState.activeExpBooster?.itemId === item.itemId;
-            return (
-              <section className="card decorated-card charm-item-card" key={item.itemId}>
+              </section>
+            );
+          }).concat(
+            ownedBoosters.map((item) => {
+              const ownedCount = gameState.ownedBoosterItemCounts[item.itemId] ?? 0;
+              const isActive = gameState.activeExpBooster?.itemId === item.itemId;
+              return (
+                <section className="card decorated-card shop-grid-card inventory-grid-card charm-item-card" key={item.itemId}>
                 <div className="shop-item-card">
                   <div className="shop-preview shop-charm-preview shop-grid-preview-coming-soon">
                     {item.iconPath ? <img src={item.iconPath} alt={item.title} className="shop-charm-icon" /> : <span className="shop-coming-soon-label">BOOST</span>}
@@ -357,13 +390,14 @@ export default function InventoryPage() {
                     {isActive ? "発動中" : "このアイテムを使う"}
                   </button>
                 </div>
-              </section>
-            );
-          })
-        )
-      )}
+                </section>
+              );
+            })
+          )
+        )}
+      </section>
 
-      <section className="card decorated-card">
+      <section className="card decorated-card inventory-actions-card">
         <div className="settings-menu-grid centered-actions">
           <Link href="/shop" className="ui-link-button settings-menu-button settings-menu-button-neutral">
             ショップへ

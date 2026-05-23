@@ -269,26 +269,27 @@ export default function HomePage() {
           <div className="home-stage-actions">
             <Link href="/notifications" className="home-notification-button">
               <span className="home-notification-icon">
-                <img src="/img/icon/icon_notification_01.png" alt="" className="home-notification-icon-image" />
+                <img src="/img/icon/sfc/sfc_notification_01.png" alt="" className="home-notification-icon-image" />
               </span>
               <span className="home-notification-label">おしらせ</span>
               {notificationCount > 0 && <span className="home-notification-badge">{notificationCount}</span>}
             </Link>
             <Link href="/shop" className="home-notification-button home-shop-shortcut">
               <span className="home-notification-icon">
-                <img src="/img/icon/icon_shop_01.png" alt="" className="home-notification-icon-image" />
+                <img src="/img/icon/sfc/sfc_shop_01.png" alt="" className="home-notification-icon-image" />
               </span>
               <span className="home-notification-label">ショップ</span>
             </Link>
             <Link href="/inventory" className="home-notification-button home-inventory-shortcut">
               <span className="home-notification-icon">
-                <img src="/img/icon/icon_quest_reward_02.png" alt="" className="home-notification-icon-image" />
+                <img src="/img/icon/sfc/sfc_inventory_01.png" alt="" className="home-notification-icon-image" />
               </span>
               <span className="home-notification-label">持ち物</span>
             </Link>
           </div>
         </div>
-        <div className="status-panel">
+        <div className="status-panel home-status-panel">
+          <div className="home-panel-heading">ステータス</div>
           <div className="status-row">
             <span>現在のモンスター</span>
             <strong>{currentMonster?.name ?? "-"}</strong>
@@ -383,7 +384,7 @@ export default function HomePage() {
             {remainingTasks.slice(0, 3).map((task) => (
               <li key={task.taskId} className="quest-item row">
                 <span className="row-tight">
-                  <img src="/img/icon/icon_quest_task_01.png" alt="quest" className="quest-icon" />
+                  <img src="/img/icon/sfc/sfc_task_01.png" alt="quest" className="quest-icon" />
                   <span>{task.name}</span>
                 </span>
                 <button className="quest-btn quest-btn-primary quest-btn-check" onClick={() => onCompleteFromHome(task.taskId)}>

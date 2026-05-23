@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
+import { getMonsterImage } from "@/lib/game/assets";
 import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { playSfx } from "@/lib/game/sfx";
 import { getTaskLimitInfo, shouldRouteToDailyReview } from "@/lib/game/state";
@@ -45,6 +46,8 @@ export default function TaskRemovePage() {
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map((active) => tasks.find((task) => task.taskId === active.taskId))
     .filter((task): task is TaskMaster => Boolean(task));
+  const currentMonster = monsters.find((monster) => monster.monsterId === gameState.currentMonsterId);
+  const isAtMinTasks = limits.current <= limits.min;
 
   const onRemoveTask = (taskId: number) => {
     const result = removeTask(taskId);
@@ -66,10 +69,23 @@ export default function TaskRemovePage() {
 
   return (
     <main
-      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      className={`page-shell page-rpg page-tasks page-task-remove ${getFrameThemeClass(gameState.selectedFrameId)}`}
       style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
     >
       <div className="title-panel">タスク削除</div>
+
+      <section className="card decorated-card screen-summary-card task-remove-summary-card">
+        <img src={getMonsterImage(currentMonster?.monsterId)} alt="" className="screen-summary-monster" />
+        <div className="screen-summary-copy">
+          <strong>クエストを整理する</strong>
+          <span>毎日のクエストから、使わないタスクを外せます。</span>
+          <div className="task-progress-strip">
+            <span>登録 {limits.current}/{limits.max}</span>
+            <span>最低 {limits.min}</span>
+          </div>
+        </div>
+      </section>
+
       <section className="card decorated-card">
         <div className="task-global-menu">
           <Link href="/task-add" className="ui-link-button task-global-menu-button task-global-menu-button-primary">
@@ -87,11 +103,10 @@ export default function TaskRemovePage() {
         </div>
       </section>
 
-      <section className="card decorated-card">
-        <div>
-          タスク数: {limits.current} / {limits.max}
-        </div>
-        <div>最低必要数: {limits.min}</div>
+      <section className="card decorated-card task-remove-guide-card">
+        <h2 className="screen-section-title">削除ルール</h2>
+        <p>タスクは最低{limits.min}件必要です。削除したタスクは追加画面から戻せます。</p>
+        {isAtMinTasks && <div className="task-remove-limit-note">最低件数のため、これ以上削除できません。</div>}
         <div className="settings-links rpg-link-grid">
           <Link href="/task-settings" className="ui-link-button quest-btn quest-btn-secondary">
             タスク設定へ戻る
@@ -101,18 +116,26 @@ export default function TaskRemovePage() {
 
       {message && <div className="toast">{message}</div>}
 
-      <section className="card decorated-card">
-        <h2>削除対象クエスト</h2>
+      <section className="card decorated-card task-board-card task-remove-board-card">
+        <h2 className="screen-section-title">削除対象クエスト</h2>
         <ul className="quest-list">
           {activeTasks.map((task, index) => (
-            <li className="row quest-item task-row" key={task.taskId}>
-              <div className="row-tight">
-                <img src="/img/icon/icon_quest_task_01.png" alt="quest" className="quest-icon" />
-                <span>
-                  {index + 1}. {task.name}
-                </span>
+            <li className="quest-item task-row-rpg task-remove-row" key={task.taskId}>
+              <div className="task-row-main">
+                <img src="/img/icon/sfc/sfc_task_01.png" alt="" className="quest-icon quest-icon-large" />
+                <div>
+                  <div className="task-row-title">
+                    {index + 1}. {task.name}
+                  </div>
+                  <small className="task-meta">
+                    <span className="task-reward-line">
+                      <span className="task-reward-chip">{task.category}</span>
+                      <span className="task-reward-chip">EXP +{task.baseExp}</span>
+                    </span>
+                  </small>
+                </div>
               </div>
-              <button className="quest-btn quest-btn-primary" onClick={() => onRemoveTask(task.taskId)} disabled={limits.current <= limits.min}>
+              <button className="quest-btn quest-btn-primary task-remove-button" onClick={() => onRemoveTask(task.taskId)} disabled={isAtMinTasks}>
                 削除
               </button>
             </li>

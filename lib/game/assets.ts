@@ -107,7 +107,7 @@ const FOUR_FRAME_MOTION = {
   frameCount: 4,
   columns: 2,
   rows: 2,
-  durationMs: 1120
+  durationMs: 1600
 } as const;
 
 const createRenewalMotion = (slug: string, kind: Extract<MonsterMotionKind, "walk" | "happy">): MonsterMotionAsset => ({
@@ -185,14 +185,14 @@ export const ATTRIBUTE_ICON_BY_KEY = {
 } as const;
 
 export const TAB_ICON_BY_KEY = {
-  home: "/img/tab/tab_home_01.png",
-  tasks: "/img/tab/tab_tasks_01.png",
-  dex: "/img/tab/tab_dex_01.png",
-  settings: "/img/tab/tab_settings_01.png"
+  home: "/img/icon/sfc/sfc_home_01.png",
+  tasks: "/img/icon/sfc/sfc_task_01.png",
+  dex: "/img/icon/sfc/sfc_dex_01.png",
+  settings: "/img/icon/sfc/sfc_settings_01.png"
 } as const;
 
 export const END_EVENT_ASSET_BY_KEY = {
-  letterItem: "/img/letter/letter_item_01.png"
+  letterItem: "/img/icon/sfc/sfc_letter_01.png"
 } as const;
 
 export const LETTER_ITEM_IMAGES = [

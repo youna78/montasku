@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
+import { getMonsterImage } from "@/lib/game/assets";
 import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { playSfx } from "@/lib/game/sfx";
 import { getTaskLimitInfo, shouldRouteToDailyReview } from "@/lib/game/state";
@@ -38,6 +39,7 @@ export default function TaskAddPage() {
   const limits = gameState ? getTaskLimitInfo(gameState) : { min: 3, max: 15, current: 0 };
   const activeTaskIds = new Set((gameState?.activeTasks ?? []).filter((t) => t.enabled).map((t) => t.taskId));
   const isAtMaxTasks = limits.current >= limits.max;
+  const currentMonster = monsters.find((monster) => monster.monsterId === gameState?.currentMonsterId);
 
   const addableTasks = useMemo(
     () =>
@@ -83,10 +85,23 @@ export default function TaskAddPage() {
 
   return (
     <main
-      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      className={`page-shell page-rpg page-tasks page-task-add ${getFrameThemeClass(gameState.selectedFrameId)}`}
       style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
     >
       <div className="title-panel">タスク追加</div>
+
+      <section className="card decorated-card screen-summary-card task-add-summary-card">
+        <img src={getMonsterImage(currentMonster?.monsterId)} alt="" className="screen-summary-monster" />
+        <div className="screen-summary-copy">
+          <strong>クエストを増やす</strong>
+          <span>公式タスク一覧から、毎日のクエストに追加できます。</span>
+          <div className="task-progress-strip">
+            <span>登録 {limits.current}/{limits.max}</span>
+            {isAtMaxTasks && <span>上限です</span>}
+          </div>
+        </div>
+      </section>
+
       <section className="card decorated-card">
         <div className="task-global-menu">
           <span
@@ -104,12 +119,10 @@ export default function TaskAddPage() {
         </div>
       </section>
 
-      <section className="card decorated-card">
-        <p>公式タスク一覧から追加できます。</p>
-        <div>
-          タスク数: {limits.current} / {limits.max}
-        </div>
-        {isAtMaxTasks && <div>上限に達しているため追加できません。</div>}
+      <section className="card decorated-card task-add-guide-card">
+        <h2 className="screen-section-title">追加ルール</h2>
+        <p>タスク数は最大{limits.max}件までです。使わないタスクは削除画面から外せます。</p>
+        {isAtMaxTasks && <div className="task-add-limit-note">上限に達しているため追加できません。</div>}
         <div className="settings-links rpg-link-grid">
           <Link href="/task-settings" className="ui-link-button quest-btn quest-btn-secondary">
             タスク設定へ戻る
@@ -120,19 +133,24 @@ export default function TaskAddPage() {
       {message && <div className="toast">{message}</div>}
       {errorMessage && <div className="toast">{errorMessage}</div>}
 
-      <section className="card decorated-card">
-        <h2>追加可能クエスト</h2>
+      <section className="card decorated-card task-board-card task-add-board-card">
+        <h2 className="screen-section-title">追加可能クエスト</h2>
         {addableTasks.length === 0 ? (
-          <div>追加可能なタスクがありません。</div>
+          <div className="task-add-empty">追加可能なタスクがありません。</div>
         ) : (
           <ul className="quest-list">
             {addableTasks.map((task) => (
-              <li className="row quest-item task-row" key={task.taskId}>
-                <div className="row-tight">
-                  <img src="/img/icon/icon_quest_task_01.png" alt="quest" className="quest-icon" />
+              <li className="quest-item task-row-rpg task-add-row" key={task.taskId}>
+                <div className="task-row-main">
+                  <img src="/img/icon/sfc/sfc_task_01.png" alt="" className="quest-icon quest-icon-large" />
                   <div>
-                    <div>{task.name}</div>
-                    <small>{task.category}</small>
+                    <div className="task-row-title">{task.name}</div>
+                    <small className="task-meta">
+                      <span className="task-reward-line">
+                        <span className="task-reward-chip">{task.category}</span>
+                        <span className="task-reward-chip">EXP +{task.baseExp}</span>
+                      </span>
+                    </small>
                   </div>
                 </div>
                 <button className="quest-btn quest-btn-primary" onClick={() => onAddTask(task.taskId)} disabled={isAtMaxTasks}>
