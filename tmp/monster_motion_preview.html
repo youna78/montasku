@@ -1,0 +1,1159 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Monster Motion Preview</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f2e8;
+      --panel: #fffaf0;
+      --ink: #33281e;
+      --muted: #715f4b;
+      --line: #d9c6a8;
+      --accent: #2f7a58;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      margin: -24px -24px 18px;
+      padding: 16px 24px;
+      background: rgba(246, 242, 232, 0.94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(8px);
+    }
+    h1 { margin: 0 0 10px; font-size: 22px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    button, select, input {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      padding: 9px 12px;
+      font: inherit;
+    }
+    button { background: var(--accent); color: white; border-color: #21563f; cursor: pointer; }
+    label { display: inline-flex; gap: 8px; align-items: center; color: var(--muted); }
+    .count { margin-left: auto; color: var(--muted); font-size: 13px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 14px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 2px 0 rgba(94, 69, 31, 0.12);
+    }
+    .motion {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background:
+        linear-gradient(45deg, #171717 25%, transparent 25%),
+        linear-gradient(-45deg, #171717 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #171717 75%),
+        linear-gradient(-45deg, transparent 75%, #171717 75%),
+        #222;
+      background-size: 24px 24px;
+      background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+      border-radius: 6px;
+    }
+    .motion img {
+      image-rendering: pixelated;
+      max-width: none;
+      max-height: none;
+      transform-origin: top left;
+      will-change: transform;
+    }
+    .meta { display: grid; gap: 4px; margin-top: 10px; }
+    .meta strong { font-size: 14px; line-height: 1.25; }
+    .meta span { color: var(--muted); font-size: 12px; }
+    .meta code { font-size: 11px; color: #6b553d; overflow-wrap: anywhere; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Monster Motion Preview</h1>
+    <div class="toolbar">
+      <button id="toggle">一時停止</button>
+      <label>速度
+        <select id="speed">
+          <option value="1400">ゆっくり</option>
+          <option value="1120" selected>通常</option>
+          <option value="800">速め</option>
+          <option value="560">かなり速め</option>
+        </select>
+      </label>
+      <label>表示
+        <select id="filter">
+          <option value="all">すべて</option>
+          <option value="walk">歩き</option>
+          <option value="happy">喜び</option>
+          <option value="sway">揺れ</option>
+        </select>
+      </label>
+      <label>検索
+        <input id="search" type="search" placeholder="dragon / june など">
+      </label>
+      <span class="count">98 motions</span>
+    </div>
+  </header>
+  <main class="grid">
+    
+      <article class="card" data-name="event_june_black_mameshiba_modoki_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/event_june_black_mameshiba_modoki_walk_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_black_mameshiba_modoki_walk_4f.png" alt="event_june_black_mameshiba_modoki_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june black mameshiba modoki</strong>
+          <span>歩き / 627x627</span>
+          <code>event_june_black_mameshiba_modoki_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_black_mameshiba_modoki_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/event_june_black_mameshiba_modoki_happy_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_black_mameshiba_modoki_happy_4f.png" alt="event_june_black_mameshiba_modoki_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june black mameshiba modoki</strong>
+          <span>喜び / 627x627</span>
+          <code>event_june_black_mameshiba_modoki_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_egg_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/event_june_egg_happy_4f.png" data-fw="1024" data-fh="1024">
+          <img src="../public/img/monster/event_june_egg_happy_4f.png" alt="event_june_egg_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june egg</strong>
+          <span>喜び / 1024x1024</span>
+          <code>event_june_egg_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_egg_sway_4f.png" data-kind="sway">
+        <div class="motion" data-src="../public/img/monster/event_june_egg_sway_4f.png" data-fw="1024" data-fh="1024">
+          <img src="../public/img/monster/event_june_egg_sway_4f.png" alt="event_june_egg_sway_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june egg</strong>
+          <span>揺れ / 1024x1024</span>
+          <code>event_june_egg_sway_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_female_kitsune_kannushi_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/event_june_female_kitsune_kannushi_walk_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_female_kitsune_kannushi_walk_4f.png" alt="event_june_female_kitsune_kannushi_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june female kitsune kannushi</strong>
+          <span>歩き / 627x627</span>
+          <code>event_june_female_kitsune_kannushi_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_female_kitsune_kannushi_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/event_june_female_kitsune_kannushi_happy_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_female_kitsune_kannushi_happy_4f.png" alt="event_june_female_kitsune_kannushi_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june female kitsune kannushi</strong>
+          <span>喜び / 627x627</span>
+          <code>event_june_female_kitsune_kannushi_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_keroberos_modoki_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/event_june_keroberos_modoki_walk_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_keroberos_modoki_walk_4f.png" alt="event_june_keroberos_modoki_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june keroberos modoki</strong>
+          <span>歩き / 627x627</span>
+          <code>event_june_keroberos_modoki_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_keroberos_modoki_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/event_june_keroberos_modoki_happy_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_keroberos_modoki_happy_4f.png" alt="event_june_keroberos_modoki_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june keroberos modoki</strong>
+          <span>喜び / 627x627</span>
+          <code>event_june_keroberos_modoki_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_kitsune_kannushi_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/event_june_kitsune_kannushi_walk_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_kitsune_kannushi_walk_4f.png" alt="event_june_kitsune_kannushi_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june kitsune kannushi</strong>
+          <span>歩き / 627x627</span>
+          <code>event_june_kitsune_kannushi_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_kitsune_kannushi_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/event_june_kitsune_kannushi_happy_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_kitsune_kannushi_happy_4f.png" alt="event_june_kitsune_kannushi_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june kitsune kannushi</strong>
+          <span>喜び / 627x627</span>
+          <code>event_june_kitsune_kannushi_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_kitsune_miko_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/event_june_kitsune_miko_walk_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_kitsune_miko_walk_4f.png" alt="event_june_kitsune_miko_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june kitsune miko</strong>
+          <span>歩き / 627x627</span>
+          <code>event_june_kitsune_miko_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_kitsune_miko_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/event_june_kitsune_miko_happy_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_kitsune_miko_happy_4f.png" alt="event_june_kitsune_miko_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june kitsune miko</strong>
+          <span>喜び / 627x627</span>
+          <code>event_june_kitsune_miko_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_kitsune_raijin_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/event_june_kitsune_raijin_walk_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_kitsune_raijin_walk_4f.png" alt="event_june_kitsune_raijin_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june kitsune raijin</strong>
+          <span>歩き / 627x627</span>
+          <code>event_june_kitsune_raijin_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_kitsune_raijin_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/event_june_kitsune_raijin_happy_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_kitsune_raijin_happy_4f.png" alt="event_june_kitsune_raijin_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june kitsune raijin</strong>
+          <span>喜び / 627x627</span>
+          <code>event_june_kitsune_raijin_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_komainu_modoki_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/event_june_komainu_modoki_walk_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_komainu_modoki_walk_4f.png" alt="event_june_komainu_modoki_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june komainu modoki</strong>
+          <span>歩き / 627x627</span>
+          <code>event_june_komainu_modoki_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_komainu_modoki_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/event_june_komainu_modoki_happy_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_komainu_modoki_happy_4f.png" alt="event_june_komainu_modoki_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june komainu modoki</strong>
+          <span>喜び / 627x627</span>
+          <code>event_june_komainu_modoki_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_mameshiba_modoki_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/event_june_mameshiba_modoki_walk_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_mameshiba_modoki_walk_4f.png" alt="event_june_mameshiba_modoki_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june mameshiba modoki</strong>
+          <span>歩き / 627x627</span>
+          <code>event_june_mameshiba_modoki_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_mameshiba_modoki_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/event_june_mameshiba_modoki_happy_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_mameshiba_modoki_happy_4f.png" alt="event_june_mameshiba_modoki_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june mameshiba modoki</strong>
+          <span>喜び / 627x627</span>
+          <code>event_june_mameshiba_modoki_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_okage_inu_modoki_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/event_june_okage_inu_modoki_walk_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_okage_inu_modoki_walk_4f.png" alt="event_june_okage_inu_modoki_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june okage inu modoki</strong>
+          <span>歩き / 627x627</span>
+          <code>event_june_okage_inu_modoki_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_okage_inu_modoki_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/event_june_okage_inu_modoki_happy_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_okage_inu_modoki_happy_4f.png" alt="event_june_okage_inu_modoki_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june okage inu modoki</strong>
+          <span>喜び / 627x627</span>
+          <code>event_june_okage_inu_modoki_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_otsukai_inu_modoki_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/event_june_otsukai_inu_modoki_walk_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_otsukai_inu_modoki_walk_4f.png" alt="event_june_otsukai_inu_modoki_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june otsukai inu modoki</strong>
+          <span>歩き / 627x627</span>
+          <code>event_june_otsukai_inu_modoki_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_otsukai_inu_modoki_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/event_june_otsukai_inu_modoki_happy_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_otsukai_inu_modoki_happy_4f.png" alt="event_june_otsukai_inu_modoki_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june otsukai inu modoki</strong>
+          <span>喜び / 627x627</span>
+          <code>event_june_otsukai_inu_modoki_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_shinshi_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/event_june_shinshi_walk_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_shinshi_walk_4f.png" alt="event_june_shinshi_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june shinshi</strong>
+          <span>歩き / 627x627</span>
+          <code>event_june_shinshi_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_shinshi_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/event_june_shinshi_happy_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_shinshi_happy_4f.png" alt="event_june_shinshi_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june shinshi</strong>
+          <span>喜び / 627x627</span>
+          <code>event_june_shinshi_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_shrine_guardian_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/event_june_shrine_guardian_walk_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_shrine_guardian_walk_4f.png" alt="event_june_shrine_guardian_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june shrine guardian</strong>
+          <span>歩き / 627x627</span>
+          <code>event_june_shrine_guardian_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_shrine_guardian_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/event_june_shrine_guardian_happy_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_shrine_guardian_happy_4f.png" alt="event_june_shrine_guardian_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june shrine guardian</strong>
+          <span>喜び / 627x627</span>
+          <code>event_june_shrine_guardian_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_shrine_keroberos_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/event_june_shrine_keroberos_walk_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_shrine_keroberos_walk_4f.png" alt="event_june_shrine_keroberos_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june shrine keroberos</strong>
+          <span>歩き / 627x627</span>
+          <code>event_june_shrine_keroberos_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="event_june_shrine_keroberos_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/event_june_shrine_keroberos_happy_4f.png" data-fw="627" data-fh="627">
+          <img src="../public/img/monster/event_june_shrine_keroberos_happy_4f.png" alt="event_june_shrine_keroberos_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>june shrine keroberos</strong>
+          <span>喜び / 627x627</span>
+          <code>event_june_shrine_keroberos_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_02_pink_slime_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_02_pink_slime_walk_4f.png" data-fw="305" data-fh="305">
+          <img src="../public/img/monster/monster_renewal_02_pink_slime_walk_4f.png" alt="monster_renewal_02_pink_slime_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>02 pink slime</strong>
+          <span>歩き / 305x305</span>
+          <code>monster_renewal_02_pink_slime_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_02_pink_slime_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_02_pink_slime_happy_4f.png" data-fw="303" data-fh="303">
+          <img src="../public/img/monster/monster_renewal_02_pink_slime_happy_4f.png" alt="monster_renewal_02_pink_slime_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>02 pink slime</strong>
+          <span>喜び / 303x303</span>
+          <code>monster_renewal_02_pink_slime_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_03_blue_slime_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_03_blue_slime_walk_4f.png" data-fw="306" data-fh="306">
+          <img src="../public/img/monster/monster_renewal_03_blue_slime_walk_4f.png" alt="monster_renewal_03_blue_slime_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>03 blue slime</strong>
+          <span>歩き / 306x306</span>
+          <code>monster_renewal_03_blue_slime_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_03_blue_slime_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_03_blue_slime_happy_4f.png" data-fw="360" data-fh="360">
+          <img src="../public/img/monster/monster_renewal_03_blue_slime_happy_4f.png" alt="monster_renewal_03_blue_slime_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>03 blue slime</strong>
+          <span>喜び / 360x360</span>
+          <code>monster_renewal_03_blue_slime_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_04_green_slime_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_04_green_slime_walk_4f.png" data-fw="306" data-fh="306">
+          <img src="../public/img/monster/monster_renewal_04_green_slime_walk_4f.png" alt="monster_renewal_04_green_slime_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>04 green slime</strong>
+          <span>歩き / 306x306</span>
+          <code>monster_renewal_04_green_slime_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_04_green_slime_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_04_green_slime_happy_4f.png" data-fw="303" data-fh="303">
+          <img src="../public/img/monster/monster_renewal_04_green_slime_happy_4f.png" alt="monster_renewal_04_green_slime_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>04 green slime</strong>
+          <span>喜び / 303x303</span>
+          <code>monster_renewal_04_green_slime_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_05_purple_slime_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_05_purple_slime_walk_4f.png" data-fw="309" data-fh="309">
+          <img src="../public/img/monster/monster_renewal_05_purple_slime_walk_4f.png" alt="monster_renewal_05_purple_slime_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>05 purple slime</strong>
+          <span>歩き / 309x309</span>
+          <code>monster_renewal_05_purple_slime_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_05_purple_slime_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_05_purple_slime_happy_4f.png" data-fw="292" data-fh="292">
+          <img src="../public/img/monster/monster_renewal_05_purple_slime_happy_4f.png" alt="monster_renewal_05_purple_slime_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>05 purple slime</strong>
+          <span>喜び / 292x292</span>
+          <code>monster_renewal_05_purple_slime_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_06_mini_fairy_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_06_mini_fairy_walk_4f.png" data-fw="304" data-fh="304">
+          <img src="../public/img/monster/monster_renewal_06_mini_fairy_walk_4f.png" alt="monster_renewal_06_mini_fairy_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>06 mini fairy</strong>
+          <span>歩き / 304x304</span>
+          <code>monster_renewal_06_mini_fairy_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_06_mini_fairy_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_06_mini_fairy_happy_4f.png" data-fw="309" data-fh="309">
+          <img src="../public/img/monster/monster_renewal_06_mini_fairy_happy_4f.png" alt="monster_renewal_06_mini_fairy_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>06 mini fairy</strong>
+          <span>喜び / 309x309</span>
+          <code>monster_renewal_06_mini_fairy_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_07_petit_dragon_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_07_petit_dragon_walk_4f.png" data-fw="284" data-fh="284">
+          <img src="../public/img/monster/monster_renewal_07_petit_dragon_walk_4f.png" alt="monster_renewal_07_petit_dragon_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>07 petit dragon</strong>
+          <span>歩き / 284x284</span>
+          <code>monster_renewal_07_petit_dragon_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_07_petit_dragon_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_07_petit_dragon_happy_4f.png" data-fw="313" data-fh="313">
+          <img src="../public/img/monster/monster_renewal_07_petit_dragon_happy_4f.png" alt="monster_renewal_07_petit_dragon_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>07 petit dragon</strong>
+          <span>喜び / 313x313</span>
+          <code>monster_renewal_07_petit_dragon_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_08_petit_beast_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_08_petit_beast_walk_4f.png" data-fw="300" data-fh="300">
+          <img src="../public/img/monster/monster_renewal_08_petit_beast_walk_4f.png" alt="monster_renewal_08_petit_beast_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>08 petit beast</strong>
+          <span>歩き / 300x300</span>
+          <code>monster_renewal_08_petit_beast_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_08_petit_beast_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_08_petit_beast_happy_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_08_petit_beast_happy_4f.png" alt="monster_renewal_08_petit_beast_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>08 petit beast</strong>
+          <span>喜び / 314x314</span>
+          <code>monster_renewal_08_petit_beast_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_09_mini_spirit_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_09_mini_spirit_walk_4f.png" data-fw="276" data-fh="276">
+          <img src="../public/img/monster/monster_renewal_09_mini_spirit_walk_4f.png" alt="monster_renewal_09_mini_spirit_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>09 mini spirit</strong>
+          <span>歩き / 276x276</span>
+          <code>monster_renewal_09_mini_spirit_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_09_mini_spirit_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_09_mini_spirit_happy_4f.png" data-fw="265" data-fh="265">
+          <img src="../public/img/monster/monster_renewal_09_mini_spirit_happy_4f.png" alt="monster_renewal_09_mini_spirit_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>09 mini spirit</strong>
+          <span>喜び / 265x265</span>
+          <code>monster_renewal_09_mini_spirit_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_10_arc_fairy_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_10_arc_fairy_walk_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_10_arc_fairy_walk_4f.png" alt="monster_renewal_10_arc_fairy_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>10 arc fairy</strong>
+          <span>歩き / 314x314</span>
+          <code>monster_renewal_10_arc_fairy_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_10_arc_fairy_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_10_arc_fairy_happy_4f.png" data-fw="308" data-fh="308">
+          <img src="../public/img/monster/monster_renewal_10_arc_fairy_happy_4f.png" alt="monster_renewal_10_arc_fairy_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>10 arc fairy</strong>
+          <span>喜び / 308x308</span>
+          <code>monster_renewal_10_arc_fairy_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_11_dragon_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_11_dragon_walk_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_11_dragon_walk_4f.png" alt="monster_renewal_11_dragon_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>11 dragon</strong>
+          <span>歩き / 314x314</span>
+          <code>monster_renewal_11_dragon_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_11_dragon_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_11_dragon_happy_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_11_dragon_happy_4f.png" alt="monster_renewal_11_dragon_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>11 dragon</strong>
+          <span>喜び / 314x314</span>
+          <code>monster_renewal_11_dragon_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_12_wizard_beast_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_12_wizard_beast_walk_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_12_wizard_beast_walk_4f.png" alt="monster_renewal_12_wizard_beast_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>12 wizard beast</strong>
+          <span>歩き / 314x314</span>
+          <code>monster_renewal_12_wizard_beast_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_12_wizard_beast_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_12_wizard_beast_happy_4f.png" data-fw="313" data-fh="313">
+          <img src="../public/img/monster/monster_renewal_12_wizard_beast_happy_4f.png" alt="monster_renewal_12_wizard_beast_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>12 wizard beast</strong>
+          <span>喜び / 313x313</span>
+          <code>monster_renewal_12_wizard_beast_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_13_art_golem_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_13_art_golem_walk_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_13_art_golem_walk_4f.png" alt="monster_renewal_13_art_golem_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>13 art golem</strong>
+          <span>歩き / 314x314</span>
+          <code>monster_renewal_13_art_golem_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_13_art_golem_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_13_art_golem_happy_4f.png" data-fw="312" data-fh="312">
+          <img src="../public/img/monster/monster_renewal_13_art_golem_happy_4f.png" alt="monster_renewal_13_art_golem_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>13 art golem</strong>
+          <span>喜び / 312x312</span>
+          <code>monster_renewal_13_art_golem_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_14_seraphim_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_14_seraphim_walk_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_14_seraphim_walk_4f.png" alt="monster_renewal_14_seraphim_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>14 seraphim</strong>
+          <span>歩き / 314x314</span>
+          <code>monster_renewal_14_seraphim_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_14_seraphim_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_14_seraphim_happy_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_14_seraphim_happy_4f.png" alt="monster_renewal_14_seraphim_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>14 seraphim</strong>
+          <span>喜び / 314x314</span>
+          <code>monster_renewal_14_seraphim_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_15_arc_dragon_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_15_arc_dragon_walk_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_15_arc_dragon_walk_4f.png" alt="monster_renewal_15_arc_dragon_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>15 arc dragon</strong>
+          <span>歩き / 314x314</span>
+          <code>monster_renewal_15_arc_dragon_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_15_arc_dragon_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_15_arc_dragon_happy_4f.png" data-fw="313" data-fh="313">
+          <img src="../public/img/monster/monster_renewal_15_arc_dragon_happy_4f.png" alt="monster_renewal_15_arc_dragon_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>15 arc dragon</strong>
+          <span>喜び / 313x313</span>
+          <code>monster_renewal_15_arc_dragon_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_16_arc_mage_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_16_arc_mage_walk_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_16_arc_mage_walk_4f.png" alt="monster_renewal_16_arc_mage_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>16 arc mage</strong>
+          <span>歩き / 314x314</span>
+          <code>monster_renewal_16_arc_mage_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_16_arc_mage_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_16_arc_mage_happy_4f.png" data-fw="313" data-fh="313">
+          <img src="../public/img/monster/monster_renewal_16_arc_mage_happy_4f.png" alt="monster_renewal_16_arc_mage_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>16 arc mage</strong>
+          <span>喜び / 313x313</span>
+          <code>monster_renewal_16_arc_mage_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_17_creator_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_17_creator_walk_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_17_creator_walk_4f.png" alt="monster_renewal_17_creator_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>17 creator</strong>
+          <span>歩き / 314x314</span>
+          <code>monster_renewal_17_creator_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_17_creator_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_17_creator_happy_4f.png" data-fw="307" data-fh="307">
+          <img src="../public/img/monster/monster_renewal_17_creator_happy_4f.png" alt="monster_renewal_17_creator_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>17 creator</strong>
+          <span>喜び / 307x307</span>
+          <code>monster_renewal_17_creator_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_18_golden_slime_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_18_golden_slime_walk_4f.png" data-fw="283" data-fh="283">
+          <img src="../public/img/monster/monster_renewal_18_golden_slime_walk_4f.png" alt="monster_renewal_18_golden_slime_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>18 golden slime</strong>
+          <span>歩き / 283x283</span>
+          <code>monster_renewal_18_golden_slime_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_18_golden_slime_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_18_golden_slime_happy_4f.png" data-fw="288" data-fh="288">
+          <img src="../public/img/monster/monster_renewal_18_golden_slime_happy_4f.png" alt="monster_renewal_18_golden_slime_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>18 golden slime</strong>
+          <span>喜び / 288x288</span>
+          <code>monster_renewal_18_golden_slime_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_19_golden_petit_dragon_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_19_golden_petit_dragon_walk_4f.png" data-fw="309" data-fh="309">
+          <img src="../public/img/monster/monster_renewal_19_golden_petit_dragon_walk_4f.png" alt="monster_renewal_19_golden_petit_dragon_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>19 golden petit dragon</strong>
+          <span>歩き / 309x309</span>
+          <code>monster_renewal_19_golden_petit_dragon_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_19_golden_petit_dragon_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_19_golden_petit_dragon_happy_4f.png" data-fw="309" data-fh="309">
+          <img src="../public/img/monster/monster_renewal_19_golden_petit_dragon_happy_4f.png" alt="monster_renewal_19_golden_petit_dragon_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>19 golden petit dragon</strong>
+          <span>喜び / 309x309</span>
+          <code>monster_renewal_19_golden_petit_dragon_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_20_gold_dragon_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_20_gold_dragon_walk_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_20_gold_dragon_walk_4f.png" alt="monster_renewal_20_gold_dragon_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>20 gold dragon</strong>
+          <span>歩き / 314x314</span>
+          <code>monster_renewal_20_gold_dragon_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_20_gold_dragon_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_20_gold_dragon_happy_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_20_gold_dragon_happy_4f.png" alt="monster_renewal_20_gold_dragon_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>20 gold dragon</strong>
+          <span>喜び / 314x314</span>
+          <code>monster_renewal_20_gold_dragon_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_21_shadow_spirit_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_21_shadow_spirit_walk_4f.png" data-fw="261" data-fh="261">
+          <img src="../public/img/monster/monster_renewal_21_shadow_spirit_walk_4f.png" alt="monster_renewal_21_shadow_spirit_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>21 shadow spirit</strong>
+          <span>歩き / 261x261</span>
+          <code>monster_renewal_21_shadow_spirit_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_21_shadow_spirit_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_21_shadow_spirit_happy_4f.png" data-fw="275" data-fh="275">
+          <img src="../public/img/monster/monster_renewal_21_shadow_spirit_happy_4f.png" alt="monster_renewal_21_shadow_spirit_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>21 shadow spirit</strong>
+          <span>喜び / 275x275</span>
+          <code>monster_renewal_21_shadow_spirit_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_22_spring_egg_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_22_spring_egg_happy_4f.png" data-fw="285" data-fh="285">
+          <img src="../public/img/monster/monster_renewal_22_spring_egg_happy_4f.png" alt="monster_renewal_22_spring_egg_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>22 spring egg</strong>
+          <span>喜び / 285x285</span>
+          <code>monster_renewal_22_spring_egg_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_22_spring_egg_sway_4f.png" data-kind="sway">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_22_spring_egg_sway_4f.png" data-fw="302" data-fh="302">
+          <img src="../public/img/monster/monster_renewal_22_spring_egg_sway_4f.png" alt="monster_renewal_22_spring_egg_sway_4f.png">
+        </div>
+        <div class="meta">
+          <strong>22 spring egg</strong>
+          <span>揺れ / 302x302</span>
+          <code>monster_renewal_22_spring_egg_sway_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_23_bud_slime_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_23_bud_slime_walk_4f.png" data-fw="302" data-fh="302">
+          <img src="../public/img/monster/monster_renewal_23_bud_slime_walk_4f.png" alt="monster_renewal_23_bud_slime_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>23 bud slime</strong>
+          <span>歩き / 302x302</span>
+          <code>monster_renewal_23_bud_slime_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_23_bud_slime_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_23_bud_slime_happy_4f.png" data-fw="370" data-fh="370">
+          <img src="../public/img/monster/monster_renewal_23_bud_slime_happy_4f.png" alt="monster_renewal_23_bud_slime_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>23 bud slime</strong>
+          <span>喜び / 370x370</span>
+          <code>monster_renewal_23_bud_slime_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_24_droplet_slime_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_24_droplet_slime_walk_4f.png" data-fw="288" data-fh="288">
+          <img src="../public/img/monster/monster_renewal_24_droplet_slime_walk_4f.png" alt="monster_renewal_24_droplet_slime_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>24 droplet slime</strong>
+          <span>歩き / 288x288</span>
+          <code>monster_renewal_24_droplet_slime_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_24_droplet_slime_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_24_droplet_slime_happy_4f.png" data-fw="287" data-fh="287">
+          <img src="../public/img/monster/monster_renewal_24_droplet_slime_happy_4f.png" alt="monster_renewal_24_droplet_slime_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>24 droplet slime</strong>
+          <span>喜び / 287x287</span>
+          <code>monster_renewal_24_droplet_slime_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_25_flower_guardian_fairy_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_25_flower_guardian_fairy_walk_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_25_flower_guardian_fairy_walk_4f.png" alt="monster_renewal_25_flower_guardian_fairy_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>25 flower guardian fairy</strong>
+          <span>歩き / 314x314</span>
+          <code>monster_renewal_25_flower_guardian_fairy_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_25_flower_guardian_fairy_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_25_flower_guardian_fairy_happy_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_25_flower_guardian_fairy_happy_4f.png" alt="monster_renewal_25_flower_guardian_fairy_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>25 flower guardian fairy</strong>
+          <span>喜び / 314x314</span>
+          <code>monster_renewal_25_flower_guardian_fairy_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_26_mini_spring_hedgehog_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_26_mini_spring_hedgehog_walk_4f.png" data-fw="289" data-fh="289">
+          <img src="../public/img/monster/monster_renewal_26_mini_spring_hedgehog_walk_4f.png" alt="monster_renewal_26_mini_spring_hedgehog_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>26 mini spring hedgehog</strong>
+          <span>歩き / 289x289</span>
+          <code>monster_renewal_26_mini_spring_hedgehog_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_26_mini_spring_hedgehog_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_26_mini_spring_hedgehog_happy_4f.png" data-fw="313" data-fh="313">
+          <img src="../public/img/monster/monster_renewal_26_mini_spring_hedgehog_happy_4f.png" alt="monster_renewal_26_mini_spring_hedgehog_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>26 mini spring hedgehog</strong>
+          <span>喜び / 313x313</span>
+          <code>monster_renewal_26_mini_spring_hedgehog_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_27_petit_ryu_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_27_petit_ryu_walk_4f.png" data-fw="313" data-fh="313">
+          <img src="../public/img/monster/monster_renewal_27_petit_ryu_walk_4f.png" alt="monster_renewal_27_petit_ryu_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>27 petit ryu</strong>
+          <span>歩き / 313x313</span>
+          <code>monster_renewal_27_petit_ryu_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_27_petit_ryu_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_27_petit_ryu_happy_4f.png" data-fw="306" data-fh="306">
+          <img src="../public/img/monster/monster_renewal_27_petit_ryu_happy_4f.png" alt="monster_renewal_27_petit_ryu_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>27 petit ryu</strong>
+          <span>喜び / 306x306</span>
+          <code>monster_renewal_27_petit_ryu_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_28_mini_rabbit_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_28_mini_rabbit_walk_4f.png" data-fw="263" data-fh="263">
+          <img src="../public/img/monster/monster_renewal_28_mini_rabbit_walk_4f.png" alt="monster_renewal_28_mini_rabbit_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>28 mini rabbit</strong>
+          <span>歩き / 263x263</span>
+          <code>monster_renewal_28_mini_rabbit_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_28_mini_rabbit_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_28_mini_rabbit_happy_4f.png" data-fw="269" data-fh="269">
+          <img src="../public/img/monster/monster_renewal_28_mini_rabbit_happy_4f.png" alt="monster_renewal_28_mini_rabbit_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>28 mini rabbit</strong>
+          <span>喜び / 269x269</span>
+          <code>monster_renewal_28_mini_rabbit_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_29_spring_fairy_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_29_spring_fairy_walk_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_29_spring_fairy_walk_4f.png" alt="monster_renewal_29_spring_fairy_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>29 spring fairy</strong>
+          <span>歩き / 314x314</span>
+          <code>monster_renewal_29_spring_fairy_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_29_spring_fairy_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_29_spring_fairy_happy_4f.png" data-fw="448" data-fh="448">
+          <img src="../public/img/monster/monster_renewal_29_spring_fairy_happy_4f.png" alt="monster_renewal_29_spring_fairy_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>29 spring fairy</strong>
+          <span>喜び / 448x448</span>
+          <code>monster_renewal_29_spring_fairy_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_30_spring_hedgehog_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_30_spring_hedgehog_walk_4f.png" data-fw="304" data-fh="304">
+          <img src="../public/img/monster/monster_renewal_30_spring_hedgehog_walk_4f.png" alt="monster_renewal_30_spring_hedgehog_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>30 spring hedgehog</strong>
+          <span>歩き / 304x304</span>
+          <code>monster_renewal_30_spring_hedgehog_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_30_spring_hedgehog_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_30_spring_hedgehog_happy_4f.png" data-fw="313" data-fh="313">
+          <img src="../public/img/monster/monster_renewal_30_spring_hedgehog_happy_4f.png" alt="monster_renewal_30_spring_hedgehog_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>30 spring hedgehog</strong>
+          <span>喜び / 313x313</span>
+          <code>monster_renewal_30_spring_hedgehog_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_31_spring_dragon_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_31_spring_dragon_walk_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_31_spring_dragon_walk_4f.png" alt="monster_renewal_31_spring_dragon_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>31 spring dragon</strong>
+          <span>歩き / 314x314</span>
+          <code>monster_renewal_31_spring_dragon_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_31_spring_dragon_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_31_spring_dragon_happy_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_31_spring_dragon_happy_4f.png" alt="monster_renewal_31_spring_dragon_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>31 spring dragon</strong>
+          <span>喜び / 314x314</span>
+          <code>monster_renewal_31_spring_dragon_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_32_easter_rabbit_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_32_easter_rabbit_walk_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_32_easter_rabbit_walk_4f.png" alt="monster_renewal_32_easter_rabbit_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>32 easter rabbit</strong>
+          <span>歩き / 314x314</span>
+          <code>monster_renewal_32_easter_rabbit_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_32_easter_rabbit_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_32_easter_rabbit_happy_4f.png" data-fw="295" data-fh="295">
+          <img src="../public/img/monster/monster_renewal_32_easter_rabbit_happy_4f.png" alt="monster_renewal_32_easter_rabbit_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>32 easter rabbit</strong>
+          <span>喜び / 295x295</span>
+          <code>monster_renewal_32_easter_rabbit_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_33_spring_seraphim_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_33_spring_seraphim_walk_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_33_spring_seraphim_walk_4f.png" alt="monster_renewal_33_spring_seraphim_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>33 spring seraphim</strong>
+          <span>歩き / 314x314</span>
+          <code>monster_renewal_33_spring_seraphim_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_33_spring_seraphim_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_33_spring_seraphim_happy_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_33_spring_seraphim_happy_4f.png" alt="monster_renewal_33_spring_seraphim_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>33 spring seraphim</strong>
+          <span>喜び / 314x314</span>
+          <code>monster_renewal_33_spring_seraphim_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_34_flower_mouse_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_34_flower_mouse_walk_4f.png" data-fw="313" data-fh="313">
+          <img src="../public/img/monster/monster_renewal_34_flower_mouse_walk_4f.png" alt="monster_renewal_34_flower_mouse_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>34 flower mouse</strong>
+          <span>歩き / 313x313</span>
+          <code>monster_renewal_34_flower_mouse_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_34_flower_mouse_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_34_flower_mouse_happy_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_34_flower_mouse_happy_4f.png" alt="monster_renewal_34_flower_mouse_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>34 flower mouse</strong>
+          <span>喜び / 314x314</span>
+          <code>monster_renewal_34_flower_mouse_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_35_spring_messenger_dragon_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_35_spring_messenger_dragon_walk_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_35_spring_messenger_dragon_walk_4f.png" alt="monster_renewal_35_spring_messenger_dragon_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>35 spring messenger dragon</strong>
+          <span>歩き / 314x314</span>
+          <code>monster_renewal_35_spring_messenger_dragon_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_35_spring_messenger_dragon_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_35_spring_messenger_dragon_happy_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_35_spring_messenger_dragon_happy_4f.png" alt="monster_renewal_35_spring_messenger_dragon_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>35 spring messenger dragon</strong>
+          <span>喜び / 314x314</span>
+          <code>monster_renewal_35_spring_messenger_dragon_happy_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_36_space_time_traveler_walk_4f.png" data-kind="walk">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_36_space_time_traveler_walk_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_36_space_time_traveler_walk_4f.png" alt="monster_renewal_36_space_time_traveler_walk_4f.png">
+        </div>
+        <div class="meta">
+          <strong>36 space time traveler</strong>
+          <span>歩き / 314x314</span>
+          <code>monster_renewal_36_space_time_traveler_walk_4f.png</code>
+        </div>
+      </article>
+      <article class="card" data-name="monster_renewal_36_space_time_traveler_happy_4f.png" data-kind="happy">
+        <div class="motion" data-src="../public/img/monster/monster_renewal_36_space_time_traveler_happy_4f.png" data-fw="314" data-fh="314">
+          <img src="../public/img/monster/monster_renewal_36_space_time_traveler_happy_4f.png" alt="monster_renewal_36_space_time_traveler_happy_4f.png">
+        </div>
+        <div class="meta">
+          <strong>36 space time traveler</strong>
+          <span>喜び / 314x314</span>
+          <code>monster_renewal_36_space_time_traveler_happy_4f.png</code>
+        </div>
+      </article>
+  </main>
+  <script>
+    const positions = [[0,0], [1,0], [0,1], [1,1]];
+    const motions = [...document.querySelectorAll('.motion')].map((el) => {
+      const img = el.querySelector('img');
+      const fw = Number(el.dataset.fw);
+      const fh = Number(el.dataset.fh);
+      const fit = () => {
+        const size = Math.min(el.clientWidth, el.clientHeight) * 0.86;
+        const scale = Math.min(size / fw, size / fh);
+        img.style.width = `${fw * 2 * scale}px`;
+        img.style.height = `${fh * 2 * scale}px`;
+        return scale;
+      };
+      return { el, img, fw, fh, scale: fit() };
+    });
+    let frame = 0;
+    let playing = true;
+    let duration = Number(document.querySelector('#speed').value);
+    let timer = null;
+    function render() {
+      for (const m of motions) {
+        m.scale = Math.min(m.el.clientWidth, m.el.clientHeight) * 0.86 / Math.max(m.fw, m.fh);
+        const [cx, cy] = positions[frame];
+        m.img.style.transform = `translate(${-cx * m.fw * m.scale}px, ${-cy * m.fh * m.scale}px)`;
+      }
+    }
+    function tick() {
+      if (!playing) return;
+      frame = (frame + 1) % 4;
+      render();
+    }
+    function restartTimer() {
+      clearInterval(timer);
+      timer = setInterval(tick, duration / 4);
+    }
+    document.querySelector('#toggle').addEventListener('click', (event) => {
+      playing = !playing;
+      event.currentTarget.textContent = playing ? '一時停止' : '再生';
+    });
+    document.querySelector('#speed').addEventListener('change', (event) => {
+      duration = Number(event.target.value);
+      restartTimer();
+    });
+    function applyFilter() {
+      const kind = document.querySelector('#filter').value;
+      const q = document.querySelector('#search').value.trim().toLowerCase();
+      for (const card of document.querySelectorAll('.card')) {
+        const kindOk = kind === 'all' || card.dataset.kind === kind;
+        const qOk = !q || card.dataset.name.toLowerCase().includes(q);
+        card.classList.toggle('hidden', !(kindOk && qOk));
+      }
+    }
+    document.querySelector('#filter').addEventListener('change', applyFilter);
+    document.querySelector('#search').addEventListener('input', applyFilter);
+    window.addEventListener('resize', render);
+    render();
+    restartTimer();
+  </script>
+</body>
+</html>

@@ -5425,3 +5425,158 @@ a.quest-btn[aria-disabled="true"] {
   width: 30px;
   height: 30px;
 }
+
+/* Shop screens keep the SFC shop frame even when a decorative frame is equipped. */
+.page-shop[class*="theme-frame-"] .card:not(.shop-grid-card):not(.event-banner-card),
+.page-event-shop[class*="theme-frame-"] .card:not(.shop-grid-card):not(.event-banner-card) {
+  border-color: var(--shop-palette-brown-dark);
+  background:
+    radial-gradient(120% 160% at 50% -20%, rgba(255, 244, 207, 0.94), rgba(244, 223, 180, 0.94)),
+    repeating-linear-gradient(0deg, rgba(255, 244, 207, 0.46) 0 5px, rgba(139, 87, 35, 0.12) 5px 10px);
+  box-shadow:
+    inset 0 0 0 2px var(--shop-palette-gold),
+    inset 0 0 0 6px rgba(139, 87, 35, 0.42),
+    0 4px 0 rgba(34, 23, 15, 0.54);
+}
+
+.page-shop .shop-grid-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.page-shop .shop-grid-preview {
+  min-height: 0;
+}
+
+.page-shop .shop-frame-preview {
+  min-height: 0;
+  aspect-ratio: auto;
+}
+
+.page-shop .shop-frame-preview-image-only {
+  height: 76px;
+  padding: 5px;
+  background:
+    linear-gradient(180deg, rgba(255, 250, 226, 0.98), rgba(244, 223, 180, 0.98));
+}
+
+.page-shop .shop-frame-preview-image-only .shop-frame-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.page-shop .shop-grid-card:has(.shop-frame-preview-image-only) {
+  grid-template-rows: 76px minmax(66px, auto) auto;
+  min-height: 216px;
+}
+
+.page-shop .shop-grid-meta {
+  min-width: 0;
+  overflow: visible;
+}
+
+.page-shop .shop-grid-meta h2 {
+  min-height: 32px;
+  line-height: 1.25;
+}
+
+.page-shop .shop-grid-price {
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 4px;
+  padding-left: 4px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.page-shop .shop-grid-preview-paid {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  row-gap: 0;
+  padding: 4px 3px;
+}
+
+.page-shop .shop-grid-preview-paid .shop-badge-stack {
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+}
+
+.page-shop .shop-grid-preview-paid .shop-paid-pack-icon {
+  width: 40px;
+  height: 34px;
+  margin: 0;
+}
+
+.page-shop .shop-grid-preview-paid .shop-paid-amount {
+  font-size: 24px;
+  line-height: 0.95;
+}
+
+.page-shop .shop-grid-preview-paid .shop-paid-label {
+  font-size: 10px;
+  line-height: 1;
+}
+
+.page-shop .shop-grid-card:has(.shop-paid-amount) {
+  grid-template-rows: 78px minmax(74px, auto) auto;
+  min-height: 222px;
+}
+
+@media (max-width: 520px) {
+  .page-shop .shop-grid {
+    gap: 8px;
+  }
+
+  .page-shop .shop-grid-card {
+    grid-template-rows: 72px minmax(62px, auto) auto;
+    min-height: 208px;
+    padding: 5px;
+  }
+
+  .page-shop .shop-grid-preview {
+    height: 72px;
+  }
+
+  .page-shop .shop-frame-preview-image-only {
+    height: 72px;
+    padding: 4px;
+  }
+
+  .page-shop .shop-grid-card:has(.shop-frame-preview-image-only) {
+    grid-template-rows: 72px minmax(64px, auto) auto;
+    min-height: 212px;
+  }
+
+  .page-shop .shop-grid-meta {
+    gap: 4px;
+  }
+
+  .page-shop .shop-grid-meta h2 {
+    min-height: 30px;
+    font-size: 11px;
+  }
+
+  .page-shop .shop-grid-price {
+    min-height: 28px;
+    font-size: 10px;
+    line-height: 1.15;
+  }
+
+  .page-shop .shop-grid-preview-paid .shop-paid-pack-icon {
+    width: 38px;
+    height: 32px;
+  }
+
+  .page-shop .shop-grid-preview-paid .shop-paid-amount {
+    font-size: 22px;
+  }
+
+  .page-shop .shop-grid-card:has(.shop-paid-amount) {
+    grid-template-rows: 74px minmax(76px, auto) auto;
+    min-height: 224px;
+  }
+}
