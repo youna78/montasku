@@ -112,7 +112,7 @@ export default function DailyReviewPage() {
 
   return (
     <main
-      className={`page-shell ${getFrameThemeClass(gameState.selectedFrameId)}`}
+      className={`page-shell page-rpg page-daily-review ${getFrameThemeClass(gameState.selectedFrameId)}`}
       style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
     >
       <div className="title-panel">きのうのふりかえり</div>
@@ -153,7 +153,7 @@ export default function DailyReviewPage() {
         </ul>
       </section>
 
-      <section className="card decorated-card">
+      <section className="card decorated-card review-actions-card">
         <div className="task-global-menu">
           <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={onSkip}>
             あとで

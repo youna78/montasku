@@ -3587,6 +3587,15 @@ button:disabled {
   text-align: right;
 }
 
+.page-daily-review {
+  padding-bottom: calc(150px + env(safe-area-inset-bottom));
+}
+
+.page-daily-review .review-actions-card {
+  margin-bottom: calc(22px + env(safe-area-inset-bottom));
+  scroll-margin-bottom: calc(150px + env(safe-area-inset-bottom));
+}
+
 .hatch-scene {
   position: relative;
   height: 170px;
