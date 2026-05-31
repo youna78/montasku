@@ -9,6 +9,11 @@ type GoogleServiceAccount = {
   private_key?: string;
 };
 
+type GooglePlayCredentials = {
+  clientEmail: string;
+  privateKey: string;
+};
+
 export type GooglePlayProductPurchase = {
   kind?: string;
   purchaseTimeMillis?: string;
@@ -39,31 +44,130 @@ function normalizePrivateKey(value: string): string {
   return value.replace(/\\n/g, "\n");
 }
 
-function getGooglePlayCredentials() {
-  const rawServiceAccountJson = process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON;
+function stripWrappingQuotes(value: string): string {
+  let output = value.trim();
+  const quotePairs = [
+    ['"', '"'],
+    ["'", "'"],
+    ["“", "”"],
+    ["”", "”"],
+    ["‘", "’"],
+    ["’", "’"]
+  ] as const;
 
-  if (rawServiceAccountJson) {
-    const parsed = JSON.parse(rawServiceAccountJson) as GoogleServiceAccount;
-    if (!parsed.client_email || !parsed.private_key) {
-      throw new Error("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is missing client_email or private_key.");
+  let changed = true;
+  while (changed && output.length >= 2) {
+    changed = false;
+    for (const [left, right] of quotePairs) {
+      if (output.startsWith(left) && output.endsWith(right)) {
+        output = output.slice(left.length, -right.length).trim();
+        changed = true;
+      }
     }
-    return {
-      clientEmail: parsed.client_email,
-      privateKey: normalizePrivateKey(parsed.private_key)
-    };
   }
 
+  return output;
+}
+
+function tryDecodeBase64Json(value: string): string | null {
+  const compactValue = value.replace(/\s/g, "");
+  if (!compactValue || !/^[A-Za-z0-9+/=_-]+$/.test(compactValue)) {
+    return null;
+  }
+
+  try {
+    return Buffer.from(compactValue.replace(/-/g, "+").replace(/_/g, "/"), "base64")
+      .toString("utf8")
+      .trim();
+  } catch {
+    return null;
+  }
+}
+
+function parseGoogleServiceAccountJson(rawValue: string): GoogleServiceAccount {
+  const trimmedValue = rawValue.trim();
+  const cleanedValue = stripWrappingQuotes(trimmedValue);
+  const candidates = Array.from(new Set([
+    trimmedValue,
+    cleanedValue,
+    tryDecodeBase64Json(trimmedValue),
+    tryDecodeBase64Json(cleanedValue)
+  ].filter((value): value is string => Boolean(value))));
+
+  let lastError: unknown = null;
+
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate) as GoogleServiceAccount | string;
+      if (typeof parsed === "string") {
+        const nestedParsed = JSON.parse(stripWrappingQuotes(parsed)) as GoogleServiceAccount;
+        return nestedParsed;
+      }
+      return parsed;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (cleanedValue === "[object Object]") {
+    throw new Error("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is [object Object]. Paste the raw service account JSON text or base64 encoded JSON.");
+  }
+
+  throw new Error(
+    `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON could not be parsed: ${lastError instanceof Error ? lastError.message : "unknown_parse_error"}`
+  );
+}
+
+function getSplitGooglePlayCredentials(): GooglePlayCredentials | null {
   const clientEmail = process.env.GOOGLE_PLAY_CLIENT_EMAIL;
   const privateKey = process.env.GOOGLE_PLAY_PRIVATE_KEY;
 
   if (!clientEmail || !privateKey) {
-    throw new Error("Google Play service account is not configured.");
+    return null;
   }
 
   return {
     clientEmail,
     privateKey: normalizePrivateKey(privateKey)
   };
+}
+
+function getGooglePlayCredentials(): GooglePlayCredentials {
+  const serviceAccountEnvValues = [
+    process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON,
+    process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64
+  ].filter((value): value is string => Boolean(value?.trim()));
+
+  let serviceAccountParseError: unknown = null;
+
+  for (const serviceAccountEnvValue of serviceAccountEnvValues) {
+    try {
+      const parsed = parseGoogleServiceAccountJson(serviceAccountEnvValue);
+      if (!parsed.client_email || !parsed.private_key) {
+        throw new Error("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is missing client_email or private_key.");
+      }
+      return {
+        clientEmail: parsed.client_email,
+        privateKey: normalizePrivateKey(parsed.private_key)
+      };
+    } catch (error) {
+      serviceAccountParseError = error;
+    }
+  }
+
+  const splitCredentials = getSplitGooglePlayCredentials();
+  if (splitCredentials) {
+    if (serviceAccountParseError) {
+      console.warn("[google-play] service account JSON could not be parsed. Falling back to split credentials.");
+    }
+    return splitCredentials;
+  }
+
+  if (serviceAccountParseError) {
+    throw serviceAccountParseError;
+  }
+
+  throw new Error("Google Play service account is not configured.");
 }
 
 function createGoogleOAuthJwt(): string {
