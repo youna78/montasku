@@ -3,6 +3,7 @@ import type {
   ActiveAttributeCharm,
   AttributeTotals,
   CharmAttribute,
+  DailyReviewRewardSnapshot,
   GameState,
   LetterRecord,
   OwnedBoosterItemCounts,
@@ -13,7 +14,7 @@ import type {
 } from "@/types/game";
 import type { LevelingMaster, MonsterMaster, TaskMaster } from "@/types/master";
 import { LETTER_ITEM_IMAGES } from "./assets";
-import { GAME_EVENTS, getEventById, isEventActive, normalizeUserEventState } from "./events";
+import { GAME_EVENTS, JUNE_SHRINE_EVENT, SPRING_EASTER_EVENT, getEventById, isEventActive, normalizeUserEventState } from "./events";
 import { getGameNow } from "./virtualTime";
 import { evaluateEvolution, resolveBirthMonsterId, resolveEggEvolutionMonsterId } from "./evolution";
 import { getAttributeCharmItem, getBoosterShopItem, getDecorationShopItem, getPaidBackgroundShopItem, getPaidBundleShopItem, getPaidFrameShopItem } from "./shop";
@@ -156,6 +157,7 @@ export type DailyReviewResolveResult = {
   nextState: GameState;
   resolved: boolean;
   rewarded: boolean;
+  action: "answered" | "changed" | "cleared" | "noop";
   gainedExp: number;
   gainedFreeCoins: number;
   gainedAttributes: {
@@ -242,6 +244,90 @@ function normalizeEventStates(rawStates: GameState["eventStates"] | undefined): 
   );
 }
 
+function cloneEventStates(eventStates: GameState["eventStates"]): GameState["eventStates"] {
+  return Object.fromEntries(
+    Object.entries(eventStates).map(([eventId, eventState]) => [
+      eventId,
+      {
+        ...eventState,
+        loginDates: [...eventState.loginDates],
+        claimedRewardIds: [...eventState.claimedRewardIds]
+      }
+    ])
+  );
+}
+
+function normalizeAttributeTotals(rawTotals: unknown): AttributeTotals {
+  const values = rawTotals && typeof rawTotals === "object" ? (rawTotals as Partial<AttributeTotals>) : {};
+  return {
+    power: typeof values.power === "number" ? Math.max(0, values.power) : 0,
+    heal: typeof values.heal === "number" ? Math.max(0, values.heal) : 0,
+    knowledge: typeof values.knowledge === "number" ? Math.max(0, values.knowledge) : 0,
+    create: typeof values.create === "number" ? Math.max(0, values.create) : 0
+  };
+}
+
+function captureDailyReviewRewardSnapshot(state: GameState): DailyReviewRewardSnapshot {
+  return {
+    currentMonsterId: state.currentMonsterId,
+    currentMonsterLevel: state.currentMonsterLevel,
+    currentMonsterExp: state.currentMonsterExp,
+    freeCoins: state.freeCoins,
+    todayExp: state.todayExp,
+    attributeTotals: { ...state.attributeTotals },
+    activeAttributeCharm: state.activeAttributeCharm ? { ...state.activeAttributeCharm } : null,
+    activeExpBooster: state.activeExpBooster ? { ...state.activeExpBooster } : null,
+    eventStates: cloneEventStates(state.eventStates),
+    discoveredMonsterIds: [...state.discoveredMonsterIds],
+    endEventPending: state.endEventPending
+  };
+}
+
+function normalizeDailyReviewRewardSnapshot(rawSnapshot: unknown): DailyReviewRewardSnapshot | undefined {
+  if (!rawSnapshot || typeof rawSnapshot !== "object") return undefined;
+  const snapshot = rawSnapshot as Partial<DailyReviewRewardSnapshot>;
+  if (
+    typeof snapshot.currentMonsterId !== "number" ||
+    typeof snapshot.currentMonsterLevel !== "number" ||
+    typeof snapshot.currentMonsterExp !== "number" ||
+    typeof snapshot.freeCoins !== "number" ||
+    typeof snapshot.todayExp !== "number"
+  ) {
+    return undefined;
+  }
+
+  return {
+    currentMonsterId: snapshot.currentMonsterId,
+    currentMonsterLevel: snapshot.currentMonsterLevel,
+    currentMonsterExp: Math.max(0, snapshot.currentMonsterExp),
+    freeCoins: Math.max(0, snapshot.freeCoins),
+    todayExp: Math.max(0, snapshot.todayExp),
+    attributeTotals: normalizeAttributeTotals(snapshot.attributeTotals),
+    activeAttributeCharm: normalizeActiveAttributeCharm(snapshot.activeAttributeCharm),
+    activeExpBooster: normalizeActiveExpBooster(snapshot.activeExpBooster),
+    eventStates: normalizeEventStates(snapshot.eventStates),
+    discoveredMonsterIds: uniqueNumbers(Array.isArray(snapshot.discoveredMonsterIds) ? snapshot.discoveredMonsterIds : []),
+    endEventPending: typeof snapshot.endEventPending === "boolean" ? snapshot.endEventPending : false
+  };
+}
+
+function restoreDailyReviewRewardSnapshot(state: GameState, snapshot: DailyReviewRewardSnapshot): GameState {
+  return {
+    ...state,
+    currentMonsterId: snapshot.currentMonsterId,
+    currentMonsterLevel: snapshot.currentMonsterLevel,
+    currentMonsterExp: snapshot.currentMonsterExp,
+    freeCoins: snapshot.freeCoins,
+    todayExp: snapshot.todayExp,
+    attributeTotals: { ...snapshot.attributeTotals },
+    activeAttributeCharm: snapshot.activeAttributeCharm ? { ...snapshot.activeAttributeCharm } : null,
+    activeExpBooster: snapshot.activeExpBooster ? { ...snapshot.activeExpBooster } : null,
+    eventStates: cloneEventStates(snapshot.eventStates),
+    discoveredMonsterIds: [...snapshot.discoveredMonsterIds],
+    endEventPending: snapshot.endEventPending
+  };
+}
+
 function appendUniqueDate(values: string[], nextValue: string): string[] {
   return values.includes(nextValue) ? values : [...values, nextValue];
 }
@@ -280,24 +366,34 @@ function applyEventLoginBonuses(state: GameState, currentDate: string): GameStat
 
   return activeEvents.reduce((nextState, eventConfig) => {
     const currentEventState = normalizeUserEventState(eventConfig.eventId, nextState.eventStates[eventConfig.eventId]);
-    if (currentEventState.loginDates.includes(currentDate)) {
+    const alreadyLoggedToday = currentEventState.loginDates.includes(currentDate);
+    const nextLoginDates = alreadyLoggedToday
+      ? currentEventState.loginDates
+      : appendUniqueDate(currentEventState.loginDates, currentDate);
+    const completedLoginMission =
+      currentEventState.hasCompletedLoginMission ||
+      nextLoginDates.length >= eventConfig.mission.loginDaysRequired;
+    const loginRewardFrameId = eventConfig.mission.loginRewardFrameId;
+    const shouldGrantLoginReward =
+      completedLoginMission &&
+      Boolean(loginRewardFrameId) &&
+      !nextState.ownedFrameIds.includes(loginRewardFrameId ?? "");
+    const shouldMarkLoginRewardClaimed =
+      completedLoginMission &&
+      Boolean(loginRewardFrameId) &&
+      !currentEventState.claimedRewardIds.includes("login_mission_reward");
+
+    if (alreadyLoggedToday && !shouldGrantLoginReward && !shouldMarkLoginRewardClaimed) {
       return nextState;
     }
 
-    const nextLoginDates = appendUniqueDate(currentEventState.loginDates, currentDate);
-    const completedLoginMission = nextLoginDates.length >= eventConfig.mission.loginDaysRequired;
-    const shouldGrantLoginReward =
-      completedLoginMission &&
-      Boolean(eventConfig.mission.loginRewardFrameId) &&
-      !currentEventState.claimedRewardIds.includes("login_mission_reward");
-
-    const nextOwnedFrameIds = shouldGrantLoginReward && eventConfig.mission.loginRewardFrameId
-      ? uniqueStrings([...nextState.ownedFrameIds, eventConfig.mission.loginRewardFrameId])
+    const nextOwnedFrameIds = shouldGrantLoginReward && loginRewardFrameId
+      ? uniqueStrings([...nextState.ownedFrameIds, loginRewardFrameId])
       : nextState.ownedFrameIds;
 
     return {
       ...nextState,
-      freeCoins: nextState.freeCoins + eventConfig.mission.dailyLoginBonusFreeCoins,
+      freeCoins: alreadyLoggedToday ? nextState.freeCoins : nextState.freeCoins + eventConfig.mission.dailyLoginBonusFreeCoins,
       ownedFrameIds: nextOwnedFrameIds,
       eventStates: {
         ...nextState.eventStates,
@@ -305,8 +401,8 @@ function applyEventLoginBonuses(state: GameState, currentDate: string): GameStat
           ...currentEventState,
           loginDates: nextLoginDates,
           hasCompletedLoginMission: completedLoginMission,
-          claimedRewardIds: shouldGrantLoginReward
-            ? [...currentEventState.claimedRewardIds, "login_mission_reward"]
+          claimedRewardIds: shouldMarkLoginRewardClaimed
+            ? uniqueStrings([...currentEventState.claimedRewardIds, "login_mission_reward"])
             : currentEventState.claimedRewardIds,
           updatedAt: new Date().toISOString()
         }
@@ -360,6 +456,7 @@ function normalizePendingDailyReview(rawReview: GameState["pendingDailyReview"] 
     taskIds,
     resolvedTaskIds: uniqueNumbers(Array.isArray(rawReview.resolvedTaskIds) ? rawReview.resolvedTaskIds : []),
     rewardedTaskIds: uniqueNumbers(Array.isArray(rawReview.rewardedTaskIds) ? rawReview.rewardedTaskIds : []),
+    rewardBaseSnapshot: normalizeDailyReviewRewardSnapshot(rawReview.rewardBaseSnapshot),
     skippedAt: typeof rawReview.skippedAt === "string" ? rawReview.skippedAt : undefined
   };
 }
@@ -443,6 +540,27 @@ function buildFarewellLetter(state: GameState, monster: MonsterMaster | undefine
     fromMonsterName,
     obtainedDate: state.lastPlayedDate
   };
+}
+
+function buildSeasonalFarewellLetter(state: GameState, monster: MonsterMaster | undefined): LetterRecord {
+  const fromMonsterName = monster?.name ?? "春のモンスター";
+  return {
+    letterId: `seasonal-farewell-${SPRING_EASTER_EVENT.eventId}-${fromMonsterName}-${state.lastPlayedDate}`,
+    title: "あめのきせつへ",
+    body: `${fromMonsterName} は 春のひかりを たっぷり あつめて つぎの旅へ 出かけました。\n梅雨のあいだも きみのタスクを そっと おうえんしています。`,
+    imagePath: LETTER_ITEM_IMAGES[0],
+    fromMonsterId: monster?.monsterId ?? state.currentMonsterId,
+    fromMonsterName,
+    obtainedDate: state.lastPlayedDate
+  };
+}
+
+function appendLetterOnce(letters: LetterRecord[], nextLetter: LetterRecord): LetterRecord[] {
+  return letters.some((letter) => letter.letterId === nextLetter.letterId) ? letters : [...letters, nextLetter];
+}
+
+function isSpringEventMonsterId(monsterId: number | null | undefined): boolean {
+  return typeof monsterId === "number" && SPRING_EASTER_EVENT.rewardPreviewMonsterIds.includes(monsterId);
 }
 
 function normalizeActiveTasks(
@@ -721,7 +839,8 @@ function buildPendingDailyReview(state: GameState): PendingDailyReview | null {
     targetDate: state.lastPlayedDate,
     taskIds,
     resolvedTaskIds: [],
-    rewardedTaskIds: []
+    rewardedTaskIds: [],
+    rewardBaseSnapshot: captureDailyReviewRewardSnapshot(state)
   };
 }
 
@@ -866,7 +985,7 @@ export function reconcileMonsterProgress(params: {
   levelingRows: LevelingMaster[];
 }): GameState {
   const { state, monsters, levelingRows } = params;
-  let nextState = state;
+  let nextState = retireSpringEventMonsterForJune(state, monsters);
 
   if (nextState.hasCompletedCurrentBirth) {
     while (true) {
@@ -891,6 +1010,38 @@ export function reconcileMonsterProgress(params: {
   }
 
   return nextState;
+}
+
+export function retireSpringEventMonsterForJune(state: GameState, monsters: MonsterMaster[] = []): GameState {
+  if (!isEventActive(JUNE_SHRINE_EVENT)) return state;
+  if (!isSpringEventMonsterId(state.currentMonsterId)) return state;
+
+  const currentMonster = monsters.find((monster) => monster.monsterId === state.currentMonsterId);
+  const nextLetter = buildSeasonalFarewellLetter(state, currentMonster);
+  const nextEggMonsterId = isSpringEventMonsterId(state.queuedEggMonsterId) ? 1 : state.queuedEggMonsterId ?? 1;
+
+  return {
+    ...state,
+    currentMonsterId: nextEggMonsterId,
+    currentMonsterLevel: 1,
+    currentMonsterExp: 0,
+    attributeTotals: {
+      power: 0,
+      heal: 0,
+      knowledge: 0,
+      create: 0
+    },
+    todayExp: 0,
+    birthEventPending: false,
+    queuedEggMonsterId: null,
+    hasCompletedCurrentBirth: false,
+    endEventPending: false,
+    isInTutorialFlow: false,
+    onboardingCompletedTaskCount: 0,
+    pendingDailyReview: null,
+    discoveredMonsterIds: uniqueNumbers([...state.discoveredMonsterIds, nextEggMonsterId]),
+    acquiredLetters: appendLetterOnce(state.acquiredLetters, nextLetter)
+  };
 }
 
 function applyEvolutionAndEndChecks(
@@ -975,21 +1126,57 @@ export function completeTask(params: {
   };
 }
 
+function applyDailyReviewReward(
+  state: GameState,
+  task: TaskMaster,
+  monsters: MonsterMaster[],
+  levelingRows: LevelingMaster[]
+): GameState {
+  const previousLevel = state.currentMonsterLevel;
+  const previousMonsterId = state.currentMonsterId;
+  let nextState = applyExpAndAttributes(state, task, levelingRows, {
+    includeTodayExp: false,
+    markCompletedToday: false
+  });
+  nextState = applyEventTaskCompletionProgress(nextState);
+  return applyEvolutionAndEndChecks(nextState, previousLevel, previousMonsterId, monsters, levelingRows).nextState;
+}
+
+function rebuildDailyReviewRewardedState(params: {
+  state: GameState;
+  pending: PendingDailyReview;
+  tasks: TaskMaster[];
+  monsters: MonsterMaster[];
+  levelingRows: LevelingMaster[];
+}): GameState {
+  const { state, pending, tasks, monsters, levelingRows } = params;
+  const baseState = pending.rewardBaseSnapshot ? restoreDailyReviewRewardSnapshot(state, pending.rewardBaseSnapshot) : state;
+
+  return pending.taskIds.reduce<GameState>((nextState, taskId) => {
+    if (!pending.rewardedTaskIds.includes(taskId)) return nextState;
+    const task = tasks.find((candidate) => candidate.taskId === taskId);
+    if (!task) return nextState;
+    return applyDailyReviewReward(nextState, task, monsters, levelingRows);
+  }, { ...baseState, pendingDailyReview: pending });
+}
+
 export function resolveDailyReviewTask(params: {
   state: GameState;
+  tasks: TaskMaster[];
   task: TaskMaster;
   didComplete: boolean;
   monsters: MonsterMaster[];
   levelingRows: LevelingMaster[];
 }): DailyReviewResolveResult {
-  const { state, task, didComplete, monsters, levelingRows } = params;
+  const { state, tasks, task, didComplete, monsters, levelingRows } = params;
   const pending = state.pendingDailyReview;
 
-  if (!pending || !pending.taskIds.includes(task.taskId) || pending.resolvedTaskIds.includes(task.taskId)) {
+  if (!pending || !pending.taskIds.includes(task.taskId)) {
     return {
       nextState: state,
       resolved: false,
       rewarded: false,
+      action: "noop",
       gainedExp: 0,
       gainedFreeCoins: 0,
       gainedAttributes: { power: 0, heal: 0, knowledge: 0, create: 0 },
@@ -1002,19 +1189,37 @@ export function resolveDailyReviewTask(params: {
 
   const previousLevel = state.currentMonsterLevel;
   const previousMonsterId = state.currentMonsterId;
-  let nextState: GameState = {
-    ...state,
-    pendingDailyReview: {
-      ...pending,
-      resolvedTaskIds: uniqueNumbers([...pending.resolvedTaskIds, task.taskId])
-    }
+  const wasResolved = pending.resolvedTaskIds.includes(task.taskId);
+  const wasRewarded = pending.rewardedTaskIds.includes(task.taskId);
+  const selectedSameAnswer = wasResolved && ((didComplete && wasRewarded) || (!didComplete && !wasRewarded));
+  const rewardBaseSnapshot = pending.rewardBaseSnapshot ?? captureDailyReviewRewardSnapshot(state);
+  const resolvedTaskIds = selectedSameAnswer
+    ? pending.resolvedTaskIds.filter((taskId) => taskId !== task.taskId)
+    : uniqueNumbers([...pending.resolvedTaskIds, task.taskId]);
+  const rewardedTaskIds = selectedSameAnswer || !didComplete
+    ? pending.rewardedTaskIds.filter((taskId) => taskId !== task.taskId)
+    : uniqueNumbers([...pending.rewardedTaskIds, task.taskId]);
+  const action = selectedSameAnswer ? "cleared" : wasResolved ? "changed" : "answered";
+  const nextPending: PendingDailyReview = {
+    ...pending,
+    resolvedTaskIds,
+    rewardedTaskIds,
+    rewardBaseSnapshot
   };
+  const nextState = rebuildDailyReviewRewardedState({
+    state,
+    pending: nextPending,
+    tasks,
+    monsters,
+    levelingRows
+  });
 
-  if (!didComplete) {
+  if (!didComplete || selectedSameAnswer) {
     return {
       nextState,
-      resolved: true,
+      resolved: action !== "cleared",
       rewarded: false,
+      action,
       gainedExp: 0,
       gainedFreeCoins: 0,
       gainedAttributes: { power: 0, heal: 0, knowledge: 0, create: 0 },
@@ -1025,33 +1230,18 @@ export function resolveDailyReviewTask(params: {
     };
   }
 
-  nextState = applyExpAndAttributes(nextState, task, levelingRows, {
-    includeTodayExp: false,
-    markCompletedToday: false
-  });
-  nextState = applyEventTaskCompletionProgress(nextState);
-  const progressResult = applyEvolutionAndEndChecks(nextState, previousLevel, previousMonsterId, monsters, levelingRows);
-  nextState = {
-    ...progressResult.nextState,
-    pendingDailyReview: progressResult.nextState.pendingDailyReview
-      ? {
-          ...progressResult.nextState.pendingDailyReview,
-          rewardedTaskIds: uniqueNumbers([...progressResult.nextState.pendingDailyReview.rewardedTaskIds, task.taskId])
-        }
-      : progressResult.nextState.pendingDailyReview
-  };
-
   return {
     nextState,
     resolved: true,
     rewarded: true,
+    action,
     gainedExp: applyExpBoost(task.baseExp, resolveActiveExpBooster(state)),
     gainedFreeCoins: FREE_COINS_PER_TASK,
     gainedAttributes: {
       ...resolveAttributeGains(task, state.activeAttributeCharm)
     },
-    evolved: progressResult.evolved,
-    levelUp: progressResult.levelUp,
+    evolved: nextState.currentMonsterId !== previousMonsterId,
+    levelUp: nextState.currentMonsterLevel > previousLevel,
     previousMonsterId,
     nextMonsterId: nextState.currentMonsterId
   };

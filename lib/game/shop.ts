@@ -38,6 +38,7 @@ export type ShopPaidCoinItem = {
   description: string;
   priceJpy: number;
   appStoreProductId?: string;
+  googlePlayProductId?: string;
   paidCoinsGranted: number;
   bonusPaidCoins: number;
   totalPaidCoins: number;
@@ -457,6 +458,7 @@ export const SHOP_PAID_COIN_ITEMS: ShopPaidCoinItem[] = [
     description: "まず試しやすい、いちばん小さなモンタコインパックです。",
     priceJpy: 100,
     appStoreProductId: "montasku_coin_120",
+    googlePlayProductId: "montaskucoin120",
     paidCoinsGranted: 100,
     bonusPaidCoins: 20,
     totalPaidCoins: 120,
@@ -472,6 +474,7 @@ export const SHOP_PAID_COIN_ITEMS: ShopPaidCoinItem[] = [
     description: "少しお得に買える、定番のモンタコインパックです。",
     priceJpy: 300,
     appStoreProductId: "montasku_coin_380",
+    googlePlayProductId: "montaskucoin380",
     paidCoinsGranted: 300,
     bonusPaidCoins: 80,
     totalPaidCoins: 380,
@@ -487,6 +490,7 @@ export const SHOP_PAID_COIN_ITEMS: ShopPaidCoinItem[] = [
     description: "継続して遊ぶ人向けの、少し大きめなモンタコインパックです。",
     priceJpy: 600,
     appStoreProductId: "montasku_coin_700",
+    googlePlayProductId: "montaskucoin700",
     paidCoinsGranted: 600,
     bonusPaidCoins: 100,
     totalPaidCoins: 700,
@@ -502,6 +506,7 @@ export const SHOP_PAID_COIN_ITEMS: ShopPaidCoinItem[] = [
     description: "イベント時やまとめ買い向けの、大きなモンタコインパックです。",
     priceJpy: 1000,
     appStoreProductId: "montasku_coin_1600",
+    googlePlayProductId: "montaskucoin1600",
     paidCoinsGranted: 1000,
     bonusPaidCoins: 600,
     totalPaidCoins: 1600,
@@ -659,6 +664,12 @@ export function getPaidCoinShopItem(itemId: string): ShopPaidCoinItem | null {
 export function getPaidCoinShopItemByAppStoreProductId(appStoreProductId: string): ShopPaidCoinItem | null {
   return SHOP_PAID_COIN_ITEMS.find(
     (item) => item.appStoreProductId === appStoreProductId && item.status === "confirmed"
+  ) ?? null;
+}
+
+export function getPaidCoinShopItemByGooglePlayProductId(googlePlayProductId: string): ShopPaidCoinItem | null {
+  return SHOP_PAID_COIN_ITEMS.find(
+    (item) => item.googlePlayProductId === googlePlayProductId && item.status === "confirmed"
   ) ?? null;
 }
 

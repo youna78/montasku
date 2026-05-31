@@ -30,6 +30,8 @@ export type GameEventConfig = {
   announcementStartsAt: string;
   targetUsers: "all";
   heroImagePath: string;
+  homeBannerImagePath?: string;
+  shopBannerImagePath?: string;
   bannerLabel: string;
   description: string;
   notice: string;

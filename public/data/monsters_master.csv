@@ -1,10 +1,10 @@
-monster_id,name,attribute,stage,rarity,unlock_lv,unlock_condition,evolution_from,evolution_to,description,is_special
+monster_id,name,attribute,stage,rarity,unlock_lv,unlock_condition,evolution_from,evolution_to,description,is_special,movement_type
 1,タマゴ,none,egg,common,0,start,,ピンクスライム|ブルースライム|グリーンスライム|パープルスライム,どんなモンスターになるかまだ分からない不思議なタマゴ,FALSE
 2,ピンクスライム,heal,baby,common,5,heal,タマゴ,ミニフェアリー,ぷるぷるしていて触ると少し元気をくれる優しいスライム,FALSE
 3,ブルースライム,power,baby,common,5,power,タマゴ,プチドラ,元気いっぱいで跳ね回る活発なスライム,FALSE
 4,グリーンスライム,knowledge,baby,common,5,knowledge,タマゴ,プチビースト,静かに周囲を観察している賢そうなスライム,FALSE
 5,パープルスライム,create,baby,common,5,create,タマゴ,ミニスピリット,不思議な輝きを持つ想像力豊かなスライム,FALSE
-6,ミニフェアリー,heal,child,normal,20,heal,ピンクスライム,アークフェアリー,小さな羽を持つ精霊。近くにいると心が落ち着く,FALSE
+6,ミニフェアリー,heal,child,normal,20,heal,ピンクスライム,アークフェアリー,小さな羽を持つ精霊。近くにいると心が落ち着く,FALSE,flying
 7,プチドラ,power,child,normal,20,power,ブルースライム,ドラゴン,まだ小さいが炎を吐く力を秘めたドラゴンの子供,FALSE
 8,プチビースト,knowledge,child,normal,20,knowledge,グリーンスライム,ウィザードビースト,魔力と知識を少しだけ扱える賢いビースト,FALSE
 9,ミニスピリット,create,child,normal,20,create,パープルスライム,アートゴーレム,芸術的なオーラを持つ自由な精霊,FALSE

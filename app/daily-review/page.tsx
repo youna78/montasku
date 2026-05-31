@@ -56,10 +56,15 @@ export default function DailyReviewPage() {
 
   const onAnswer = (taskId: number, didComplete: boolean) => {
     const result = resolveDailyReviewTask(taskId, didComplete);
-    if (!result || !result.resolved) return;
+    if (!result || result.action === "noop") return;
+
+    if (result.action === "cleared") {
+      setMessage("");
+      return;
+    }
 
     if (!didComplete) {
-      setMessage("きろくしました");
+      setMessage("");
       return;
     }
 
@@ -121,13 +126,14 @@ export default function DailyReviewPage() {
         {pending.skippedAt && <p className="review-resume-note">あとでにした確認です。ここから再開できます。</p>}
       </section>
 
-      {message && <div className="toast">{message}</div>}
+      {message && <div className="reward-popup reward-popup-top">{message}</div>}
 
       <section className="card decorated-card">
         <ul className="quest-list">
           {reviewTasks.map((task) => {
             const resolved = pending.resolvedTaskIds.includes(task.taskId);
             const rewarded = pending.rewardedTaskIds.includes(task.taskId);
+            const missed = resolved && !rewarded;
 
             return (
               <li key={task.taskId} className="quest-item review-task-item">
@@ -139,14 +145,20 @@ export default function DailyReviewPage() {
                   <small className="task-meta">EXP +{task.baseExp}</small>
                 </div>
                 <div className="review-task-actions">
-                  <button className="quest-btn quest-btn-primary review-answer-button" onClick={() => onAnswer(task.taskId, true)} disabled={resolved}>
+                  <button
+                    className={`quest-btn quest-btn-primary review-answer-button ${rewarded ? "review-answer-selected" : ""}`}
+                    onClick={() => onAnswer(task.taskId, true)}
+                  >
                     できた
                   </button>
-                  <button className="quest-btn quest-btn-secondary review-answer-button" onClick={() => onAnswer(task.taskId, false)} disabled={resolved}>
+                  <button
+                    className={`quest-btn quest-btn-secondary review-answer-button ${missed ? "review-answer-selected" : ""}`}
+                    onClick={() => onAnswer(task.taskId, false)}
+                  >
                     できなかった
                   </button>
                 </div>
-                {resolved && <div className="review-status-text">{rewarded ? "報酬付与ずみ" : "記録ずみ"}</div>}
+                {resolved && <div className="review-status-text">選択中・もう一度押すと戻せます</div>}
               </li>
             );
           })}

@@ -9,6 +9,7 @@ export type MonsterAttribute =
   | "special";
 
 export type MonsterStage = "egg" | "baby" | "child" | "adult" | "final" | "end";
+export type MonsterMovementType = "ground" | "flying" | "floating";
 
 export type TaskMaster = {
   taskId: number;
@@ -37,6 +38,7 @@ export type MonsterMaster = {
   evolutionTo?: string;
   description: string;
   isSpecial: boolean;
+  movementType: MonsterMovementType;
 };
 
 export type NavigationFlow = {

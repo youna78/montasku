@@ -7,10 +7,11 @@ import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getFirebaseAuth } from "@/lib/firebase/auth";
 import { loadCloudPurchaseHistory } from "@/lib/game/cloudCommerce";
+import type { NativeStorePlatform } from "@/lib/iap/appStorePurchases";
 import {
   createAppAccountToken,
-  finishAppStoreTransaction,
-  restoreAppStorePurchases
+  finishNativeStoreTransaction,
+  restoreNativeStorePurchases
 } from "@/lib/iap/appStorePurchases";
 import { getNativePlatform, isNativeMobileApp } from "@/lib/platform/capacitor";
 import {
@@ -89,12 +90,13 @@ export default function PurchaseHistoryPage() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState("");
   const [copiedPurchaseId, setCopiedPurchaseId] = useState<string | null>(null);
-  const [isNativeIosApp, setIsNativeIosApp] = useState(false);
-  const [isRestoringAppStorePurchases, setIsRestoringAppStorePurchases] = useState(false);
+  const [nativeStorePlatform, setNativeStorePlatform] = useState<NativeStorePlatform | null>(null);
+  const [isRestoringNativeStorePurchases, setIsRestoringNativeStorePurchases] = useState(false);
   const [restoreMessage, setRestoreMessage] = useState("");
 
   useEffect(() => {
-    setIsNativeIosApp(isNativeMobileApp() && getNativePlatform() === "ios");
+    const platform = getNativePlatform();
+    setNativeStorePlatform(isNativeMobileApp() && (platform === "ios" || platform === "android") ? platform : null);
   }, []);
 
   useEffect(() => {
@@ -182,8 +184,9 @@ export default function PurchaseHistoryPage() {
     }
   };
 
-  const fulfillAppStoreTransaction = async (
-    transaction: Awaited<ReturnType<typeof restoreAppStorePurchases>>[number],
+  const fulfillNativeStoreTransaction = async (
+    transaction: Awaited<ReturnType<typeof restoreNativeStorePurchases>>[number],
+    platform: NativeStorePlatform,
     appAccountToken: string
   ) => {
     const currentUser = getFirebaseAuth().currentUser;
@@ -196,18 +199,29 @@ export default function PurchaseHistoryPage() {
     }
 
     const idToken = await currentUser.getIdToken();
-    const response = await fetch("/api/app-store/fulfill", {
+    const response = await fetch(platform === "android" ? "/api/google-play/fulfill" : "/api/app-store/fulfill", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${idToken}`
       },
-      body: JSON.stringify({
-        appStoreProductId: transaction.productIdentifier,
-        transactionId: transaction.transactionId,
-        appAccountToken,
-        signedTransactionInfo: transaction.jwsRepresentation ?? null
-      })
+      body: JSON.stringify(
+        platform === "android"
+          ? {
+              googlePlayProductId: transaction.productIdentifier,
+              purchaseToken: transaction.purchaseToken,
+              transactionId: transaction.transactionId,
+              orderId: transaction.orderId ?? null,
+              purchaseState: transaction.purchaseState ?? null,
+              appAccountToken
+            }
+          : {
+              appStoreProductId: transaction.productIdentifier,
+              transactionId: transaction.transactionId,
+              appAccountToken,
+              signedTransactionInfo: transaction.jwsRepresentation ?? null
+            }
+      )
     });
     const payload = (await response.json().catch(() => null)) as { error?: string; grantedPaidCoins?: number } | null;
 
@@ -215,11 +229,11 @@ export default function PurchaseHistoryPage() {
       throw new Error(`${payload?.error ?? "購入の反映に失敗しました。"} (${response.status})`);
     }
 
-    await finishAppStoreTransaction(transaction.transactionId);
+    await finishNativeStoreTransaction(transaction, platform);
     return payload?.grantedPaidCoins ?? 0;
   };
 
-  const onRestoreAppStorePurchases = async () => {
+  const onRestoreNativeStorePurchases = async () => {
     try {
       const currentUser = getFirebaseAuth().currentUser;
       if (!currentUser) {
@@ -227,11 +241,16 @@ export default function PurchaseHistoryPage() {
         return;
       }
 
-      setIsRestoringAppStorePurchases(true);
+      if (!nativeStorePlatform) {
+        setRestoreMessage("アプリ版で未反映の購入を確認できます。");
+        return;
+      }
+
+      setIsRestoringNativeStorePurchases(true);
       setRestoreMessage("");
       const paidCoinPacks = SHOP_PAID_COIN_ITEMS.filter((item) => item.status === "confirmed" && item.productType === "coin_pack");
       const appAccountToken = await createAppAccountToken(currentUser.uid);
-      const purchases = await restoreAppStorePurchases(paidCoinPacks, appAccountToken);
+      const purchases = await restoreNativeStorePurchases(paidCoinPacks, nativeStorePlatform, appAccountToken);
 
       if (purchases.length === 0) {
         setRestoreMessage("未反映の購入は見つかりませんでした。");
@@ -240,7 +259,7 @@ export default function PurchaseHistoryPage() {
 
       let grantedTotal = 0;
       for (const purchase of purchases) {
-        grantedTotal += await fulfillAppStoreTransaction(purchase, appAccountToken);
+        grantedTotal += await fulfillNativeStoreTransaction(purchase, nativeStorePlatform, appAccountToken);
       }
 
       setRestoreMessage(
@@ -251,12 +270,12 @@ export default function PurchaseHistoryPage() {
       await reloadHistory();
     } catch (error) {
       console.error(
-        "[purchase-history] failed to restore App Store purchases",
+        "[purchase-history] failed to restore native store purchases",
         error instanceof Error ? { message: error.message, stack: error.stack } : error
       );
       setRestoreMessage(error instanceof Error ? error.message : "購入の確認に失敗しました。");
     } finally {
-      setIsRestoringAppStorePurchases(false);
+      setIsRestoringNativeStorePurchases(false);
     }
   };
 
@@ -275,17 +294,17 @@ export default function PurchaseHistoryPage() {
         <div className="legal-section">
           <h2>ご案内</h2>
           <p>モンタコインやセット商品の購入状況を確認できます。反映に時間がかかる時は、購入IDと購入日時を添えてお問い合わせください。</p>
-          {isNativeIosApp && user ? (
+          {nativeStorePlatform && user ? (
             <>
-              <p>App Storeで購入したモンタコインが反映されない場合は、下のボタンから未反映の購入を確認できます。</p>
+              <p>{nativeStorePlatform === "android" ? "Google Play" : "App Store"}で購入したモンタコインが反映されない場合は、下のボタンから未反映の購入を確認できます。</p>
               <div className="notification-card-actions">
                 <button
                   type="button"
                   className="quest-btn settings-menu-button settings-menu-button-secondary"
-                  onClick={() => void onRestoreAppStorePurchases()}
-                  disabled={isRestoringAppStorePurchases}
+                  onClick={() => void onRestoreNativeStorePurchases()}
+                  disabled={isRestoringNativeStorePurchases}
                 >
-                  {isRestoringAppStorePurchases ? "購入を確認中..." : "未反映の購入を確認"}
+                  {isRestoringNativeStorePurchases ? "購入を確認中..." : "未反映の購入を確認"}
                 </button>
               </div>
               {restoreMessage ? <p className="shop-note shop-note-strong">{restoreMessage}</p> : null}

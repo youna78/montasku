@@ -346,6 +346,11 @@ export default function EventShopDetailPage() {
           <span className="notification-badge notification-badge-event">{getEventStatusLabel(eventConfig)}</span>
           <span className="event-banner-remaining">{getRemainingDaysLabel(eventConfig)}</span>
         </div>
+        {eventConfig.shopBannerImagePath ? (
+          <div className="event-shop-banner-image-wrap">
+            <img src={eventConfig.shopBannerImagePath} alt={`${eventConfig.name} ショップ`} className="event-shop-banner-image" />
+          </div>
+        ) : null}
         <h2>{eventConfig.name} ショップ</h2>
         <p>{eventConfig.notice}</p>
       </section>
@@ -675,8 +680,8 @@ export default function EventShopDetailPage() {
       <BottomNav />
 
       {showStartNowConfirm ? (
-        <div className="auth-email-modal-overlay">
-          <div className="auth-email-modal-card event-confirm-modal-card">
+        <div className="auth-email-modal-overlay event-shop-modal-overlay">
+          <div className="auth-email-modal-card event-shop-modal-card event-confirm-modal-card">
             <h2 className="auth-email-modal-title">{eventEggName}に切り替える？</h2>
             <div className="event-confirm-egg-preview">
               <img src={getMonsterImage(eventConfig.freeEggMonsterId)} alt={eventEggName} />
@@ -700,8 +705,8 @@ export default function EventShopDetailPage() {
       ) : null}
 
       {bundleConfirm ? (
-        <div className="auth-email-modal-overlay">
-          <div className="auth-email-modal-card">
+        <div className="auth-email-modal-overlay event-shop-modal-overlay">
+          <div className="auth-email-modal-card event-shop-modal-card">
             <h2 className="auth-email-modal-title">セットを購入しますか？</h2>
             <p className="shop-note">
               <strong>{bundleConfirm.title}</strong>
@@ -723,8 +728,8 @@ export default function EventShopDetailPage() {
       ) : null}
 
       {purchaseConfirm ? (
-        <div className="auth-email-modal-overlay">
-          <div className="auth-email-modal-card">
+        <div className="auth-email-modal-overlay event-shop-modal-overlay">
+          <div className="auth-email-modal-card event-shop-modal-card event-shop-purchase-modal-card">
             <h2 className="auth-email-modal-title">購入しますか？</h2>
             <p className="shop-note">
               <strong>{purchaseConfirm.title}</strong>

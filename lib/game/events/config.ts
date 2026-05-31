@@ -88,6 +88,8 @@ export const JUNE_SHRINE_EVENT: GameEventConfig = {
   announcementStartsAt: "2026-05-28T00:00:00+09:00",
   targetUsers: "all",
   heroImagePath: "/img/illustration/icatch_june_shrine_01.png",
+  homeBannerImagePath: "/img/illustration/icatch_june_shrine_home_01.png",
+  shopBannerImagePath: "/img/illustration/icatch_june_shop_01.png",
   bannerLabel: "イベント開催中",
   description: "梅雨限定のモンスター登場！タスクを達成して育ててみよう",
   notice: "期間限定です。イベントショップは開催中のみ利用できます。",

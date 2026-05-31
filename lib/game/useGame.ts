@@ -227,6 +227,11 @@ export function useGame(): UseGameResult {
             setGameState(reconciledState);
             gameStateRef.current = reconciledState;
             saveGameState(reconciledState);
+            if (user) {
+              await saveCloudGameState(user.uid, reconciledState);
+              await saveCloudCommerceState(user.uid, reconciledState);
+              await saveCloudEventStates(user.uid, reconciledState.eventStates);
+            }
           }
         } catch (monsterError) {
           console.error("[useGame] failed to load monsters CSV", monsterError);
@@ -292,7 +297,11 @@ export function useGame(): UseGameResult {
     const syncTodayState = () => {
       const current = gameStateRef.current;
       if (!current) return;
-      const next = runRefreshGameStateForToday(current);
+      const refreshed = runRefreshGameStateForToday(current);
+      const next =
+        monsters.length > 0
+          ? reconcileMonsterProgress({ state: refreshed, monsters, levelingRows })
+          : refreshed;
       if (next === current) return;
       commitState(next);
     };
@@ -309,7 +318,7 @@ export function useGame(): UseGameResult {
       window.removeEventListener("focus", syncTodayState);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [commitState]);
+  }, [commitState, levelingRows, monsters]);
 
   const completeTask = useCallback(
     (taskId: number): CompleteTaskResult | null => {
@@ -747,6 +756,7 @@ export function useGame(): UseGameResult {
 
       const result = runResolveDailyReviewTask({
         state: current,
+        tasks,
         task,
         didComplete,
         monsters,

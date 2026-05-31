@@ -1,6 +1,14 @@
 import type { MonsterMaster } from "@/types/master";
 import { loadCsv, toBool, toNum } from "./loadCsv";
 
+const MONSTER_MOVEMENT_TYPES = new Set<MonsterMaster["movementType"]>(["ground", "flying", "floating"]);
+
+function toMovementType(value: string): MonsterMaster["movementType"] {
+  return MONSTER_MOVEMENT_TYPES.has(value as MonsterMaster["movementType"])
+    ? (value as MonsterMaster["movementType"])
+    : "ground";
+}
+
 export async function loadMonstersMaster(): Promise<MonsterMaster[]> {
   const rows = await loadCsv("/data/monsters_master.csv");
 
@@ -15,6 +23,7 @@ export async function loadMonstersMaster(): Promise<MonsterMaster[]> {
     evolutionFrom: row.evolution_from || undefined,
     evolutionTo: row.evolution_to || undefined,
     description: row.description,
-    isSpecial: toBool(row.is_special)
+    isSpecial: toBool(row.is_special),
+    movementType: toMovementType(row.movement_type)
   }));
 }

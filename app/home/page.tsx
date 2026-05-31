@@ -24,6 +24,13 @@ type EvolutionScene = {
   nextMonsterId: number;
 };
 
+type MonsterCelebrationState = {
+  id: number;
+  loops: number;
+};
+
+const MONSTER_HAPPY_LOOP_MS = 1600;
+
 const GROWTH_STAGE_LABELS: Record<string, string> = {
   egg: "Egg",
   baby: "Baby",
@@ -42,7 +49,8 @@ export default function HomePage() {
   const router = useRouter();
   const { tasks, monsters, levelingRows, gameState, isLoading, completeTask, markEventIntroPopupSeen } = useGame();
   const [feedback, setFeedback] = useState("");
-  const [isMonsterCelebrating, setIsMonsterCelebrating] = useState(false);
+  const [feedbackKey, setFeedbackKey] = useState(0);
+  const [monsterCelebration, setMonsterCelebration] = useState<MonsterCelebrationState | null>(null);
   const [evolutionScene, setEvolutionScene] = useState<EvolutionScene | null>(null);
   const [showEventIntro, setShowEventIntro] = useState(false);
   const [dismissedEventIntroId, setDismissedEventIntroId] = useState<string | null>(null);
@@ -50,15 +58,15 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!feedback) return;
-    const timer = window.setTimeout(() => setFeedback(""), 1200);
+    const timer = window.setTimeout(() => setFeedback(""), 1800);
     return () => window.clearTimeout(timer);
-  }, [feedback]);
+  }, [feedback, feedbackKey]);
 
   useEffect(() => {
-    if (!isMonsterCelebrating) return;
-    const timer = window.setTimeout(() => setIsMonsterCelebrating(false), 1200);
+    if (!monsterCelebration) return;
+    const timer = window.setTimeout(() => setMonsterCelebration(null), monsterCelebration.loops * MONSTER_HAPPY_LOOP_MS + 80);
     return () => window.clearTimeout(timer);
-  }, [isMonsterCelebrating]);
+  }, [monsterCelebration]);
 
   useEffect(() => {
     const refreshReadNotificationIds = () => setReadNotificationIds(getNotificationReadIds());
@@ -95,6 +103,7 @@ export default function HomePage() {
   const visibleEvents = getVisibleHomeEvents();
   const activeEvent = visibleEvents[0] ?? null;
   const activeEventState = activeEvent && gameState ? gameState.eventStates[activeEvent.eventId] : null;
+  const activeEventHomeBannerImagePath = activeEvent?.homeBannerImagePath ?? activeEvent?.heroImagePath;
 
   useEffect(() => {
     if (!gameState) return;
@@ -152,15 +161,36 @@ export default function HomePage() {
   ];
 
   const growthStageLabel = GROWTH_STAGE_LABELS[growthStage] ?? growthStage;
+  const isMonsterCelebrating = Boolean(monsterCelebration);
+  const celebrationLoops = monsterCelebration?.loops ?? 1;
   const monsterMotionKind = growthStage === "egg" ? (isMonsterCelebrating ? "happy" : "sway") : isMonsterCelebrating ? "happy" : "walk";
   const monsterMotionAsset =
     getMonsterMotionAsset(currentMonster?.monsterId, monsterMotionKind) ??
     (growthStage === "egg" && monsterMotionKind === "happy" ? getMonsterMotionAsset(currentMonster?.monsterId, "sway") : null);
   const monsterMotionClass = growthStage === "egg" ? "monster-img-alive" : "monster-img-walk-hop";
+  const monsterMovementType = currentMonster?.movementType ?? "ground";
   const activeDecorations = gameState.selectedDecorationIds
     .map((itemId) => getDecorationShopItem(itemId))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
   const activeFrameImagePath = getFramePreviewImagePath(gameState.selectedFrameId);
+  const monsterStageBackgroundClass = `monster-stage-bg-${gameState.selectedBackgroundId}`;
+
+  const showFeedback = (message: string) => {
+    setFeedback(message);
+    setFeedbackKey((current) => current + 1);
+  };
+
+  const triggerMonsterCelebration = (loops: number) => {
+    setMonsterCelebration((current) => ({
+      id: (current?.id ?? 0) + 1,
+      loops
+    }));
+  };
+
+  const onPetMonster = () => {
+    playSfx("s_Check");
+    triggerMonsterCelebration(2);
+  };
 
   const onCompleteFromHome = (taskId: number) => {
     const result = completeTask(taskId);
@@ -176,8 +206,10 @@ export default function HomePage() {
     if (result.levelUp) fragments.push("LV UP");
     if (result.evolved) fragments.push("進化");
     if (result.nextState.endEventPending) fragments.push("お別れ");
-    setFeedback(fragments.join(" / "));
-    setIsMonsterCelebrating(result.levelUp);
+    showFeedback(fragments.join(" / "));
+    if (result.levelUp) {
+      triggerMonsterCelebration(3);
+    }
 
     if (result.nextState.endEventPending) {
       window.setTimeout(() => {
@@ -211,12 +243,12 @@ export default function HomePage() {
       style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
     >
       <div className="title-panel">ホーム</div>
-      {feedback && <div className="toast">{feedback}</div>}
+      {feedback && <div key={feedbackKey} className="reward-popup reward-popup-top home-reward-popup">{feedback}</div>}
 
-      {activeEvent && (
+      {activeEvent && activeEventHomeBannerImagePath && (
         <Link href={`/event/${activeEvent.slug}`} className="card decorated-card event-banner-card">
           <div className="event-banner-image-wrap">
-            <img src={activeEvent.heroImagePath} alt={activeEvent.name} className="event-banner-image" />
+            <img src={activeEventHomeBannerImagePath} alt={activeEvent.name} className="event-banner-image" />
           </div>
           <div className="event-banner-meta">
             <div className="event-banner-head">
@@ -231,7 +263,10 @@ export default function HomePage() {
 
       <section className="card decorated-card">
         <div className="home-stage-layout">
-          <div className="monster-stage" style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}>
+          <div
+            className={`monster-stage ${monsterStageBackgroundClass}`}
+            style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
+          >
             <div className="monster-stage-overlay" />
             {activeFrameImagePath ? (
               <div className="monster-stage-frame">
@@ -251,20 +286,27 @@ export default function HomePage() {
                 <div
                   role="img"
                   aria-label={currentMonster?.name ?? "monster"}
-                  className={`monster-motion-frame ${monsterMotionKind === "walk" ? "monster-motion-frame-walk" : ""}`}
+                  className={`monster-motion-frame monster-motion-frame-${monsterMovementType} ${monsterMotionKind === "walk" ? "monster-motion-frame-walk" : ""}`}
                 >
                   <div
+                    key={`${monsterMotionKind}-${monsterCelebration?.id ?? "idle"}`}
                     className="monster-img monster-sprite"
                     style={{
                       backgroundImage: `url("${monsterMotionAsset.imagePath}")`,
-                      animationDuration: `${monsterMotionAsset.durationMs}ms`
+                      animationDuration: `${monsterMotionAsset.durationMs}ms`,
+                      animationIterationCount: monsterMotionKind === "happy" ? celebrationLoops : "infinite"
                     }}
                   />
                 </div>
               ) : (
-                <img src={getMonsterImage(currentMonster?.monsterId)} alt={currentMonster?.name ?? "monster"} className={`monster-img ${monsterMotionClass}`} />
+                <img src={getMonsterImage(currentMonster?.monsterId)} alt={currentMonster?.name ?? "monster"} className={`monster-img monster-img-${monsterMovementType} ${monsterMotionClass}`} />
               )}
             </div>
+          </div>
+          <div className="home-pet-action">
+            <button type="button" className="quest-btn home-pet-button" onClick={onPetMonster}>
+              撫でる
+            </button>
           </div>
           <div className="home-stage-actions">
             <Link href="/notifications" className="home-notification-button">

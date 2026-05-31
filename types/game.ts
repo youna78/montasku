@@ -26,7 +26,22 @@ export type PendingDailyReview = {
   taskIds: number[];
   resolvedTaskIds: number[];
   rewardedTaskIds: number[];
+  rewardBaseSnapshot?: DailyReviewRewardSnapshot;
   skippedAt?: string;
+};
+
+export type DailyReviewRewardSnapshot = {
+  currentMonsterId: number;
+  currentMonsterLevel: number;
+  currentMonsterExp: number;
+  freeCoins: number;
+  todayExp: number;
+  attributeTotals: AttributeTotals;
+  activeAttributeCharm: ActiveAttributeCharm | null;
+  activeExpBooster: ActiveExpBooster | null;
+  eventStates: Record<string, SavedUserEventState>;
+  discoveredMonsterIds: number[];
+  endEventPending: boolean;
 };
 
 export type CharmAttribute = "power" | "heal" | "knowledge" | "create";

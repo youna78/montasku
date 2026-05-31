@@ -11,12 +11,13 @@ import { getFirebaseAuth } from "@/lib/firebase/auth";
 import { getVisibleHomeEvents, isEventActive } from "@/lib/game/events";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { getNativePlatform, isNativeMobileApp } from "@/lib/platform/capacitor";
-import type { AppStoreProductMap } from "@/lib/iap/appStorePurchases";
+import type { NativeStorePlatform, NativeStoreProductMap } from "@/lib/iap/appStorePurchases";
 import {
   createAppAccountToken,
-  finishAppStoreTransaction,
-  loadAppStoreProducts,
-  purchaseAppStoreProduct
+  finishNativeStoreTransaction,
+  getNativeStoreProductId,
+  loadNativeStoreProducts,
+  purchaseNativeStoreProduct
 } from "@/lib/iap/appStorePurchases";
 import {
   getBackgroundImagePath,
@@ -76,10 +77,22 @@ function normalizeIosViewportAfterNativeDialog() {
   });
 }
 
-function buildAppStoreThanksUrl(grantedPaidCoins: number, fallbackPaidCoins: number): string {
+function isSupportedNativeStorePlatform(platform: "web" | "ios" | "android"): platform is NativeStorePlatform {
+  return platform === "ios" || platform === "android";
+}
+
+function getNativeStoreProviderLabel(platform: NativeStorePlatform): string {
+  return platform === "android" ? "Google Play" : "Apple";
+}
+
+function getNativeStoreProviderParam(platform: NativeStorePlatform): "app_store" | "google_play" {
+  return platform === "android" ? "google_play" : "app_store";
+}
+
+function buildNativeStoreThanksUrl(provider: "app_store" | "google_play", grantedPaidCoins: number, fallbackPaidCoins: number): string {
   const coins = grantedPaidCoins || fallbackPaidCoins;
   const params = new URLSearchParams({
-    provider: "app_store",
+    provider,
     coins: String(coins)
   });
   return `/shop/thanks?${params.toString()}`;
@@ -118,8 +131,8 @@ export default function ShopPage() {
   const [isNativeApp, setIsNativeApp] = useState(false);
   const [nativePlatform, setNativePlatform] = useState<"web" | "ios" | "android">("web");
   const [nativePlatformLabel, setNativePlatformLabel] = useState("アプリ");
-  const [appStoreProducts, setAppStoreProducts] = useState<AppStoreProductMap>({});
-  const [appStoreProductError, setAppStoreProductError] = useState("");
+  const [nativeStoreProducts, setNativeStoreProducts] = useState<NativeStoreProductMap>({});
+  const [nativeStoreProductError, setNativeStoreProductError] = useState("");
 
   useEffect(() => {
     setIsNativeApp(isNativeMobileApp());
@@ -205,20 +218,22 @@ export default function ShopPage() {
   }, [isNativeApp, nativePlatform]);
 
   useEffect(() => {
-    if (!isNativeApp || nativePlatform !== "ios") return;
+    if (!isNativeApp || !isSupportedNativeStorePlatform(nativePlatform)) return;
     let isCancelled = false;
 
     async function loadProducts() {
+      if (!isSupportedNativeStorePlatform(nativePlatform)) return;
       try {
-        setAppStoreProductError("");
-        const products = await loadAppStoreProducts(paidCoinPacks);
+        setNativeStoreProductError("");
+        const products = await loadNativeStoreProducts(paidCoinPacks, nativePlatform);
         if (!isCancelled) {
-          setAppStoreProducts(products);
+          setNativeStoreProducts(products);
         }
       } catch (error) {
-        console.error("[shop] failed to load App Store products", error);
+        console.error("[shop] failed to load native store products", error);
         if (!isCancelled) {
-          setAppStoreProductError("App Storeの商品情報を取得できませんでした。");
+          const providerLabel = isSupportedNativeStorePlatform(nativePlatform) ? getNativeStoreProviderLabel(nativePlatform) : "アプリストア";
+          setNativeStoreProductError(`${providerLabel}の商品情報を取得できませんでした。`);
         }
       }
     }
@@ -565,21 +580,25 @@ export default function ShopPage() {
     }
   };
 
-  const getAppStoreProduct = (item: (typeof SHOP_PAID_COIN_ITEMS)[number]) =>
-    item.appStoreProductId ? appStoreProducts[item.appStoreProductId] ?? null : null;
+  const getNativeStoreProduct = (item: (typeof SHOP_PAID_COIN_ITEMS)[number]) => {
+    if (!isSupportedNativeStorePlatform(nativePlatform)) return null;
+    const productId = getNativeStoreProductId(item, nativePlatform);
+    return productId ? nativeStoreProducts[productId] ?? null : null;
+  };
 
   const getPaidCoinTitle = (item: (typeof SHOP_PAID_COIN_ITEMS)[number]) =>
-    nativePlatform === "ios" ? getAppStoreProduct(item)?.title ?? item.title : item.title;
+    isSupportedNativeStorePlatform(nativePlatform) ? getNativeStoreProduct(item)?.title ?? item.title : item.title;
 
   const getPaidCoinPriceLabel = (item: (typeof SHOP_PAID_COIN_ITEMS)[number]) => {
-    if (nativePlatform === "ios") {
-      return getAppStoreProduct(item)?.priceString ?? "価格取得中";
+    if (isSupportedNativeStorePlatform(nativePlatform)) {
+      return getNativeStoreProduct(item)?.priceString ?? "価格取得中";
     }
     return `${item.priceJpy} 円`;
   };
 
-  const fulfillAppStoreTransaction = async (
-    transaction: Awaited<ReturnType<typeof purchaseAppStoreProduct>>,
+  const fulfillNativeStoreTransaction = async (
+    transaction: Awaited<ReturnType<typeof purchaseNativeStoreProduct>>,
+    platform: NativeStorePlatform,
     appAccountToken: string
   ) => {
     const currentUser = getFirebaseAuth().currentUser;
@@ -587,30 +606,43 @@ export default function ShopPage() {
       throw new Error("ログインが必要です。");
     }
 
-    const appStoreProductId = transaction.productIdentifier;
-    if (!appStoreProductId) {
+    const storeProductId = transaction.productIdentifier;
+    if (!storeProductId) {
       throw new Error("購入商品の情報を取得できませんでした。");
     }
 
     const idToken = await currentUser.getIdToken();
-    console.info("[shop] App Store transaction received", {
-      productIdentifier: appStoreProductId,
+    console.info("[shop] native store transaction received", {
+      platform,
+      productIdentifier: storeProductId,
       transactionId: transaction.transactionId,
+      hasPurchaseToken: Boolean(transaction.purchaseToken),
       hasSignedTransactionInfo: Boolean(transaction.jwsRepresentation)
     });
 
-    const response = await fetch("/api/app-store/fulfill", {
+    const response = await fetch(platform === "android" ? "/api/google-play/fulfill" : "/api/app-store/fulfill", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${idToken}`
       },
-      body: JSON.stringify({
-        appStoreProductId,
-        transactionId: transaction.transactionId,
-        appAccountToken,
-        signedTransactionInfo: transaction.jwsRepresentation ?? null
-      })
+      body: JSON.stringify(
+        platform === "android"
+          ? {
+              googlePlayProductId: storeProductId,
+              purchaseToken: transaction.purchaseToken,
+              transactionId: transaction.transactionId,
+              orderId: transaction.orderId ?? null,
+              purchaseState: transaction.purchaseState ?? null,
+              appAccountToken
+            }
+          : {
+              appStoreProductId: storeProductId,
+              transactionId: transaction.transactionId,
+              appAccountToken,
+              signedTransactionInfo: transaction.jwsRepresentation ?? null
+            }
+      )
     });
     const payload = (await response.json().catch(() => null)) as { error?: string; grantedPaidCoins?: number } | null;
 
@@ -618,11 +650,11 @@ export default function ShopPage() {
       throw new Error(`${payload?.error ?? "購入の反映に失敗しました。"} (${response.status})`);
     }
 
-    await finishAppStoreTransaction(transaction.transactionId);
+    await finishNativeStoreTransaction(transaction, platform);
     return payload?.grantedPaidCoins ?? 0;
   };
 
-  const onStartAppStorePurchase = async (item: (typeof SHOP_PAID_COIN_ITEMS)[number]) => {
+  const onStartNativeStorePurchase = async (item: (typeof SHOP_PAID_COIN_ITEMS)[number]) => {
     try {
       const currentUser = getFirebaseAuth().currentUser;
       if (!currentUser) {
@@ -631,8 +663,15 @@ export default function ShopPage() {
         return;
       }
 
-      if (!item.appStoreProductId || !getAppStoreProduct(item)) {
-        setMessage("App Storeの商品情報を取得できませんでした");
+      if (!isSupportedNativeStorePlatform(nativePlatform)) {
+        setMessage(`${nativePlatformLabel}版での購入は準備中です。`);
+        return;
+      }
+
+      const providerLabel = getNativeStoreProviderLabel(nativePlatform);
+      const productId = getNativeStoreProductId(item, nativePlatform);
+      if (!productId || !getNativeStoreProduct(item)) {
+        setMessage(`${providerLabel}の商品情報を取得できませんでした`);
         return;
       }
 
@@ -644,23 +683,25 @@ export default function ShopPage() {
         item_type: item.productType,
         value: item.priceJpy,
         currency: "JPY",
-        payment_provider: "app_store"
+        payment_provider: getNativeStoreProviderParam(nativePlatform)
       });
 
-      const transaction = await purchaseAppStoreProduct(item, appAccountToken);
-      const grantedPaidCoins = await fulfillAppStoreTransaction(transaction, appAccountToken);
+      const transaction = await purchaseNativeStoreProduct(item, nativePlatform, appAccountToken);
+      const grantedPaidCoins = await fulfillNativeStoreTransaction(transaction, nativePlatform, appAccountToken);
       trackEvent("purchase", {
         item_id: item.itemId,
         item_type: item.productType,
         value: item.priceJpy,
         currency: "JPY",
-        payment_provider: "app_store"
+        payment_provider: getNativeStoreProviderParam(nativePlatform)
       });
-      normalizeIosViewportAfterNativeDialog();
-      router.replace(buildAppStoreThanksUrl(grantedPaidCoins, item.totalPaidCoins));
+      if (nativePlatform === "ios") {
+        normalizeIosViewportAfterNativeDialog();
+      }
+      router.replace(buildNativeStoreThanksUrl(getNativeStoreProviderParam(nativePlatform), grantedPaidCoins, item.totalPaidCoins));
     } catch (error) {
       console.error(
-        "[shop] failed to complete App Store purchase",
+        "[shop] failed to complete native store purchase",
         error instanceof Error ? { message: error.message, stack: error.stack } : error
       );
       setMessage(error instanceof Error ? error.message : "購入に失敗しました");
@@ -837,10 +878,12 @@ export default function ShopPage() {
 
   const paidCards = activePaidCategoryTab === "coin"
     ? paidCoinPacks.map((item) => {
-        const appStoreProduct = getAppStoreProduct(item);
+        const nativeStoreProduct = getNativeStoreProduct(item);
         const priceLabel = getPaidCoinPriceLabel(item);
         const title = getPaidCoinTitle(item);
-        const isAppStoreReady = nativePlatform !== "ios" || Boolean(appStoreProduct);
+        const isNativeStorePlatform = isSupportedNativeStorePlatform(nativePlatform);
+        const nativeStoreProviderLabel = isNativeStorePlatform ? getNativeStoreProviderLabel(nativePlatform) : nativePlatformLabel;
+        const isNativeStoreReady = !isNativeStorePlatform || Boolean(nativeStoreProduct);
 
         return (
           <section className="card decorated-card shop-grid-card" key={item.itemId}>
@@ -857,9 +900,9 @@ export default function ShopPage() {
               <p>{item.description}</p>
               <div className="shop-grid-price">{priceLabel}{item.bonusPaidCoins > 0 ? ` / +${item.bonusPaidCoins} おまけ` : ""}</div>
             </div>
-            {isNativeApp && nativePlatform === "ios" ? (
+            {isNativeApp && isNativeStorePlatform ? (
               <>
-                {appStoreProductError ? <p className="shop-note shop-note-strong">{appStoreProductError}</p> : null}
+                {nativeStoreProductError ? <p className="shop-note shop-note-strong">{nativeStoreProductError}</p> : null}
                 <button
                   className="quest-btn shop-grid-button task-global-menu-button-accent"
                   onClick={() =>
@@ -867,15 +910,15 @@ export default function ShopPage() {
                       {
                         title,
                         priceLabel,
-                        message: "Appleの購入画面へ進みます。購入しますか？",
+                        message: `${nativeStoreProviderLabel}の購入画面へ進みます。購入しますか？`,
                         confirmLabel: "購入へ進む"
                       },
-                      () => onStartAppStorePurchase(item)
+                      () => onStartNativeStorePurchase(item)
                     )
                   }
-                  disabled={checkoutItemId === item.itemId || !user || !isAppStoreReady}
+                  disabled={checkoutItemId === item.itemId || !user || !isNativeStoreReady}
                 >
-                  {!user ? "ログインで購入可能" : checkoutItemId === item.itemId ? "処理中..." : "Appleで購入"}
+                  {!user ? "ログインで購入可能" : checkoutItemId === item.itemId ? "処理中..." : `${nativeStoreProviderLabel}で購入`}
                 </button>
               </>
             ) : isNativeApp ? (
@@ -1287,6 +1330,8 @@ export default function ShopPage() {
               <p className="shop-note shop-note-strong">
                 {isNativeApp && nativePlatform === "ios"
                   ? "モンタコインは、Appleのアプリ内課金で購入できます。所持しているモンタコインは、背景やフレーム、アイテム、セット商品に使えます。"
+                  : isNativeApp && nativePlatform === "android"
+                    ? "モンタコインは、Google Playのアプリ内課金で購入できます。所持しているモンタコインは、背景やフレーム、アイテム、セット商品に使えます。"
                   : isNativeApp
                     ? `${nativePlatformLabel}版のモンタコイン購入は準備中です。所持しているモンタコインは、背景やフレーム、アイテム、セット商品に使えます。`
                   : "モンタコインは、Stripe で購入できる有料コインです。チャージしたあと、背景やフレーム、アイテム、セット商品に使えます。"}
