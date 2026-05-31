@@ -4,6 +4,31 @@ import type { ShopPaidCoinItem } from "@/lib/game/shop";
 export type AppStoreProductMap = Record<string, Product>;
 export type NativeStorePlatform = "ios" | "android";
 export type NativeStoreProductMap = Record<string, Product>;
+export type NativeStorePurchaseSnapshot = {
+  productIdentifier: string | null;
+  transactionId: string | null;
+  orderId: string | null;
+  purchaseState: string | null;
+  purchaseDate: string | null;
+  productType: string | null;
+  appAccountTokenPresent: boolean;
+  purchaseTokenPresent: boolean;
+  purchaseTokenHash: string | null;
+  jwsRepresentationPresent: boolean;
+  isAcknowledged: boolean | null;
+  quantity: number | null;
+};
+
+export type NativeStorePurchaseInspection = {
+  productIds: string[];
+  restoreSyncAttempted: boolean;
+  restoreSyncError: string | null;
+  rawPurchases: Transaction[];
+  restorablePurchases: Transaction[];
+  rawPurchaseSnapshots: NativeStorePurchaseSnapshot[];
+  restorablePurchaseSnapshots: NativeStorePurchaseSnapshot[];
+  rejectedPurchaseSnapshots: Array<NativeStorePurchaseSnapshot & { reason: string }>;
+};
 
 const APP_ACCOUNT_TOKEN_NAMESPACE = "77b06a9e-2eb8-5f21-a2e1-7f4cf2c0b7f4";
 
@@ -21,6 +46,39 @@ async function sha256Hex(value: string): Promise<string> {
   return Array.from(new Uint8Array(digest))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
+}
+
+function normalizeStoreValue(value: string | null | undefined): string | null {
+  const normalized = value?.trim();
+  return normalized ? normalized : null;
+}
+
+function normalizePurchaseState(value: string | number | null | undefined): string | null {
+  if (value === null || value === undefined) return null;
+  const normalized = String(value).trim();
+  return normalized ? normalized : null;
+}
+
+function isAndroidPurchasedState(value: string | number | null | undefined): boolean {
+  const normalized = normalizePurchaseState(value);
+  return !normalized || normalized === "1" || normalized.toUpperCase() === "PURCHASED";
+}
+
+export async function summarizeNativeStoreTransaction(transaction: Transaction): Promise<NativeStorePurchaseSnapshot> {
+  return {
+    productIdentifier: normalizeStoreValue(transaction.productIdentifier),
+    transactionId: normalizeStoreValue(transaction.transactionId),
+    orderId: normalizeStoreValue(transaction.orderId),
+    purchaseState: normalizePurchaseState(transaction.purchaseState),
+    purchaseDate: normalizeStoreValue(transaction.purchaseDate),
+    productType: normalizeStoreValue(transaction.productType),
+    appAccountTokenPresent: Boolean(transaction.appAccountToken),
+    purchaseTokenPresent: Boolean(transaction.purchaseToken),
+    purchaseTokenHash: transaction.purchaseToken ? await sha256Hex(transaction.purchaseToken) : null,
+    jwsRepresentationPresent: Boolean(transaction.jwsRepresentation),
+    isAcknowledged: typeof transaction.isAcknowledged === "boolean" ? transaction.isAcknowledged : null,
+    quantity: typeof transaction.quantity === "number" ? transaction.quantity : null
+  };
 }
 
 export async function createAppAccountToken(uid: string): Promise<string> {
@@ -89,17 +147,64 @@ export async function restoreNativeStorePurchases(
   platform: NativeStorePlatform,
   appAccountToken: string
 ): Promise<Transaction[]> {
+  const inspection = await inspectNativeStorePurchases(items, platform, appAccountToken);
+  return inspection.restorablePurchases;
+}
+
+export async function inspectNativeStorePurchases(
+  items: ShopPaidCoinItem[],
+  platform: NativeStorePlatform,
+  appAccountToken: string
+): Promise<NativeStorePurchaseInspection> {
+  let restoreSyncError: string | null = null;
+  try {
+    await NativePurchases.restorePurchases();
+  } catch (error) {
+    restoreSyncError = error instanceof Error ? error.message : "restorePurchases failed";
+  }
+
   const { purchases } = await NativePurchases.getPurchases({
     productType: PURCHASE_TYPE.INAPP
   });
 
-  const productIds = new Set(getNativeStoreProductIds(items, platform));
-  return purchases.filter((purchase) => {
-    if (!productIds.has(purchase.productIdentifier)) return false;
-    if (platform === "android" && purchase.purchaseState && purchase.purchaseState !== "1") return false;
-    if (!purchase.appAccountToken) return true;
-    return purchase.appAccountToken.toLowerCase() === appAccountToken.toLowerCase();
-  });
+  const productIds = getNativeStoreProductIds(items, platform);
+  const productIdSet = new Set(productIds);
+  const rawPurchaseSnapshots = await Promise.all(purchases.map((purchase) => summarizeNativeStoreTransaction(purchase)));
+  const restorablePurchases: Transaction[] = [];
+  const rejectedPurchaseSnapshots: Array<NativeStorePurchaseSnapshot & { reason: string }> = [];
+
+  for (let index = 0; index < purchases.length; index += 1) {
+    const purchase = purchases[index];
+    const snapshot = rawPurchaseSnapshots[index];
+
+    if (!productIdSet.has(purchase.productIdentifier)) {
+      rejectedPurchaseSnapshots.push({ ...snapshot, reason: "product_not_configured" });
+      continue;
+    }
+
+    if (platform === "android" && !isAndroidPurchasedState(purchase.purchaseState)) {
+      rejectedPurchaseSnapshots.push({ ...snapshot, reason: "android_purchase_not_completed" });
+      continue;
+    }
+
+    if (platform === "ios" && purchase.appAccountToken && purchase.appAccountToken.toLowerCase() !== appAccountToken.toLowerCase()) {
+      rejectedPurchaseSnapshots.push({ ...snapshot, reason: "app_account_token_mismatch" });
+      continue;
+    }
+
+    restorablePurchases.push(purchase);
+  }
+
+  return {
+    productIds,
+    restoreSyncAttempted: true,
+    restoreSyncError,
+    rawPurchases: purchases,
+    restorablePurchases,
+    rawPurchaseSnapshots,
+    restorablePurchaseSnapshots: await Promise.all(restorablePurchases.map((purchase) => summarizeNativeStoreTransaction(purchase))),
+    rejectedPurchaseSnapshots
+  };
 }
 
 export async function restoreAppStorePurchases(items: ShopPaidCoinItem[], appAccountToken: string): Promise<Transaction[]> {

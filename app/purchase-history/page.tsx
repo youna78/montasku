@@ -11,8 +11,10 @@ import type { NativeStorePlatform } from "@/lib/iap/appStorePurchases";
 import {
   createAppAccountToken,
   finishNativeStoreTransaction,
-  restoreNativeStorePurchases
+  inspectNativeStorePurchases,
+  summarizeNativeStoreTransaction
 } from "@/lib/iap/appStorePurchases";
+import { writeNativeStoreDiagnostic } from "@/lib/iap/nativePurchaseDiagnostics";
 import { getNativePlatform, isNativeMobileApp } from "@/lib/platform/capacitor";
 import {
   getAttributeCharmItem,
@@ -81,6 +83,10 @@ function resolveGrantedItemTitles(record: PurchaseHistoryRecord): string[] {
     .map((itemId) => resolveProductTitle(itemId))
     .filter(Boolean);
   return [...paidCoinTitle, ...itemTitles];
+}
+
+function appendDiagnosticId(message: string, diagnosticId: string | null): string {
+  return diagnosticId ? `${message} 診断ID: ${diagnosticId}` : message;
 }
 
 export default function PurchaseHistoryPage() {
@@ -185,9 +191,10 @@ export default function PurchaseHistoryPage() {
   };
 
   const fulfillNativeStoreTransaction = async (
-    transaction: Awaited<ReturnType<typeof restoreNativeStorePurchases>>[number],
+    transaction: Awaited<ReturnType<typeof inspectNativeStorePurchases>>["restorablePurchases"][number],
     platform: NativeStorePlatform,
-    appAccountToken: string
+    appAccountToken: string,
+    idToken: string
   ) => {
     const currentUser = getFirebaseAuth().currentUser;
     if (!currentUser) {
@@ -198,7 +205,7 @@ export default function PurchaseHistoryPage() {
       throw new Error("購入商品の情報を取得できませんでした。");
     }
 
-    const idToken = await currentUser.getIdToken();
+    const transactionSnapshot = await summarizeNativeStoreTransaction(transaction);
     const response = await fetch(platform === "android" ? "/api/google-play/fulfill" : "/api/app-store/fulfill", {
       method: "POST",
       headers: {
@@ -226,10 +233,41 @@ export default function PurchaseHistoryPage() {
     const payload = (await response.json().catch(() => null)) as { error?: string; grantedPaidCoins?: number } | null;
 
     if (!response.ok) {
-      throw new Error(`${payload?.error ?? "購入の反映に失敗しました。"} (${response.status})`);
+      const diagnosticId = await writeNativeStoreDiagnostic(idToken, {
+        eventName: "restore_fulfill_failed",
+        platform,
+        appAccountTokenPresent: Boolean(appAccountToken),
+        targetProductId: transaction.productIdentifier,
+        transaction: transactionSnapshot,
+        responseStatus: response.status,
+        errorMessage: payload?.error ?? "restore fulfill failed"
+      });
+      throw new Error(appendDiagnosticId(`${payload?.error ?? "購入の反映に失敗しました。"} (${response.status})`, diagnosticId));
     }
 
-    await finishNativeStoreTransaction(transaction, platform);
+    try {
+      await finishNativeStoreTransaction(transaction, platform);
+    } catch (finishError) {
+      await writeNativeStoreDiagnostic(idToken, {
+        eventName: "restore_finish_failed",
+        platform,
+        appAccountTokenPresent: Boolean(appAccountToken),
+        targetProductId: transaction.productIdentifier,
+        transaction: transactionSnapshot,
+        errorMessage: finishError instanceof Error ? finishError.message : "finish native transaction failed"
+      });
+      console.warn("[purchase-history] native store transaction was fulfilled but finish failed", finishError);
+    }
+
+    await writeNativeStoreDiagnostic(idToken, {
+      eventName: "restore_fulfill_success",
+      platform,
+      appAccountTokenPresent: Boolean(appAccountToken),
+      targetProductId: transaction.productIdentifier,
+      transaction: transactionSnapshot,
+      responseStatus: response.status,
+      grantedPaidCoins: payload?.grantedPaidCoins ?? 0
+    });
     return payload?.grantedPaidCoins ?? 0;
   };
 
@@ -250,22 +288,49 @@ export default function PurchaseHistoryPage() {
       setRestoreMessage("");
       const paidCoinPacks = SHOP_PAID_COIN_ITEMS.filter((item) => item.status === "confirmed" && item.productType === "coin_pack");
       const appAccountToken = await createAppAccountToken(currentUser.uid);
-      const purchases = await restoreNativeStorePurchases(paidCoinPacks, nativeStorePlatform, appAccountToken);
+      const idToken = await currentUser.getIdToken();
+      await writeNativeStoreDiagnostic(idToken, {
+        eventName: "restore_start",
+        platform: nativeStorePlatform,
+        appAccountTokenPresent: Boolean(appAccountToken),
+        productIds: paidCoinPacks
+          .map((item) => (nativeStorePlatform === "android" ? item.googlePlayProductId : item.appStoreProductId))
+          .filter((productId): productId is string => Boolean(productId))
+      });
+      const inspection = await inspectNativeStorePurchases(paidCoinPacks, nativeStorePlatform, appAccountToken);
+      const inspectionDiagnosticId = await writeNativeStoreDiagnostic(idToken, {
+        eventName: "restore_inspection",
+        platform: nativeStorePlatform,
+        appAccountTokenPresent: Boolean(appAccountToken),
+        productIds: inspection.productIds,
+        rawPurchaseCount: inspection.rawPurchases.length,
+        restorablePurchaseCount: inspection.restorablePurchases.length,
+        rejectedPurchaseCount: inspection.rejectedPurchaseSnapshots.length,
+        restoreSyncAttempted: inspection.restoreSyncAttempted,
+        restoreSyncError: inspection.restoreSyncError,
+        rawPurchaseSnapshots: inspection.rawPurchaseSnapshots,
+        restorablePurchaseSnapshots: inspection.restorablePurchaseSnapshots,
+        rejectedPurchaseSnapshots: inspection.rejectedPurchaseSnapshots
+      });
+      const purchases = inspection.restorablePurchases;
 
       if (purchases.length === 0) {
-        setRestoreMessage("未反映の購入は見つかりませんでした。");
+        setRestoreMessage(appendDiagnosticId("未反映の購入は見つかりませんでした。", inspectionDiagnosticId));
         return;
       }
 
       let grantedTotal = 0;
       for (const purchase of purchases) {
-        grantedTotal += await fulfillNativeStoreTransaction(purchase, nativeStorePlatform, appAccountToken);
+        grantedTotal += await fulfillNativeStoreTransaction(purchase, nativeStorePlatform, appAccountToken, idToken);
       }
 
       setRestoreMessage(
-        grantedTotal > 0
-          ? `${grantedTotal} モンタコインを反映しました。`
-          : "購入はすでに反映済みです。"
+        appendDiagnosticId(
+          grantedTotal > 0
+            ? `${grantedTotal} モンタコインを反映しました。`
+            : "購入はすでに反映済みです。",
+          inspectionDiagnosticId
+        )
       );
       await reloadHistory();
     } catch (error) {

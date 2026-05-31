@@ -15,6 +15,25 @@ type RequestBody = {
   appAccountToken?: string | null;
 };
 
+type GooglePlayDiagnosticInput = {
+  eventName: string;
+  productId?: string | null;
+  storeProductId?: string | null;
+  orderId?: string | null;
+  transactionId?: string | null;
+  purchaseTokenHash?: string | null;
+  clientPurchaseState?: string | number | null;
+  googlePlayPurchaseState?: number | null;
+  googlePlayAcknowledgementState?: number | null;
+  googlePlayConsumptionState?: number | null;
+  googlePlayObfuscatedAccountPresent?: boolean;
+  appAccountTokenPresent?: boolean;
+  responseStatus?: number;
+  errorMessage?: string | null;
+  grantedPaidCoins?: number | null;
+  alreadyFulfilled?: boolean;
+};
+
 function getBearerToken(request: Request): string | null {
   const header = request.headers.get("authorization");
   if (!header?.startsWith("Bearer ")) return null;
@@ -28,7 +47,50 @@ function toIsoStringFromMillis(value?: string | null): string {
   return new Date(millis).toISOString();
 }
 
+function stripUndefined<T extends Record<string, unknown>>(value: T): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(value).filter(([, entryValue]) => entryValue !== undefined)
+  );
+}
+
+async function writeGooglePlayDiagnostic(uid: string | null, input: GooglePlayDiagnosticInput): Promise<void> {
+  if (!uid) return;
+  try {
+    const db = getFirebaseAdminFirestore();
+    await db.collection("users").doc(uid).collection("purchaseDiagnostics").doc().set(
+      stripUndefined({
+        source: "api/google-play/fulfill",
+        eventName: input.eventName,
+        platform: "android",
+        productId: input.productId ?? null,
+        storeProductId: input.storeProductId ?? null,
+        orderId: input.orderId ?? null,
+        transactionId: input.transactionId ?? null,
+        purchaseTokenHash: input.purchaseTokenHash ?? null,
+        clientPurchaseState: input.clientPurchaseState ?? null,
+        googlePlayPurchaseState: input.googlePlayPurchaseState ?? null,
+        googlePlayAcknowledgementState: input.googlePlayAcknowledgementState ?? null,
+        googlePlayConsumptionState: input.googlePlayConsumptionState ?? null,
+        googlePlayObfuscatedAccountPresent: input.googlePlayObfuscatedAccountPresent,
+        appAccountTokenPresent: input.appAccountTokenPresent,
+        responseStatus: input.responseStatus,
+        errorMessage: input.errorMessage ?? null,
+        grantedPaidCoins: input.grantedPaidCoins ?? null,
+        alreadyFulfilled: input.alreadyFulfilled,
+        createdAt: FieldValue.serverTimestamp()
+      })
+    );
+  } catch (diagnosticError) {
+    console.warn("[google-play] failed to write fulfillment diagnostic", diagnosticError);
+  }
+}
+
 export async function POST(request: Request) {
+  let uid: string | null = null;
+  let body: RequestBody | null = null;
+  let googlePlayProductId: string | null = null;
+  let purchaseTokenHash: string | null = null;
+
   try {
     const token = getBearerToken(request);
     if (!token) {
@@ -36,22 +98,62 @@ export async function POST(request: Request) {
     }
 
     const decodedToken = await getFirebaseAdminAuth().verifyIdToken(token);
-    const body = (await request.json()) as RequestBody;
-    const googlePlayProductId = body.googlePlayProductId?.trim();
+    uid = decodedToken.uid;
+    body = (await request.json()) as RequestBody;
+    googlePlayProductId = body.googlePlayProductId?.trim() ?? null;
     const purchaseToken = body.purchaseToken?.trim();
+    purchaseTokenHash = purchaseToken ? hashGooglePlayPurchaseToken(purchaseToken) : null;
 
     if (!googlePlayProductId || !purchaseToken) {
+      await writeGooglePlayDiagnostic(uid, {
+        eventName: "google_play_fulfill_failed",
+        storeProductId: googlePlayProductId,
+        transactionId: body.transactionId ?? null,
+        orderId: body.orderId ?? null,
+        purchaseTokenHash,
+        clientPurchaseState: body.purchaseState ?? null,
+        appAccountTokenPresent: Boolean(body.appAccountToken),
+        responseStatus: 400,
+        errorMessage: "missing_google_play_product_or_purchase_token"
+      });
       return NextResponse.json({ error: "購入情報が不足しています。" }, { status: 400 });
     }
 
     const item = getPaidCoinShopItemByGooglePlayProductId(googlePlayProductId);
     if (!item) {
+      await writeGooglePlayDiagnostic(uid, {
+        eventName: "google_play_fulfill_failed",
+        storeProductId: googlePlayProductId,
+        transactionId: body.transactionId ?? null,
+        orderId: body.orderId ?? null,
+        purchaseTokenHash,
+        clientPurchaseState: body.purchaseState ?? null,
+        appAccountTokenPresent: Boolean(body.appAccountToken),
+        responseStatus: 400,
+        errorMessage: "google_play_product_not_configured"
+      });
       return NextResponse.json({ error: "商品が見つかりません。" }, { status: 400 });
     }
 
     const purchaseInfo = await fetchGooglePlayProductPurchase(googlePlayProductId, purchaseToken);
 
     if (purchaseInfo.purchaseState !== 0) {
+      await writeGooglePlayDiagnostic(uid, {
+        eventName: "google_play_fulfill_failed",
+        productId: item.itemId,
+        storeProductId: googlePlayProductId,
+        transactionId: body.transactionId ?? null,
+        orderId: purchaseInfo.orderId ?? body.orderId ?? null,
+        purchaseTokenHash,
+        clientPurchaseState: body.purchaseState ?? null,
+        googlePlayPurchaseState: purchaseInfo.purchaseState ?? null,
+        googlePlayAcknowledgementState: purchaseInfo.acknowledgementState ?? null,
+        googlePlayConsumptionState: purchaseInfo.consumptionState ?? null,
+        googlePlayObfuscatedAccountPresent: Boolean(purchaseInfo.obfuscatedExternalAccountId),
+        appAccountTokenPresent: Boolean(body.appAccountToken),
+        responseStatus: 400,
+        errorMessage: "google_play_purchase_not_completed"
+      });
       return NextResponse.json({ error: "購入がまだ完了していません。" }, { status: 400 });
     }
 
@@ -60,13 +162,28 @@ export async function POST(request: Request) {
       && purchaseInfo.obfuscatedExternalAccountId
       && purchaseInfo.obfuscatedExternalAccountId.toLowerCase() !== body.appAccountToken.toLowerCase()
     ) {
+      await writeGooglePlayDiagnostic(uid, {
+        eventName: "google_play_fulfill_failed",
+        productId: item.itemId,
+        storeProductId: googlePlayProductId,
+        transactionId: body.transactionId ?? null,
+        orderId: purchaseInfo.orderId ?? body.orderId ?? null,
+        purchaseTokenHash,
+        clientPurchaseState: body.purchaseState ?? null,
+        googlePlayPurchaseState: purchaseInfo.purchaseState ?? null,
+        googlePlayAcknowledgementState: purchaseInfo.acknowledgementState ?? null,
+        googlePlayConsumptionState: purchaseInfo.consumptionState ?? null,
+        googlePlayObfuscatedAccountPresent: Boolean(purchaseInfo.obfuscatedExternalAccountId),
+        appAccountTokenPresent: Boolean(body.appAccountToken),
+        responseStatus: 400,
+        errorMessage: "app_account_token_mismatch"
+      });
       return NextResponse.json({ error: "購入アカウントが一致しません。" }, { status: 400 });
     }
 
     const db = getFirebaseAdminFirestore();
-    const uid = decodedToken.uid;
-    const purchaseTokenHash = hashGooglePlayPurchaseToken(purchaseToken);
-    const purchaseId = `google_play_${purchaseTokenHash.slice(0, 40)}`;
+    const verifiedPurchaseTokenHash = purchaseTokenHash ?? hashGooglePlayPurchaseToken(purchaseToken);
+    const purchaseId = `google_play_${verifiedPurchaseTokenHash.slice(0, 40)}`;
     const orderId = purchaseInfo.orderId ?? body.orderId ?? null;
     const walletRef = db.collection("users").doc(uid).collection("wallet").doc("summary");
     const historyRef = db.collection("users").doc(uid).collection("purchaseHistory").doc(purchaseId);
@@ -102,12 +219,12 @@ export async function POST(request: Request) {
           paidAt,
           fulfilledAt: new Date().toISOString(),
           googlePlayOrderId: orderId,
-          googlePlayTransactionId: body.transactionId ?? null,
-          googlePlayPurchaseTokenHash: purchaseTokenHash,
+          googlePlayTransactionId: body?.transactionId ?? null,
+          googlePlayPurchaseTokenHash: verifiedPurchaseTokenHash,
           googlePlayPurchaseState: purchaseInfo.purchaseState,
           googlePlayAcknowledgementState: purchaseInfo.acknowledgementState ?? null,
           googlePlayConsumptionState: purchaseInfo.consumptionState ?? null,
-          idempotencyKey: purchaseTokenHash,
+          idempotencyKey: verifiedPurchaseTokenHash,
           createdAt: historySnapshot.exists ? historyData?.createdAt ?? FieldValue.serverTimestamp() : FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp()
         },
@@ -128,6 +245,24 @@ export async function POST(request: Request) {
       );
     });
 
+    await writeGooglePlayDiagnostic(uid, {
+      eventName: "google_play_fulfill_success",
+      productId: item.itemId,
+      storeProductId: googlePlayProductId,
+      transactionId: body.transactionId ?? null,
+      orderId,
+      purchaseTokenHash: verifiedPurchaseTokenHash,
+      clientPurchaseState: body.purchaseState ?? null,
+      googlePlayPurchaseState: purchaseInfo.purchaseState ?? null,
+      googlePlayAcknowledgementState: purchaseInfo.acknowledgementState ?? null,
+      googlePlayConsumptionState: purchaseInfo.consumptionState ?? null,
+      googlePlayObfuscatedAccountPresent: Boolean(purchaseInfo.obfuscatedExternalAccountId),
+      appAccountTokenPresent: Boolean(body.appAccountToken),
+      responseStatus: 200,
+      grantedPaidCoins: alreadyFulfilled ? 0 : item.totalPaidCoins,
+      alreadyFulfilled
+    });
+
     return NextResponse.json({
       fulfilled: true,
       alreadyFulfilled,
@@ -136,6 +271,17 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("[google-play] failed to fulfill purchase", error);
+    await writeGooglePlayDiagnostic(uid, {
+      eventName: "google_play_fulfill_failed",
+      storeProductId: googlePlayProductId,
+      transactionId: body?.transactionId ?? null,
+      orderId: body?.orderId ?? null,
+      purchaseTokenHash,
+      clientPurchaseState: body?.purchaseState ?? null,
+      appAccountTokenPresent: Boolean(body?.appAccountToken),
+      responseStatus: 500,
+      errorMessage: error instanceof Error ? error.message : "google_play_fulfill_unknown_error"
+    });
     return NextResponse.json(
       { error: "購入情報の確認に失敗しました。少し待ってからもう一度お試しください。" },
       { status: 500 }

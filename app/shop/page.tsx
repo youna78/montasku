@@ -17,8 +17,10 @@ import {
   finishNativeStoreTransaction,
   getNativeStoreProductId,
   loadNativeStoreProducts,
-  purchaseNativeStoreProduct
+  purchaseNativeStoreProduct,
+  summarizeNativeStoreTransaction
 } from "@/lib/iap/appStorePurchases";
+import { writeNativeStoreDiagnostic } from "@/lib/iap/nativePurchaseDiagnostics";
 import {
   getBackgroundImagePath,
   getBoosterShopItem,
@@ -600,7 +602,8 @@ export default function ShopPage() {
     transaction: Awaited<ReturnType<typeof purchaseNativeStoreProduct>>,
     platform: NativeStorePlatform,
     appAccountToken: string,
-    expectedProductId: string
+    expectedProductId: string,
+    idToken: string
   ) => {
     const currentUser = getFirebaseAuth().currentUser;
     if (!currentUser) {
@@ -612,7 +615,7 @@ export default function ShopPage() {
       throw new Error("購入商品の情報を取得できませんでした。");
     }
 
-    const idToken = await currentUser.getIdToken();
+    const transactionSnapshot = await summarizeNativeStoreTransaction(transaction);
     console.info("[shop] native store transaction received", {
       platform,
       productIdentifier: storeProductId,
@@ -648,14 +651,40 @@ export default function ShopPage() {
     const payload = (await response.json().catch(() => null)) as { error?: string; grantedPaidCoins?: number } | null;
 
     if (!response.ok) {
-      throw new Error(`${payload?.error ?? "購入の反映に失敗しました。"} (${response.status})`);
+      const diagnosticId = await writeNativeStoreDiagnostic(idToken, {
+        eventName: "purchase_fulfill_failed",
+        platform,
+        appAccountTokenPresent: Boolean(appAccountToken),
+        targetProductId: storeProductId,
+        transaction: transactionSnapshot,
+        responseStatus: response.status,
+        errorMessage: payload?.error ?? "purchase fulfill failed"
+      });
+      throw new Error(`${payload?.error ?? "購入の反映に失敗しました。"} (${response.status})${diagnosticId ? ` 診断ID: ${diagnosticId}` : ""}`);
     }
 
     try {
       await finishNativeStoreTransaction(transaction, platform);
     } catch (finishError) {
+      await writeNativeStoreDiagnostic(idToken, {
+        eventName: "purchase_finish_failed",
+        platform,
+        appAccountTokenPresent: Boolean(appAccountToken),
+        targetProductId: storeProductId,
+        transaction: transactionSnapshot,
+        errorMessage: finishError instanceof Error ? finishError.message : "finish native transaction failed"
+      });
       console.warn("[shop] native store transaction was fulfilled but finish failed", finishError);
     }
+    await writeNativeStoreDiagnostic(idToken, {
+      eventName: "purchase_fulfill_success",
+      platform,
+      appAccountTokenPresent: Boolean(appAccountToken),
+      targetProductId: storeProductId,
+      transaction: transactionSnapshot,
+      responseStatus: response.status,
+      grantedPaidCoins: payload?.grantedPaidCoins ?? 0
+    });
     return payload?.grantedPaidCoins ?? 0;
   };
 
@@ -681,7 +710,15 @@ export default function ShopPage() {
       }
 
       setCheckoutItemId(item.itemId);
+      const idToken = await currentUser.getIdToken();
       const appAccountToken = await createAppAccountToken(currentUser.uid);
+
+      await writeNativeStoreDiagnostic(idToken, {
+        eventName: "purchase_start",
+        platform: nativePlatform,
+        appAccountTokenPresent: Boolean(appAccountToken),
+        targetProductId: productId
+      });
 
       trackEvent("begin_checkout", {
         item_id: item.itemId,
@@ -692,7 +729,14 @@ export default function ShopPage() {
       });
 
       const transaction = await purchaseNativeStoreProduct(item, nativePlatform, appAccountToken);
-      const grantedPaidCoins = await fulfillNativeStoreTransaction(transaction, nativePlatform, appAccountToken, productId);
+      await writeNativeStoreDiagnostic(idToken, {
+        eventName: "purchase_result",
+        platform: nativePlatform,
+        appAccountTokenPresent: Boolean(appAccountToken),
+        targetProductId: productId,
+        transaction: await summarizeNativeStoreTransaction(transaction)
+      });
+      const grantedPaidCoins = await fulfillNativeStoreTransaction(transaction, nativePlatform, appAccountToken, productId, idToken);
       trackEvent("purchase", {
         item_id: item.itemId,
         item_type: item.productType,
