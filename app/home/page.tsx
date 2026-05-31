@@ -238,10 +238,7 @@ export default function HomePage() {
   };
 
   return (
-    <main
-      className={`page-shell page-home ${getFrameThemeClass(gameState.selectedFrameId)}`}
-      style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
-    >
+    <main className={`page-shell page-home ${getFrameThemeClass(gameState.selectedFrameId)}`}>
       <div className="title-panel">ホーム</div>
       {feedback && <div key={feedbackKey} className="reward-popup reward-popup-top home-reward-popup">{feedback}</div>}
 

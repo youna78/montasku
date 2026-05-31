@@ -599,14 +599,15 @@ export default function ShopPage() {
   const fulfillNativeStoreTransaction = async (
     transaction: Awaited<ReturnType<typeof purchaseNativeStoreProduct>>,
     platform: NativeStorePlatform,
-    appAccountToken: string
+    appAccountToken: string,
+    expectedProductId: string
   ) => {
     const currentUser = getFirebaseAuth().currentUser;
     if (!currentUser) {
       throw new Error("ログインが必要です。");
     }
 
-    const storeProductId = transaction.productIdentifier;
+    const storeProductId = transaction.productIdentifier ?? expectedProductId;
     if (!storeProductId) {
       throw new Error("購入商品の情報を取得できませんでした。");
     }
@@ -650,7 +651,11 @@ export default function ShopPage() {
       throw new Error(`${payload?.error ?? "購入の反映に失敗しました。"} (${response.status})`);
     }
 
-    await finishNativeStoreTransaction(transaction, platform);
+    try {
+      await finishNativeStoreTransaction(transaction, platform);
+    } catch (finishError) {
+      console.warn("[shop] native store transaction was fulfilled but finish failed", finishError);
+    }
     return payload?.grantedPaidCoins ?? 0;
   };
 
@@ -687,7 +692,7 @@ export default function ShopPage() {
       });
 
       const transaction = await purchaseNativeStoreProduct(item, nativePlatform, appAccountToken);
-      const grantedPaidCoins = await fulfillNativeStoreTransaction(transaction, nativePlatform, appAccountToken);
+      const grantedPaidCoins = await fulfillNativeStoreTransaction(transaction, nativePlatform, appAccountToken, productId);
       trackEvent("purchase", {
         item_id: item.itemId,
         item_type: item.productType,

@@ -11,7 +11,7 @@ type RequestBody = {
   purchaseToken?: string;
   transactionId?: string | null;
   orderId?: string | null;
-  purchaseState?: string | null;
+  purchaseState?: string | number | null;
   appAccountToken?: string | null;
 };
 
@@ -39,14 +39,9 @@ export async function POST(request: Request) {
     const body = (await request.json()) as RequestBody;
     const googlePlayProductId = body.googlePlayProductId?.trim();
     const purchaseToken = body.purchaseToken?.trim();
-    const pluginPurchaseState = body.purchaseState?.trim();
 
     if (!googlePlayProductId || !purchaseToken) {
       return NextResponse.json({ error: "購入情報が不足しています。" }, { status: 400 });
-    }
-
-    if (pluginPurchaseState && pluginPurchaseState !== "1") {
-      return NextResponse.json({ error: "購入がまだ完了していません。" }, { status: 400 });
     }
 
     const item = getPaidCoinShopItemByGooglePlayProductId(googlePlayProductId);

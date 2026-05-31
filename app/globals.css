@@ -3544,6 +3544,10 @@ button:disabled {
   margin-top: 6px;
 }
 
+.page-purchase-history {
+  padding-bottom: calc(156px + env(safe-area-inset-bottom));
+}
+
 .purchase-history-list {
   display: grid;
   gap: 12px;

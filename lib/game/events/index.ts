@@ -23,7 +23,14 @@ export function isEventAnnouncementVisible(event: GameEventConfig, now: Date = g
 }
 
 export function getVisibleHomeEvents(now: Date = getGameNow()): GameEventConfig[] {
-  return GAME_EVENTS.filter((event) => isEventAnnouncementVisible(event, now));
+  const eventOrder = new Map(GAME_EVENTS.map((event, index) => [event.eventId, index]));
+  return GAME_EVENTS
+    .filter((event) => isEventAnnouncementVisible(event, now))
+    .sort((a, b) => {
+      const activeDiff = Number(isEventActive(b, now)) - Number(isEventActive(a, now));
+      if (activeDiff !== 0) return activeDiff;
+      return (eventOrder.get(a.eventId) ?? 0) - (eventOrder.get(b.eventId) ?? 0);
+    });
 }
 
 export function getActiveEvents(now: Date = getGameNow()): GameEventConfig[] {

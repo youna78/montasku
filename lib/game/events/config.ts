@@ -8,7 +8,7 @@ export const SPRING_EASTER_EVENT: GameEventConfig = {
   slug: "spring-easter",
   name: "スプリングイースター",
   startsAt: "2026-04-11T00:00:00+09:00",
-  endsAt: "2026-05-30T23:59:59+09:00",
+  endsAt: "2026-05-31T23:59:59+09:00",
   announcementStartsAt: "2026-04-08T00:00:00+09:00",
   targetUsers: "all",
   heroImagePath: "/img/illustration/icatch_spring_easter_02.png",

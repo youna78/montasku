@@ -1018,7 +1018,7 @@ export function retireSpringEventMonsterForJune(state: GameState, monsters: Mons
 
   const currentMonster = monsters.find((monster) => monster.monsterId === state.currentMonsterId);
   const nextLetter = buildSeasonalFarewellLetter(state, currentMonster);
-  const nextEggMonsterId = isSpringEventMonsterId(state.queuedEggMonsterId) ? 1 : state.queuedEggMonsterId ?? 1;
+  const nextEggMonsterId = 1;
 
   return {
     ...state,
