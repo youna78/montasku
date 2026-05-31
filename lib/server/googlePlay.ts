@@ -76,12 +76,18 @@ function tryDecodeBase64Json(value: string): string | null {
   }
 
   try {
-    return Buffer.from(compactValue.replace(/-/g, "+").replace(/_/g, "/"), "base64")
+    const decodedValue = Buffer.from(compactValue.replace(/-/g, "+").replace(/_/g, "/"), "base64")
       .toString("utf8")
       .trim();
+    return looksLikeJsonText(decodedValue) ? decodedValue : null;
   } catch {
     return null;
   }
+}
+
+function looksLikeJsonText(value: string): boolean {
+  const trimmedValue = value.trim();
+  return trimmedValue.startsWith("{") || trimmedValue.startsWith('"');
 }
 
 function parseGoogleServiceAccountJson(rawValue: string): GoogleServiceAccount {
@@ -111,6 +117,10 @@ function parseGoogleServiceAccountJson(rawValue: string): GoogleServiceAccount {
 
   if (cleanedValue === "[object Object]") {
     throw new Error("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is [object Object]. Paste the raw service account JSON text or base64 encoded JSON.");
+  }
+
+  if (cleanedValue.includes("BEGIN PRIVATE KEY")) {
+    throw new Error("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON looks like a private key. Put the whole service account JSON there, or set GOOGLE_PLAY_CLIENT_EMAIL and GOOGLE_PLAY_PRIVATE_KEY separately.");
   }
 
   throw new Error(
