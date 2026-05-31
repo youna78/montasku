@@ -133,7 +133,10 @@ export async function purchaseNativeStoreProduct(
     productType: PURCHASE_TYPE.INAPP,
     quantity: 1,
     appAccountToken,
-    isConsumable: platform === "android",
+    // Keep Android coin purchases queryable until the server has granted coins.
+    // The plugin consumes immediately when isConsumable is true, which makes
+    // failed grants impossible to restore from getPurchases().
+    isConsumable: false,
     autoAcknowledgePurchases: false
   });
 }
