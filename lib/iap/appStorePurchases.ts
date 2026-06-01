@@ -31,6 +31,7 @@ export type NativeStorePurchaseInspection = {
 };
 
 const APP_ACCOUNT_TOKEN_NAMESPACE = "77b06a9e-2eb8-5f21-a2e1-7f4cf2c0b7f4";
+const ANDROID_NATIVE_STORE_PURCHASES_DISABLED = true;
 
 function hexToUuid(hex: string): string {
   const normalized = hex.padEnd(32, "0").slice(0, 32).split("");
@@ -102,6 +103,10 @@ export function getNativeStoreProductIds(items: ShopPaidCoinItem[], platform: Na
     .filter((productId): productId is string => Boolean(productId));
 }
 
+export function areAndroidNativeStorePurchasesDisabled(): boolean {
+  return ANDROID_NATIVE_STORE_PURCHASES_DISABLED;
+}
+
 export async function loadNativeStoreProducts(items: ShopPaidCoinItem[], platform: NativeStorePlatform): Promise<NativeStoreProductMap> {
   const productIdentifiers = getNativeStoreProductIds(items, platform);
   if (productIdentifiers.length === 0) return {};
@@ -126,6 +131,9 @@ export async function purchaseNativeStoreProduct(
   const productIdentifier = getNativeStoreProductId(item, platform);
   if (!productIdentifier) {
     throw new Error(`${platform === "android" ? "Google Play" : "App Store"} product ID is not configured.`);
+  }
+  if (platform === "android" && ANDROID_NATIVE_STORE_PURCHASES_DISABLED) {
+    throw new Error("Android版のモンタコイン購入は現在一時停止中です。");
   }
 
   return NativePurchases.purchaseProduct({

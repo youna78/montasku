@@ -13,6 +13,7 @@ import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { getNativePlatform, isNativeMobileApp } from "@/lib/platform/capacitor";
 import type { NativeStorePlatform, NativeStoreProductMap } from "@/lib/iap/appStorePurchases";
 import {
+  areAndroidNativeStorePurchasesDisabled,
   createAppAccountToken,
   finishNativeStoreTransaction,
   getNativeStoreProductId,
@@ -221,6 +222,11 @@ export default function ShopPage() {
 
   useEffect(() => {
     if (!isNativeApp || !isSupportedNativeStorePlatform(nativePlatform)) return;
+    if (nativePlatform === "android" && areAndroidNativeStorePurchasesDisabled()) {
+      setNativeStoreProducts({});
+      setNativeStoreProductError("");
+      return;
+    }
     let isCancelled = false;
 
     async function loadProducts() {
@@ -701,6 +707,10 @@ export default function ShopPage() {
         setMessage(`${nativePlatformLabel}版での購入は準備中です。`);
         return;
       }
+      if (nativePlatform === "android" && areAndroidNativeStorePurchasesDisabled()) {
+        setMessage("Android版のモンタコイン購入は現在一時停止中です。");
+        return;
+      }
 
       const providerLabel = getNativeStoreProviderLabel(nativePlatform);
       const productId = getNativeStoreProductId(item, nativePlatform);
@@ -932,7 +942,8 @@ export default function ShopPage() {
         const title = getPaidCoinTitle(item);
         const isNativeStorePlatform = isSupportedNativeStorePlatform(nativePlatform);
         const nativeStoreProviderLabel = isNativeStorePlatform ? getNativeStoreProviderLabel(nativePlatform) : nativePlatformLabel;
-        const isNativeStoreReady = !isNativeStorePlatform || Boolean(nativeStoreProduct);
+        const isNativeStorePaused = isNativeStorePlatform && nativePlatform === "android" && areAndroidNativeStorePurchasesDisabled();
+        const isNativeStoreReady = !isNativeStorePlatform || (!isNativeStorePaused && Boolean(nativeStoreProduct));
 
         return (
           <section className="card decorated-card shop-grid-card" key={item.itemId}>
@@ -951,7 +962,11 @@ export default function ShopPage() {
             </div>
             {isNativeApp && isNativeStorePlatform ? (
               <>
-                {nativeStoreProductError ? <p className="shop-note shop-note-strong">{nativeStoreProductError}</p> : null}
+                {isNativeStorePaused ? (
+                  <p className="shop-note shop-note-strong">Android版のモンタコイン購入は現在一時停止中です。</p>
+                ) : nativeStoreProductError ? (
+                  <p className="shop-note shop-note-strong">{nativeStoreProductError}</p>
+                ) : null}
                 <button
                   className="quest-btn shop-grid-button task-global-menu-button-accent"
                   onClick={() =>
@@ -965,9 +980,9 @@ export default function ShopPage() {
                       () => onStartNativeStorePurchase(item)
                     )
                   }
-                  disabled={checkoutItemId === item.itemId || !user || !isNativeStoreReady}
+                  disabled={checkoutItemId === item.itemId || !user || !isNativeStoreReady || isNativeStorePaused}
                 >
-                  {!user ? "ログインで購入可能" : checkoutItemId === item.itemId ? "処理中..." : `${nativeStoreProviderLabel}で購入`}
+                  {isNativeStorePaused ? "一時停止中" : !user ? "ログインで購入可能" : checkoutItemId === item.itemId ? "処理中..." : `${nativeStoreProviderLabel}で購入`}
                 </button>
               </>
             ) : isNativeApp ? (
@@ -1380,7 +1395,7 @@ export default function ShopPage() {
                 {isNativeApp && nativePlatform === "ios"
                   ? "モンタコインは、Appleのアプリ内課金で購入できます。所持しているモンタコインは、背景やフレーム、アイテム、セット商品に使えます。"
                   : isNativeApp && nativePlatform === "android"
-                    ? "モンタコインは、Google Playのアプリ内課金で購入できます。所持しているモンタコインは、背景やフレーム、アイテム、セット商品に使えます。"
+                    ? "Android版のモンタコイン購入は現在一時停止中です。所持しているモンタコインは、背景やフレーム、アイテム、セット商品に使えます。"
                   : isNativeApp
                     ? `${nativePlatformLabel}版のモンタコイン購入は準備中です。所持しているモンタコインは、背景やフレーム、アイテム、セット商品に使えます。`
                   : "モンタコインは、Stripe で購入できる有料コインです。チャージしたあと、背景やフレーム、アイテム、セット商品に使えます。"}
@@ -1393,7 +1408,11 @@ export default function ShopPage() {
                   </div>
                 </>
               ) : null}
-              <p className="shop-note">決済完了後、モンタコインは自動反映されます。少し待ってから表示をご確認ください。</p>
+              <p className="shop-note">
+                {isNativeApp && nativePlatform === "android" && areAndroidNativeStorePurchasesDisabled()
+                  ? "購入再開まで少しお待ちください。未反映の購入確認と購入履歴は引き続き利用できます。"
+                  : "決済完了後、モンタコインは自動反映されます。少し待ってから表示をご確認ください。"}
+              </p>
             </div>
           </section>
 
