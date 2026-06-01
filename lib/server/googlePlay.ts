@@ -14,6 +14,16 @@ type GooglePlayCredentials = {
   privateKey: string;
 };
 
+type CredentialEnvValueSummary = {
+  present: boolean;
+  length: number;
+  startsWithJson: boolean;
+  startsWithJsonString: boolean;
+  looksLikePrivateKey: boolean;
+  decodedStartsWithJson?: boolean;
+  decodedStartsWithJsonString?: boolean;
+};
+
 export type GooglePlayProductPurchase = {
   kind?: string;
   purchaseTimeMillis?: string;
@@ -88,6 +98,31 @@ function tryDecodeBase64Json(value: string): string | null {
 function looksLikeJsonText(value: string): boolean {
   const trimmedValue = value.trim();
   return trimmedValue.startsWith("{") || trimmedValue.startsWith('"');
+}
+
+function summarizeCredentialEnvValue(value?: string): CredentialEnvValueSummary {
+  const trimmedValue = value?.trim() ?? "";
+  const decodedValue = trimmedValue ? tryDecodeBase64Json(trimmedValue) : null;
+
+  return {
+    present: Boolean(trimmedValue),
+    length: trimmedValue.length,
+    startsWithJson: trimmedValue.startsWith("{"),
+    startsWithJsonString: trimmedValue.startsWith('"'),
+    looksLikePrivateKey: trimmedValue.includes("BEGIN PRIVATE KEY"),
+    decodedStartsWithJson: decodedValue ? decodedValue.startsWith("{") : false,
+    decodedStartsWithJsonString: decodedValue ? decodedValue.startsWith('"') : false
+  };
+}
+
+export function getGooglePlayCredentialEnvironmentSummary() {
+  return {
+    serviceAccountJson: summarizeCredentialEnvValue(process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON),
+    serviceAccountJsonBase64: summarizeCredentialEnvValue(process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64),
+    splitClientEmailPresent: Boolean(process.env.GOOGLE_PLAY_CLIENT_EMAIL?.trim()),
+    splitPrivateKeyPresent: Boolean(process.env.GOOGLE_PLAY_PRIVATE_KEY?.trim()),
+    packageNamePresent: Boolean(process.env.GOOGLE_PLAY_PACKAGE_NAME?.trim() || process.env.ANDROID_PACKAGE_NAME?.trim())
+  };
 }
 
 function parseGoogleServiceAccountJson(rawValue: string): GoogleServiceAccount {

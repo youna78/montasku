@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getFirebaseAdminAuth, getFirebaseAdminFirestore } from "@/lib/firebase/admin";
 import { getPaidCoinShopItemByGooglePlayProductId } from "@/lib/game/shop";
-import { fetchGooglePlayProductPurchase, hashGooglePlayPurchaseToken } from "@/lib/server/googlePlay";
+import {
+  fetchGooglePlayProductPurchase,
+  getGooglePlayCredentialEnvironmentSummary,
+  hashGooglePlayPurchaseToken
+} from "@/lib/server/googlePlay";
 
 export const runtime = "nodejs";
 
@@ -30,6 +34,8 @@ type GooglePlayDiagnosticInput = {
   appAccountTokenPresent?: boolean;
   responseStatus?: number;
   errorMessage?: string | null;
+  errorCode?: string | null;
+  credentialEnvironment?: ReturnType<typeof getGooglePlayCredentialEnvironmentSummary>;
   grantedPaidCoins?: number | null;
   alreadyFulfilled?: boolean;
 };
@@ -75,6 +81,8 @@ async function writeGooglePlayDiagnostic(uid: string | null, input: GooglePlayDi
         appAccountTokenPresent: input.appAccountTokenPresent,
         responseStatus: input.responseStatus,
         errorMessage: input.errorMessage ?? null,
+        errorCode: input.errorCode ?? null,
+        credentialEnvironment: input.credentialEnvironment,
         grantedPaidCoins: input.grantedPaidCoins ?? null,
         alreadyFulfilled: input.alreadyFulfilled,
         createdAt: FieldValue.serverTimestamp()
@@ -271,6 +279,11 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("[google-play] failed to fulfill purchase", error);
+    const errorMessage = error instanceof Error ? error.message : "google_play_fulfill_unknown_error";
+    const errorCode = errorMessage.includes("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON")
+      || errorMessage.includes("Google Play service account")
+      ? "google_play_credentials_invalid"
+      : "google_play_fulfill_failed";
     await writeGooglePlayDiagnostic(uid, {
       eventName: "google_play_fulfill_failed",
       storeProductId: googlePlayProductId,
@@ -280,10 +293,15 @@ export async function POST(request: Request) {
       clientPurchaseState: body?.purchaseState ?? null,
       appAccountTokenPresent: Boolean(body?.appAccountToken),
       responseStatus: 500,
-      errorMessage: error instanceof Error ? error.message : "google_play_fulfill_unknown_error"
+      errorMessage,
+      errorCode,
+      credentialEnvironment: getGooglePlayCredentialEnvironmentSummary()
     });
     return NextResponse.json(
-      { error: "購入情報の確認に失敗しました。少し待ってからもう一度お試しください。" },
+      {
+        error: "購入情報の確認に失敗しました。少し待ってからもう一度お試しください。",
+        errorCode
+      },
       { status: 500 }
     );
   }
