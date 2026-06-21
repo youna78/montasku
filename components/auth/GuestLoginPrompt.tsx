@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { isNativeMobileApp } from "@/lib/platform/capacitor";
+import { getClientPlatform, isNativeMobileApp } from "@/lib/platform/capacitor";
 import { useAuth } from "./AuthProvider";
 
 const LAST_AUTH_EMAIL_KEY = "habit-monster-last-auth-email";
@@ -28,9 +28,12 @@ export function GuestLoginPrompt() {
   const [emailFormMessage, setEmailFormMessage] = useState("");
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [isNativeApp, setIsNativeApp] = useState(false);
+  const [clientPlatform, setClientPlatform] = useState("unknown");
+  const shouldShowAppleLogin = clientPlatform !== "unknown" && clientPlatform !== "android";
 
   useEffect(() => {
     setIsNativeApp(isNativeMobileApp());
+    setClientPlatform(getClientPlatform());
   }, []);
 
   if (isNativeApp || !isConfigured || isLoading || user || !showDailyPrompt) {
@@ -97,7 +100,7 @@ export function GuestLoginPrompt() {
         <h2 id="guest-login-title">ログイン</h2>
         <p className="auth-prompt-message">ゲストのまま遊べますが、ログインすると今後別の端末でも遊べます</p>
         <div className="auth-privacy-note auth-privacy-note-compact">
-          <p>GoogleまたはAppleでログインすると、氏名、メールアドレス、ユーザーIDを取得します。</p>
+          <p>{shouldShowAppleLogin ? "GoogleまたはApple" : "Google"}でログインすると、氏名、メールアドレス、ユーザーIDを取得します。</p>
           <p>ログイン機能、データ保存、機種変更時の引き継ぎに利用します。</p>
           <p>
             詳しくは
@@ -113,9 +116,11 @@ export function GuestLoginPrompt() {
           <button className="quest-btn quest-btn-primary auth-card-button" onClick={() => void signInWithGoogle()}>
             Googleでログイン
           </button>
-          <button className="quest-btn quest-btn-apple auth-card-button" onClick={() => void signInWithApple()}>
-            Appleでログイン
-          </button>
+          {shouldShowAppleLogin && (
+            <button className="quest-btn quest-btn-apple auth-card-button" onClick={() => void signInWithApple()}>
+              Appleでログイン
+            </button>
+          )}
           <div className="auth-divider">または</div>
           <div className="auth-mode-toggle">
             <button className="quest-btn quest-btn-primary auth-mode-button" onClick={() => openEmailModal("login")}>
