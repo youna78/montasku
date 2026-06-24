@@ -27,16 +27,19 @@ export default function TasksPage() {
   const router = useRouter();
   const { tasks, monsters, gameState, isLoading, completeTask } = useGame();
   const [feedback, setFeedback] = useState<string>("");
+  const [feedbackKey, setFeedbackKey] = useState(0);
+  const [pendingRewardRedirect, setPendingRewardRedirect] = useState(false);
   const [evolutionScene, setEvolutionScene] = useState<EvolutionScene | null>(null);
 
   useEffect(() => {
     if (!feedback) return;
-    const timer = window.setTimeout(() => setFeedback(""), 1200);
+    const timer = window.setTimeout(() => setFeedback(""), 1800);
     return () => window.clearTimeout(timer);
-  }, [feedback]);
+  }, [feedback, feedbackKey]);
 
   useEffect(() => {
     if (!gameState) return;
+    if (pendingRewardRedirect) return;
     if (gameState.endEventPending) {
       router.replace("/end-event");
       return;
@@ -52,7 +55,7 @@ export default function TasksPage() {
     if (!gameState.hasSeenTutorial && !gameState.isInTutorialFlow) {
       router.replace("/tutorial");
     }
-  }, [gameState, router]);
+  }, [gameState, pendingRewardRedirect, router]);
 
   if (isLoading || !gameState) {
     return <main>Loading...</main>;
@@ -82,18 +85,21 @@ export default function TasksPage() {
     if (result.evolved) fragments.push("進化");
     if (result.nextState.endEventPending) fragments.push("お別れ");
     setFeedback(fragments.join(" / "));
+    setFeedbackKey((current) => current + 1);
 
     if (result.nextState.endEventPending) {
+      setPendingRewardRedirect(true);
       window.setTimeout(() => {
         router.push("/end-event");
-      }, 220);
+      }, 950);
       return;
     }
 
     if (result.nextState.birthEventPending) {
+      setPendingRewardRedirect(true);
       window.setTimeout(() => {
         router.push("/birth-event");
-      }, 220);
+      }, 950);
       return;
     }
 
@@ -145,7 +151,7 @@ export default function TasksPage() {
         </section>
       )}
 
-      {feedback && <div className="reward-popup reward-popup-top">{feedback}</div>}
+      {feedback && <div key={feedbackKey} className="reward-popup reward-popup-top home-reward-popup">{feedback}</div>}
 
       <section className="card decorated-card task-board-card">
         <h2 className="screen-section-title">クエスト一覧</h2>

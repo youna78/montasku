@@ -291,6 +291,22 @@ export const SHOP_BACKGROUNDS: ShopBackgroundItem[] = [
     price: 0,
     imagePath: "/img/background/bg_june_shrine_night_01.png",
     availability: "event_limited"
+  },
+  {
+    itemId: "july_summertime_beach",
+    title: "真夏のモンタスク海岸",
+    description: "海開きの空気を感じる7月イベント限定の背景です。",
+    price: 0,
+    imagePath: "/img/background/bg_july_summertime_beach_01.png",
+    availability: "event_limited"
+  },
+  {
+    itemId: "july_summertime_beach_night",
+    title: "夜のモンタスク海岸",
+    description: "夏の夜風と月明かりを感じる7月イベント限定背景です。",
+    price: 0,
+    imagePath: "/img/background/bg_july_summertime_beach_night_01.png",
+    availability: "event_limited"
   }
 ].map((item) => applyBackgroundMaster(item as ShopBackgroundItem));
 
@@ -353,6 +369,24 @@ export const SHOP_FRAMES: ShopFrameItem[] = [
     price: 0,
     previewClassName: "frame-preview-june-azisai",
     imagePath: "/img/deco_frame/frame_june_azisai_01_aligned_01.png",
+    availability: "event_limited"
+  },
+  {
+    itemId: "july_shell",
+    title: "貝殻フレーム",
+    description: "貝殻と海辺のきらめきをあしらった7月イベントフレームです。",
+    price: 0,
+    previewClassName: "frame-preview-july-shell",
+    imagePath: "/img/deco_frame/frame_july_shell_01_aligned_01.png",
+    availability: "event_limited"
+  },
+  {
+    itemId: "july_hibiscus",
+    title: "ハイビスカスフレーム",
+    description: "ハイビスカスの花をあしらった7月イベントフレームです。",
+    price: 0,
+    previewClassName: "frame-preview-july-hibiscus",
+    imagePath: "/img/deco_frame/frame_july_hibiscus_01_aligned_01.png",
     availability: "event_limited"
   }
 ].map((item) => applyFrameMaster(item as ShopFrameItem));
@@ -731,6 +765,10 @@ export function getFrameThemeClass(frameId: string): string {
       return "theme-frame-june-rain";
     case "june_shrine_azisai":
       return "theme-frame-june-azisai";
+    case "july_shell":
+      return "theme-frame-july-shell";
+    case "july_hibiscus":
+      return "theme-frame-july-hibiscus";
     case "paid_frame_starlight_01":
       return "theme-frame-starlight";
     case "classic_gold":

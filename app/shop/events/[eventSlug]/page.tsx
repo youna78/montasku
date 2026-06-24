@@ -38,8 +38,7 @@ export default function EventShopDetailPage() {
     purchasePaidBundle,
     claimEventFreeEgg,
     queueEventEgg,
-    forceStartEventEgg,
-    markEventIntroPopupSeen
+    forceStartEventEgg
   } = useGame();
   const [message, setMessage] = useState("");
   const [showStartNowConfirm, setShowStartNowConfirm] = useState(false);
@@ -86,14 +85,6 @@ export default function EventShopDetailPage() {
       router.replace("/tutorial");
     }
   }, [gameState, router]);
-
-  useEffect(() => {
-    if (!eventConfig || !gameState) return;
-    const eventState = gameState.eventStates[eventConfig.eventId];
-    if (!eventState?.hasSeenIntroPopup) {
-      markEventIntroPopupSeen(eventConfig.eventId);
-    }
-  }, [eventConfig, gameState, markEventIntroPopupSeen]);
 
   if (isLoading || !gameState) {
     return <main>Loading...</main>;
@@ -178,8 +169,8 @@ export default function EventShopDetailPage() {
       else setMessage(`${eventEggName}に切り替えできませんでした`);
       return;
     }
-    setMessage(`いまのモンスターとお別れして、${eventEggName}に切り替えました`);
-    router.push("/birth-event");
+    setMessage(`いまのモンスターとお別れして、${eventEggName}に切り替えました。タスクを達成して育てよう`);
+    router.push("/tasks");
   };
 
   const onPurchase = (itemId: string) => {
@@ -193,6 +184,7 @@ export default function EventShopDetailPage() {
       else setMessage("交換できませんでした");
       return;
     }
+    setPurchaseModal({ title: item.title, lines: [item.title] });
     setMessage(`${item.title} をこうにゅうしました`);
   };
 
@@ -388,8 +380,9 @@ export default function EventShopDetailPage() {
       </section>
 
       {purchaseModal ? (
-        <section className="card decorated-card">
-          <div className="shop-recent-purchase">
+        <div className="auth-email-modal-overlay event-shop-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="event-shop-purchase-complete-title">
+          <div className="auth-email-modal-card event-shop-modal-card shop-recent-purchase">
+            <h2 id="event-shop-purchase-complete-title" className="auth-email-modal-title">購入しました</h2>
             <p><strong>{purchaseModal.title}</strong> を購入しました。</p>
             <p>{purchaseModal.lines.map((line) => `「${line}」`).join(" と ")} を購入しました。もちものページを確認しよう。</p>
             <div className="task-global-menu">
@@ -401,7 +394,7 @@ export default function EventShopDetailPage() {
               </button>
             </div>
           </div>
-        </section>
+        </div>
       ) : null}
 
       <section className="card decorated-card">
@@ -690,7 +683,7 @@ export default function EventShopDetailPage() {
               いま育てているモンスターとはお別れして、{eventEggName}から育成を始めます。
             </p>
             <p className="shop-note shop-note-strong">
-              いまのモンスターからは手紙を受け取り、{eventEggName}の誕生イベントへ進みます。
+              いまのモンスターからは手紙を受け取り、タスクを達成すると{eventEggName}の誕生イベントへ進みます。
             </p>
             <div className="task-global-menu">
               <button className="quest-btn task-global-menu-button task-global-menu-button-accent" onClick={onForceStartEgg}>
@@ -737,6 +730,10 @@ export default function EventShopDetailPage() {
               を購入します。
             </p>
             {purchaseConfirm.message ? <p className="shop-note">{purchaseConfirm.message}</p> : null}
+            <div className="shop-confirm-balance-grid">
+              <div><span>所持フリーコイン</span><strong>{gameState.freeCoins}</strong></div>
+              <div><span>所持モンタコイン</span><strong>{gameState.paidCoinBalance}</strong></div>
+            </div>
             <p className="shop-note shop-note-strong">必要コイン: {purchaseConfirm.priceLabel}</p>
             <div className="task-global-menu">
               <button className="quest-btn task-global-menu-button task-global-menu-button-accent" onClick={onConfirmPurchase}>

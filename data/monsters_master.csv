@@ -49,3 +49,17 @@ monster_id,name,attribute,stage,rarity,unlock_lv,unlock_condition,evolution_from
 48,神社のケロベロス,special,final,rare,70,knowledge,けろべろすもどき,,神社を守ってくれるケロベロス。連帯感が強い。,TRUE
 49,女狐神主,special,final,rare,70,power,梅雨の神使,,九尾となった女狐。凄まじい力で神社を守っている。,TRUE
 50,狐の雷神,special,final,rare,70,create,狐の神主,,九尾でさらに雷神となった狐。神社に危害を加えるものは容赦しない。,TRUE
+51,夏の日差し卵,special,egg,rare,0,july_event1_start,,イエローダック|ブルーダック,夏の日差しをうけた夏イベントの特別なたまご,TRUE
+52,イエローダック,special,baby,rare,5,heal|knowledge,夏の日差し卵,ピンクスワン|スイマーダック,暑い中でも元気に歩く、よちよちアヒルモンスター,TRUE
+53,ブルーダック,special,baby,rare,5,power|create,夏の日差し卵,ピンクスワン|バッドダック,プールが大好きなアヒルモンスター,TRUE
+54,ピンクスワン,special,child,rare,20,heal|knowledge,ブルーダック|イエローダック,ピンクスナメリ|サマードルフィン,夏の浜辺を優雅に泳ぐ白鳥モンスター,TRUE
+55,スイマーダック,special,child,ultra_rare,20,power|create,イエローダック,ピンクスナメリ|マリンキャット,水泳の腕を磨いているアヒルモンスター,TRUE
+56,バッドダック,special,child,ultra_rare,20,power|create,ブルーダック,シャークジョー|サマードルフィン,少しやんちゃな黒いアヒルモンスター,TRUE
+57,ピンクスナメリ,special,adult,rare,40,heal|knowledge,ピンクスワン,サマーマーメイド,穏やかな波と一緒に遊ぶスナメリモンスター,TRUE
+58,サマードルフィン,special,adult,rare,40,heal|knowledge,ピンクスワン|バッドダック,夢見るクジラ,夏の海を軽やかに跳ねるイルカモンスター,TRUE
+59,シャークジョー,special,adult,ultra_rare,40,power|create,バッドダック,ポセイドン|夢見るクジラ,鋭い目つきで海を守るサメモンスター,TRUE
+60,マリンキャット,special,adult,ultra_rare,40,power|create,スイマーダック,サマーマーメイド|サーフィンキャット,海辺で気ままに過ごす猫モンスター,TRUE
+61,サマーマーメイド,special,final,rare,70,heal|knowledge,ピンクスナメリ,,夏の海で歌声を響かせる人魚モンスター,TRUE
+62,夢見るクジラ,special,final,rare,70,heal|knowledge,シャークジョー|サマードルフィン,,大きな夢を抱いて泳ぐクジラモンスター,TRUE
+63,ポセイドン,special,final,ultra_rare,70,power|create,シャークジョー,,海を統べる力を持つ夏イベントの守護者,TRUE
+64,サーフィンキャット,special,final,ultra_rare,70,power|create,マリンキャット,,波を乗りこなす陽気な猫モンスター,TRUE

@@ -11,13 +11,15 @@ export default function EndEventPage() {
   const router = useRouter();
   const { monsters, gameState, isLoading, finishEndEvent } = useGame();
   const [phase, setPhase] = useState<"farewell" | "letter">("farewell");
+  const [isFinishing, setIsFinishing] = useState(false);
 
   useEffect(() => {
     if (!gameState) return;
+    if (isFinishing) return;
     if (!gameState.endEventPending) {
       router.replace("/home");
     }
-  }, [gameState, router]);
+  }, [gameState, isFinishing, router]);
 
   useEffect(() => {
     if (!gameState?.endEventPending) return;
@@ -41,7 +43,10 @@ export default function EndEventPage() {
     }
 
     finishEndEvent();
-    router.push("/home");
+    setIsFinishing(true);
+    window.setTimeout(() => {
+      router.replace("/home");
+    }, 80);
   };
 
   return (

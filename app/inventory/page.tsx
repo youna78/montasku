@@ -59,7 +59,12 @@ export default function InventoryPage() {
     [gameState]
   );
   const ownedCharms = useMemo(
-    () => SHOP_ATTRIBUTE_CHARMS.filter((item) => (gameState?.ownedCharmItemCounts[item.attribute] ?? 0) > 0 || gameState?.activeAttributeCharm?.attribute === item.attribute),
+    () =>
+      SHOP_ATTRIBUTE_CHARMS.filter(
+        (item) =>
+          (gameState?.ownedCharmItemCounts[item.attribute] ?? 0) > 0 ||
+          (gameState?.activeAttributeCharm?.attribute === item.attribute && (gameState?.activeAttributeCharm?.variant ?? "free") === "free")
+      ),
     [gameState]
   );
   const ownedPaidCharms = useMemo(

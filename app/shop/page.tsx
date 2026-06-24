@@ -1286,6 +1286,10 @@ export default function ShopPage() {
             <h2 id="shop-purchase-confirm-title" className="auth-email-modal-title">購入しますか？</h2>
             <p className="shop-note shop-note-strong"><strong>{purchaseConfirm.title}</strong></p>
             <p className="shop-note">{purchaseConfirm.message ?? "この商品を購入しますか？"}</p>
+            <div className="shop-confirm-balance-grid">
+              <div><span>所持フリーコイン</span><strong>{gameState.freeCoins}</strong></div>
+              <div><span>所持モンタコイン</span><strong>{gameState.paidCoinBalance}</strong></div>
+            </div>
             <div className="shop-grid-price shop-confirm-price">{purchaseConfirm.priceLabel}</div>
             <div className="task-global-menu">
               <button className="quest-btn task-global-menu-button task-global-menu-button-primary" onClick={onConfirmPurchase}>
@@ -1300,8 +1304,9 @@ export default function ShopPage() {
       )}
 
       {purchaseModal && (
-        <section className="card decorated-card">
-          <div className="shop-recent-purchase">
+        <div className="auth-email-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="shop-purchase-complete-title">
+          <div className="card decorated-card auth-email-modal-card shop-recent-purchase">
+            <h2 id="shop-purchase-complete-title" className="auth-email-modal-title">購入しました</h2>
             <p><strong>{purchaseModal.title}</strong> を購入しました。</p>
             <p>{purchaseModal.lines.map((line) => `「${line}」`).join(" と ")} を購入しました。もちものページを確認しよう。</p>
             <div className="task-global-menu">
@@ -1309,7 +1314,7 @@ export default function ShopPage() {
               <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={() => setPurchaseModal(null)}>とじる</button>
             </div>
           </div>
-        </section>
+        </div>
       )}
 
       {bundleConfirm ? (
@@ -1343,16 +1348,15 @@ export default function ShopPage() {
       </section>
 
       {activeEvent && (
-        <section className="card decorated-card notification-card">
-          <div className="notification-card-head">
-            <span className="notification-badge notification-badge-event">イベント</span>
-            <h2>{activeEvent.name} ショップ</h2>
+        <Link href={`/shop/events/${activeEvent.slug}`} className="card decorated-card event-shop-link-card">
+          <img src="/img/illustration/icatch_july_shop_icon_01.png" alt="" className="event-shop-link-card-icon" />
+          <div className="event-shop-link-card-copy">
+            <span className="notification-badge notification-badge-event">イベントショップ</span>
+            <strong>{activeEvent.name}</strong>
+            <p>限定アイテムとイベントたまごはこちら</p>
           </div>
-          <p>春イベント限定の背景やイベントたまごは、専用ショップにまとめています。</p>
-          <div className="notification-card-actions">
-            <Link href={`/shop/events/${activeEvent.slug}`} className="ui-link-button settings-menu-button settings-menu-button-primary">イベントショップへ</Link>
-          </div>
-        </section>
+          <span className="event-shop-link-arrow" aria-hidden="true">▶</span>
+        </Link>
       )}
 
       <section className="card decorated-card">

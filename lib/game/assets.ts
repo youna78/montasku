@@ -50,7 +50,21 @@ const MONSTER_IMAGE_BY_ID: Record<number, string> = {
   47: "/img/monster/event_june_shrine_guardian_01.png",
   48: "/img/monster/event_june_shrine_keroberos_01.png",
   49: "/img/monster/event_june_female_kitsune_kannushi_01.png",
-  50: "/img/monster/event_june_kitsune_raijin_01.png"
+  50: "/img/monster/event_june_kitsune_raijin_01.png",
+  51: "/img/monster/monster_renewal_51_summer_sunshine_egg_01.png",
+  52: "/img/monster/monster_renewal_52_yellow_duck_01.png",
+  53: "/img/monster/monster_renewal_53_blue_duck_01.png",
+  54: "/img/monster/monster_renewal_54_pink_swan_01.png",
+  55: "/img/monster/monster_renewal_55_swimmer_duck_01.png",
+  56: "/img/monster/monster_renewal_56_bad_duck_01.png",
+  57: "/img/monster/monster_renewal_57_pink_finless_porpoise_01.png",
+  58: "/img/monster/monster_renewal_58_summer_dolphin_01.png",
+  59: "/img/monster/monster_renewal_59_shark_jaw_01.png",
+  60: "/img/monster/monster_renewal_60_marine_cat_01.png",
+  61: "/img/monster/monster_renewal_61_summer_mermaid_01.png",
+  62: "/img/monster/monster_renewal_62_dreaming_whale_01.png",
+  63: "/img/monster/monster_renewal_63_poseidon_01.png",
+  64: "/img/monster/monster_renewal_64_surfing_cat_01.png"
 };
 
 const MONSTER_RENEWAL_STARTS_AT = "2026-06-01T00:00:00+09:00";
@@ -101,6 +115,7 @@ export type MonsterMotionAsset = {
   columns: 2;
   rows: 2;
   durationMs: number;
+  displaySize?: number;
 };
 
 const FOUR_FRAME_MOTION = {
@@ -110,9 +125,14 @@ const FOUR_FRAME_MOTION = {
   durationMs: 1600
 } as const;
 
-const createRenewalMotion = (slug: string, kind: Extract<MonsterMotionKind, "walk" | "happy">): MonsterMotionAsset => ({
+const createRenewalMotion = (
+  slug: string,
+  kind: Extract<MonsterMotionKind, "walk" | "happy">,
+  displaySize?: number
+): MonsterMotionAsset => ({
   ...FOUR_FRAME_MOTION,
-  imagePath: `/img/monster/${slug}_${kind}_4f.png`
+  imagePath: `/img/monster/${slug}_${kind}_4f.png`,
+  displaySize
 });
 
 const MONSTER_RENEWAL_MOTION_BY_ID: Record<number, Partial<Record<MonsterMotionKind, MonsterMotionAsset>>> = {
@@ -170,7 +190,24 @@ const MONSTER_RENEWAL_MOTION_BY_ID: Record<number, Partial<Record<MonsterMotionK
   47: { walk: createRenewalMotion("event_june_shrine_guardian", "walk"), happy: createRenewalMotion("event_june_shrine_guardian", "happy") },
   48: { walk: createRenewalMotion("event_june_shrine_keroberos", "walk"), happy: createRenewalMotion("event_june_shrine_keroberos", "happy") },
   49: { walk: createRenewalMotion("event_june_female_kitsune_kannushi", "walk"), happy: createRenewalMotion("event_june_female_kitsune_kannushi", "happy") },
-  50: { walk: createRenewalMotion("event_june_kitsune_raijin", "walk"), happy: createRenewalMotion("event_june_kitsune_raijin", "happy") }
+  50: { walk: createRenewalMotion("event_june_kitsune_raijin", "walk"), happy: createRenewalMotion("event_june_kitsune_raijin", "happy") },
+  51: {
+    sway: { ...FOUR_FRAME_MOTION, imagePath: "/img/monster/monster_renewal_51_summer_sunshine_egg_sway_4f.png", displaySize: 190 },
+    happy: createRenewalMotion("monster_renewal_51_summer_sunshine_egg", "happy", 190)
+  },
+  52: { walk: createRenewalMotion("monster_renewal_52_yellow_duck", "walk", 182), happy: createRenewalMotion("monster_renewal_52_yellow_duck", "happy", 182) },
+  53: { walk: createRenewalMotion("monster_renewal_53_blue_duck", "walk"), happy: createRenewalMotion("monster_renewal_53_blue_duck", "happy") },
+  54: { walk: createRenewalMotion("monster_renewal_54_pink_swan", "walk", 190), happy: createRenewalMotion("monster_renewal_54_pink_swan", "happy", 190) },
+  55: { walk: createRenewalMotion("monster_renewal_55_swimmer_duck", "walk", 154), happy: createRenewalMotion("monster_renewal_55_swimmer_duck", "happy", 154) },
+  56: { walk: createRenewalMotion("monster_renewal_56_bad_duck", "walk", 171), happy: createRenewalMotion("monster_renewal_56_bad_duck", "happy", 171) },
+  57: { walk: createRenewalMotion("monster_renewal_57_pink_finless_porpoise", "walk"), happy: createRenewalMotion("monster_renewal_57_pink_finless_porpoise", "happy") },
+  58: { walk: createRenewalMotion("monster_renewal_58_summer_dolphin", "walk", 180), happy: createRenewalMotion("monster_renewal_58_summer_dolphin", "happy", 180) },
+  59: { walk: createRenewalMotion("monster_renewal_59_shark_jaw", "walk", 186), happy: createRenewalMotion("monster_renewal_59_shark_jaw", "happy", 186) },
+  60: { walk: createRenewalMotion("monster_renewal_60_marine_cat", "walk", 165), happy: createRenewalMotion("monster_renewal_60_marine_cat", "happy", 165) },
+  61: { walk: createRenewalMotion("monster_renewal_61_summer_mermaid", "walk", 182), happy: createRenewalMotion("monster_renewal_61_summer_mermaid", "happy", 182) },
+  62: { walk: createRenewalMotion("monster_renewal_62_dreaming_whale", "walk"), happy: createRenewalMotion("monster_renewal_62_dreaming_whale", "happy") },
+  63: { walk: createRenewalMotion("monster_renewal_63_poseidon", "walk", 175), happy: createRenewalMotion("monster_renewal_63_poseidon", "happy", 175) },
+  64: { walk: createRenewalMotion("monster_renewal_64_surfing_cat", "walk", 190), happy: createRenewalMotion("monster_renewal_64_surfing_cat", "happy", 190) }
 };
 
 function isMonsterRenewalActive(now: Date = getGameNow()): boolean {

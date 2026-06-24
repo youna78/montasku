@@ -14,7 +14,7 @@ import type {
 } from "@/types/game";
 import type { LevelingMaster, MonsterMaster, TaskMaster } from "@/types/master";
 import { LETTER_ITEM_IMAGES } from "./assets";
-import { GAME_EVENTS, JUNE_SHRINE_EVENT, SPRING_EASTER_EVENT, getEventById, isEventActive, normalizeUserEventState } from "./events";
+import { GAME_EVENTS, JULY_SUMMERTIME_EVENT, JUNE_SHRINE_EVENT, SPRING_EASTER_EVENT, getEventById, isEventActive, normalizeUserEventState } from "./events";
 import { getGameNow } from "./virtualTime";
 import { evaluateEvolution, resolveBirthMonsterId, resolveEggEvolutionMonsterId } from "./evolution";
 import { getAttributeCharmItem, getBoosterShopItem, getDecorationShopItem, getPaidBackgroundShopItem, getPaidBundleShopItem, getPaidFrameShopItem } from "./shop";
@@ -969,7 +969,11 @@ function applyInitialBirthProgress(state: GameState, monsters: MonsterMaster[]):
     };
   }
 
-  const birthMonsterId = resolveBirthMonsterId(state.attributeTotals, monsters) ?? state.currentMonsterId;
+  const currentMonster = monsters.find((monster) => monster.monsterId === state.currentMonsterId);
+  const birthMonsterId =
+    currentMonster?.stage === "egg"
+      ? resolveEggEvolutionMonsterId(currentMonster, state.attributeTotals, monsters) ?? state.currentMonsterId
+      : resolveBirthMonsterId(state.attributeTotals, monsters) ?? state.currentMonsterId;
   return {
     ...state,
     onboardingCompletedTaskCount,
@@ -985,7 +989,7 @@ export function reconcileMonsterProgress(params: {
   levelingRows: LevelingMaster[];
 }): GameState {
   const { state, monsters, levelingRows } = params;
-  let nextState = retireSpringEventMonsterForJune(state, monsters);
+  let nextState = restorePrematureEventIntroSeen(retireEndedEventMonsterForActiveEvent(retireSpringEventMonsterForJune(state, monsters), monsters));
 
   if (nextState.hasCompletedCurrentBirth) {
     while (true) {
@@ -1010,6 +1014,59 @@ export function reconcileMonsterProgress(params: {
   }
 
   return nextState;
+}
+
+function restorePrematureEventIntroSeen(state: GameState): GameState {
+  const now = getGameNow().getTime();
+  let nextState = state;
+
+  for (const eventConfig of GAME_EVENTS) {
+    const eventState = normalizeUserEventState(eventConfig.eventId, nextState.eventStates[eventConfig.eventId]);
+    if (!eventState.hasSeenIntroPopup || !eventState.updatedAt) continue;
+
+    const startsAt = new Date(eventConfig.startsAt).getTime();
+    const markedAt = new Date(eventState.updatedAt).getTime();
+    if (Number.isNaN(markedAt) || now < startsAt || markedAt >= startsAt) continue;
+
+    nextState = updateEventState(nextState, eventConfig.eventId, (current) => ({
+      ...current,
+      hasSeenIntroPopup: false
+    }));
+  }
+
+  return nextState;
+}
+
+function retireEndedEventMonsterForActiveEvent(state: GameState, monsters: MonsterMaster[] = []): GameState {
+  if (!isEventActive(JULY_SUMMERTIME_EVENT)) return state;
+  if (!JUNE_SHRINE_EVENT.rewardPreviewMonsterIds.includes(state.currentMonsterId)) return state;
+
+  const currentMonster = monsters.find((monster) => monster.monsterId === state.currentMonsterId);
+  const nextLetter = buildSeasonalFarewellLetter(state, currentMonster);
+  const nextEggMonsterId = 1;
+
+  return {
+    ...state,
+    currentMonsterId: nextEggMonsterId,
+    currentMonsterLevel: 1,
+    currentMonsterExp: 0,
+    attributeTotals: {
+      power: 0,
+      heal: 0,
+      knowledge: 0,
+      create: 0
+    },
+    todayExp: 0,
+    birthEventPending: false,
+    queuedEggMonsterId: null,
+    hasCompletedCurrentBirth: false,
+    endEventPending: false,
+    isInTutorialFlow: false,
+    onboardingCompletedTaskCount: 0,
+    pendingDailyReview: null,
+    discoveredMonsterIds: uniqueNumbers([...state.discoveredMonsterIds, nextEggMonsterId]),
+    acquiredLetters: appendLetterOnce(state.acquiredLetters, nextLetter)
+  };
 }
 
 export function retireSpringEventMonsterForJune(state: GameState, monsters: MonsterMaster[] = []): GameState {
@@ -1905,7 +1962,7 @@ export function forceStartEventEgg(state: GameState, eventId: string, monsters: 
     return { nextState: state, started: false, reason: "no_egg" };
   }
 
-  if (state.currentMonsterId === eventConfig.freeEggMonsterId && state.birthEventPending) {
+  if (state.currentMonsterId === eventConfig.freeEggMonsterId && !state.hasCompletedCurrentBirth) {
     return { nextState: state, started: false, reason: "already_active" };
   }
 
@@ -1925,7 +1982,7 @@ export function forceStartEventEgg(state: GameState, eventId: string, monsters: 
         create: 0
       },
       todayExp: 0,
-      birthEventPending: true,
+      birthEventPending: false,
       queuedEggMonsterId: null,
       hasCompletedCurrentBirth: false,
       endEventPending: false,

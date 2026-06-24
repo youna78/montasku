@@ -22,8 +22,7 @@ export default function EventDetailPage() {
     isLoading,
     claimEventFreeEgg,
     queueEventEgg,
-    forceStartEventEgg,
-    markEventIntroPopupSeen
+    forceStartEventEgg
   } = useGame();
   const [message, setMessage] = useState("");
   const [showStartNowConfirm, setShowStartNowConfirm] = useState(false);
@@ -52,14 +51,6 @@ export default function EventDetailPage() {
       router.replace("/tutorial");
     }
   }, [gameState, router]);
-
-  useEffect(() => {
-    if (!eventConfig || !gameState) return;
-    const eventState = gameState.eventStates[eventConfig.eventId];
-    if (!eventState?.hasSeenIntroPopup) {
-      markEventIntroPopupSeen(eventConfig.eventId);
-    }
-  }, [eventConfig, gameState, markEventIntroPopupSeen]);
 
   if (isLoading || !gameState) {
     return <main>Loading...</main>;
@@ -166,8 +157,8 @@ export default function EventDetailPage() {
       else setMessage(`${eventEggName}に切り替えできませんでした`);
       return;
     }
-    setMessage(`いまのモンスターとお別れして、${eventEggName}に切り替えました`);
-    router.push("/birth-event");
+    setMessage(`いまのモンスターとお別れして、${eventEggName}に切り替えました。タスクを達成して育てよう`);
+    router.push("/tasks");
   };
 
   return (
@@ -286,18 +277,15 @@ export default function EventDetailPage() {
         </div>
       </section>
 
-      <section className="card decorated-card notification-card">
-        <div className="notification-card-head">
+      <Link href={`/shop/events/${eventConfig.slug}`} className="card decorated-card event-shop-link-card">
+        <img src="/img/illustration/icatch_july_shop_icon_01.png" alt="" className="event-shop-link-card-icon" />
+        <div className="event-shop-link-card-copy">
           <span className="notification-badge notification-badge-event">イベントショップ</span>
-          <h2>限定アイテムを交換する</h2>
+          <strong>限定アイテムを交換する</strong>
+          <p>背景、フレーム、イベントたまごはこちら</p>
         </div>
-        <p>イベント限定の背景やフレーム、イベントたまごは専用ショップにまとめています。</p>
-        <div className="notification-card-actions">
-          <Link href={`/shop/events/${eventConfig.slug}`} className="quest-btn task-global-menu-button task-global-menu-button-primary">
-            イベントショップへ
-          </Link>
-        </div>
-      </section>
+        <span className="event-shop-link-arrow" aria-hidden="true">▶</span>
+      </Link>
 
       {rewardSummary.length > 0 && (
         <section className="card decorated-card notification-card">
@@ -342,7 +330,7 @@ export default function EventDetailPage() {
               いま育てているモンスターとはお別れして、{eventEggName}から育成を始めます。
             </p>
             <p className="shop-note shop-note-strong">
-              いまのモンスターからは手紙を受け取り、{eventEggName}の誕生イベントへ進みます。
+              いまのモンスターからは手紙を受け取り、タスクを達成すると{eventEggName}の誕生イベントへ進みます。
             </p>
             <div className="task-global-menu">
               <button className="quest-btn task-global-menu-button task-global-menu-button-accent" onClick={onForceStartEgg}>

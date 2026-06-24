@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
@@ -29,6 +30,10 @@ type MonsterCelebrationState = {
   loops: number;
 };
 
+type MonsterSpriteStyle = CSSProperties & {
+  "--monster-sprite-size"?: string;
+};
+
 const MONSTER_HAPPY_LOOP_MS = 1600;
 
 const GROWTH_STAGE_LABELS: Record<string, string> = {
@@ -54,6 +59,7 @@ export default function HomePage() {
   const [evolutionScene, setEvolutionScene] = useState<EvolutionScene | null>(null);
   const [showEventIntro, setShowEventIntro] = useState(false);
   const [dismissedEventIntroId, setDismissedEventIntroId] = useState<string | null>(null);
+  const shownEventIntroIdsRef = useRef<Set<string>>(new Set());
   const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -104,22 +110,36 @@ export default function HomePage() {
   const activeEvent = visibleEvents[0] ?? null;
   const activeEventState = activeEvent && gameState ? gameState.eventStates[activeEvent.eventId] : null;
   const activeEventHomeBannerImagePath = activeEvent?.homeBannerImagePath ?? activeEvent?.heroImagePath;
+  const activeEventEggName = activeEvent
+    ? monsters.find((monster) => monster.monsterId === activeEvent.freeEggMonsterId)?.name ?? "イベントたまご"
+    : "イベントたまご";
 
   useEffect(() => {
     if (!gameState) return;
+    if (
+      gameState.endEventPending ||
+      gameState.birthEventPending ||
+      shouldRouteToDailyReview(gameState) ||
+      !gameState.hasSeenTutorial
+    ) {
+      setShowEventIntro(false);
+      return;
+    }
     if (!activeEvent) return;
     if (!isEventActive(activeEvent)) return;
     if (activeEventState?.hasSeenIntroPopup) return;
     if (dismissedEventIntroId === activeEvent.eventId) return;
+    if (shownEventIntroIdsRef.current.has(activeEvent.eventId)) return;
+    shownEventIntroIdsRef.current.add(activeEvent.eventId);
+    markEventIntroPopupSeen(activeEvent.eventId);
     setShowEventIntro(true);
-  }, [activeEvent, activeEventState?.hasSeenIntroPopup, dismissedEventIntroId, gameState]);
+  }, [activeEvent, activeEventState?.hasSeenIntroPopup, dismissedEventIntroId, gameState, markEventIntroPopupSeen]);
 
   const dismissEventIntro = (openEventPage: boolean) => {
     if (!activeEvent) return;
     setDismissedEventIntroId(activeEvent.eventId);
     setShowEventIntro(false);
     window.setTimeout(() => {
-      markEventIntroPopupSeen(activeEvent.eventId);
       if (openEventPage) {
         router.push(`/event/${activeEvent.slug}`);
       }
@@ -167,6 +187,14 @@ export default function HomePage() {
   const monsterMotionAsset =
     getMonsterMotionAsset(currentMonster?.monsterId, monsterMotionKind) ??
     (growthStage === "egg" && monsterMotionKind === "happy" ? getMonsterMotionAsset(currentMonster?.monsterId, "sway") : null);
+  const monsterSpriteStyle: MonsterSpriteStyle | undefined = monsterMotionAsset
+    ? {
+        backgroundImage: `url("${monsterMotionAsset.imagePath}")`,
+        animationDuration: `${monsterMotionAsset.durationMs}ms`,
+        animationIterationCount: monsterMotionKind === "happy" ? celebrationLoops : "infinite",
+        "--monster-sprite-size": `${monsterMotionAsset.displaySize ?? 142}px`
+      }
+    : undefined;
   const monsterMotionClass = growthStage === "egg" ? "monster-img-alive" : "monster-img-walk-hop";
   const monsterMovementType = currentMonster?.movementType ?? "ground";
   const activeDecorations = gameState.selectedDecorationIds
@@ -288,11 +316,7 @@ export default function HomePage() {
                   <div
                     key={`${monsterMotionKind}-${monsterCelebration?.id ?? "idle"}`}
                     className="monster-img monster-sprite"
-                    style={{
-                      backgroundImage: `url("${monsterMotionAsset.imagePath}")`,
-                      animationDuration: `${monsterMotionAsset.durationMs}ms`,
-                      animationIterationCount: monsterMotionKind === "happy" ? celebrationLoops : "infinite"
-                    }}
+                    style={monsterSpriteStyle}
                   />
                 </div>
               ) : (
@@ -456,7 +480,7 @@ export default function HomePage() {
             <p className="auth-card-copy">
               {activeEvent.description}
               <br />
-              無料で春の芽吹きたまごを1個受け取れます。
+              無料で{activeEventEggName}を1個受け取れます。
             </p>
             <div className="settings-menu-grid centered-actions">
               <button

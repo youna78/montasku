@@ -1,6 +1,7 @@
 package com.ikizurasenryaku.montasku;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.ConnectivityManager;
@@ -20,16 +21,35 @@ import android.widget.TextView;
 import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebViewClient;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 import io.capawesome.capacitorjs.plugins.firebase.authentication.FirebaseAuthenticationPlugin;
 
 public class MainActivity extends BridgeActivity {
+  private static final String PRODUCTION_BANNER_AD_UNIT_ID = "ca-app-pub-2764076693225531/9746179416";
+  private static final String TEST_BANNER_AD_UNIT_ID = "ca-app-pub-3940256099942544/6300978111";
+  private static final int BANNER_HEIGHT_DP = 50;
+
   private View offlineErrorView;
+  private AdView bannerAdView;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     registerPlugin(FirebaseAuthenticationPlugin.class);
     super.onCreate(savedInstanceState);
     installNativeErrorOverlay();
+    installAdMobBanner();
+  }
+
+  @Override
+  public void onDestroy() {
+    if (bannerAdView != null) {
+      bannerAdView.destroy();
+      bannerAdView = null;
+    }
+    super.onDestroy();
   }
 
   private void installNativeErrorOverlay() {
@@ -42,6 +62,47 @@ public class MainActivity extends BridgeActivity {
     if (!isOnline()) {
       showOfflineError();
     }
+  }
+
+  private void installAdMobBanner() {
+    if (bridge == null || bridge.getWebView() == null || bannerAdView != null) {
+      return;
+    }
+
+    new Thread(() -> MobileAds.initialize(this, initializationStatus -> {})).start();
+
+    WebView webView = bridge.getWebView();
+    ViewGroup rootView = (ViewGroup) webView.getParent();
+    if (rootView == null) {
+      return;
+    }
+
+    int bannerHeight = dp(BANNER_HEIGHT_DP);
+    ViewGroup.LayoutParams webViewLayoutParams = webView.getLayoutParams();
+    if (webViewLayoutParams instanceof ViewGroup.MarginLayoutParams) {
+      ViewGroup.MarginLayoutParams marginLayoutParams = (ViewGroup.MarginLayoutParams) webViewLayoutParams;
+      marginLayoutParams.topMargin = Math.max(marginLayoutParams.topMargin, bannerHeight);
+      webView.setLayoutParams(marginLayoutParams);
+    } else {
+      webView.setPadding(webView.getPaddingLeft(), webView.getPaddingTop() + bannerHeight, webView.getPaddingRight(), webView.getPaddingBottom());
+    }
+
+    bannerAdView = new AdView(this);
+    bannerAdView.setAdUnitId(isDebuggableBuild() ? TEST_BANNER_AD_UNIT_ID : PRODUCTION_BANNER_AD_UNIT_ID);
+    bannerAdView.setAdSize(AdSize.BANNER);
+    bannerAdView.setBackgroundColor(Color.WHITE);
+
+    ViewGroup.LayoutParams adLayoutParams = new ViewGroup.LayoutParams(
+      ViewGroup.LayoutParams.MATCH_PARENT,
+      bannerHeight
+    );
+    rootView.addView(bannerAdView, adLayoutParams);
+    bannerAdView.bringToFront();
+    bannerAdView.loadAd(new AdRequest.Builder().build());
+  }
+
+  private boolean isDebuggableBuild() {
+    return (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
   }
 
   private boolean isOnline() {
