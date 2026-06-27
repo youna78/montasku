@@ -35,7 +35,15 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       title: item.title,
-      lines: buildSummaryLines(item.itemId, item.totalPaidCoins)
+      lines: buildSummaryLines(item.itemId, item.totalPaidCoins),
+      transactionId: session.id,
+      productId: item.itemId,
+      productType: item.productType,
+      value: item.priceJpy,
+      currency: "JPY",
+      totalPaidCoins: item.totalPaidCoins,
+      paymentProvider: "stripe",
+      paymentStatus: session.payment_status
     });
   } catch (error) {
     console.error("[stripe] failed to load checkout summary", error);

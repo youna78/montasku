@@ -738,11 +738,20 @@ export default function ShopPage() {
       });
       const grantedPaidCoins = await fulfillNativeStoreTransaction(transaction, nativePlatform, appAccountToken, productId, idToken);
       trackEvent("purchase", {
-        item_id: item.itemId,
-        item_type: item.productType,
+        transaction_id: transaction.transactionId ?? transaction.orderId ?? undefined,
         value: item.priceJpy,
         currency: "JPY",
-        payment_provider: getNativeStoreProviderParam(nativePlatform)
+        payment_provider: getNativeStoreProviderParam(nativePlatform),
+        monta_coins_granted: grantedPaidCoins,
+        items: [
+          {
+            item_id: item.itemId,
+            item_name: item.title,
+            item_category: item.productType,
+            price: item.priceJpy,
+            quantity: 1
+          }
+        ]
       });
       if (nativePlatform === "ios") {
         normalizeIosViewportAfterNativeDialog();

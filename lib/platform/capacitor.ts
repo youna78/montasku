@@ -16,3 +16,12 @@ export function getClientPlatform(): string {
   const userAgent = typeof window !== "undefined" ? window.navigator.userAgent.toLowerCase() : "";
   return userAgent.includes("android") ? "android" : "web";
 }
+
+export type AnalyticsPlatform = "web" | "ios" | "android";
+
+export function getAnalyticsPlatform(): AnalyticsPlatform {
+  if (!isNativeMobileApp()) return "web";
+
+  const platform = getNativePlatform();
+  return platform === "ios" || platform === "android" ? platform : "web";
+}

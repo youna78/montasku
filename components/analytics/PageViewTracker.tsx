@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { getAnalyticsPlatform } from "@/lib/platform/capacitor";
 
 declare global {
   interface Window {
@@ -26,7 +27,8 @@ export function PageViewTracker({ measurementId }: PageViewTrackerProps) {
     window.gtag("config", measurementId, {
       page_path: pagePath,
       page_location: window.location.href,
-      page_title: document.title
+      page_title: document.title,
+      app_platform: getAnalyticsPlatform()
     });
   }, [measurementId, pathname, searchParams]);
 

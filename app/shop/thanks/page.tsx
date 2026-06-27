@@ -4,12 +4,21 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
+import { trackEvent } from "@/lib/analytics/gtag";
 import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { useGame } from "@/lib/game/useGame";
 
 type CheckoutSummary = {
   title: string;
   lines: string[];
+  transactionId: string;
+  productId: string;
+  productType: string;
+  value: number;
+  currency: string;
+  totalPaidCoins: number;
+  paymentProvider: "stripe";
+  paymentStatus: string;
 } | null;
 
 type AppStoreSummary = {
@@ -43,6 +52,28 @@ export default function ShopThanksPage() {
         const payload = (await response.json()) as CheckoutSummary;
         if (!cancelled) {
           setSummary(payload);
+          if (payload?.paymentStatus === "paid") {
+            const trackedKey = `ga4_purchase:${payload.transactionId}`;
+            if (window.sessionStorage.getItem(trackedKey) !== "1") {
+              trackEvent("purchase", {
+                transaction_id: payload.transactionId,
+                value: payload.value,
+                currency: payload.currency,
+                payment_provider: payload.paymentProvider,
+                monta_coins_granted: payload.totalPaidCoins,
+                items: [
+                  {
+                    item_id: payload.productId,
+                    item_name: payload.title,
+                    item_category: payload.productType,
+                    price: payload.value,
+                    quantity: 1
+                  }
+                ]
+              });
+              window.sessionStorage.setItem(trackedKey, "1");
+            }
+          }
         }
       } catch (error) {
         console.error("[shop-thanks] failed to load checkout summary", error);

@@ -30,6 +30,9 @@ PODS:
     - FirebaseCore (~> 11.7.0)
   - FirebaseCoreInternal (11.7.0):
     - "GoogleUtilities/NSData+zlib (~> 8.0)"
+  - Google-Mobile-Ads-SDK (13.5.0):
+    - GoogleUserMessagingPlatform (>= 1.1)
+  - GoogleUserMessagingPlatform (3.1.0)
   - GoogleUtilities/AppDelegateSwizzler (8.1.0):
     - GoogleUtilities/Environment
     - GoogleUtilities/Logger
@@ -59,6 +62,7 @@ DEPENDENCIES:
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorFirebaseAuthentication (from `../../node_modules/@capacitor-firebase/authentication`)"
   - "CapgoNativePurchases (from `../../node_modules/@capgo/native-purchases`)"
+  - Google-Mobile-Ads-SDK
 
 SPEC REPOS:
   trunk:
@@ -68,6 +72,8 @@ SPEC REPOS:
     - FirebaseCore
     - FirebaseCoreExtension
     - FirebaseCoreInternal
+    - Google-Mobile-Ads-SDK
+    - GoogleUserMessagingPlatform
     - GoogleUtilities
     - GTMSessionFetcher
     - RecaptchaInterop
@@ -93,10 +99,12 @@ SPEC CHECKSUMS:
   FirebaseCore: 3227e35f4197a924206fbcdc0349325baf4f5de4
   FirebaseCoreExtension: 206c1b399f0d103055207c16f299b28e3dbd1949
   FirebaseCoreInternal: d6c17dafc8dc33614733a8b52df78fcb4394c881
+  Google-Mobile-Ads-SDK: 2171620c6497804b57dc88b95644cc82e7dfb5b0
+  GoogleUserMessagingPlatform: befe603da6501006420c206222acd449bba45a9c
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   GTMSessionFetcher: fc75fc972958dceedee61cb662ae1da7a83a91cf
   RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
 
-PODFILE CHECKSUM: 9f69f2b323e1bbaa1d9a6f31b6c3779554a42dab
+PODFILE CHECKSUM: 1fb17520c814a41a5cce3765b944d433fc03297f
 
 COCOAPODS: 1.16.2

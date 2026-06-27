@@ -1,9 +1,14 @@
 import Capacitor
 import CapacitorFirebaseAuthentication
+import GoogleMobileAds
 import Network
 import UIKit
 
 class AppBridgeViewController: CAPBridgeViewController {
+    private let productionBannerAdUnitID = "ca-app-pub-2764076693225531/5537447454"
+    private let testBannerAdUnitID = "ca-app-pub-3940256099942544/2435281174"
+    private var bannerView: BannerView?
+    private var bannerTopConstraint: NSLayoutConstraint?
     private let pathMonitor = NWPathMonitor()
     private let pathMonitorQueue = DispatchQueue(label: "com.ikizurasenryaku.montasku.network")
     private var offlineErrorView: UIView?
@@ -16,6 +21,7 @@ class AppBridgeViewController: CAPBridgeViewController {
 
     override open func viewDidLoad() {
         super.viewDidLoad()
+        installAdMobBanner()
         startPathMonitorIfNeeded()
     }
 
@@ -37,6 +43,48 @@ class AppBridgeViewController: CAPBridgeViewController {
             }
         }
         pathMonitor.start(queue: pathMonitorQueue)
+    }
+
+    private func installAdMobBanner() {
+        guard let webView = webView, bannerView == nil else {
+            return
+        }
+
+        let rootView = UIView(frame: view.bounds)
+        rootView.backgroundColor = .white
+        rootView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+
+        webView.removeFromSuperview()
+        webView.translatesAutoresizingMaskIntoConstraints = false
+        view = rootView
+
+        let banner = BannerView(adSize: AdSizeBanner)
+        banner.translatesAutoresizingMaskIntoConstraints = false
+        banner.adUnitID = adMobBannerAdUnitID()
+        banner.rootViewController = self
+        banner.backgroundColor = .white
+        rootView.addSubview(banner)
+        rootView.addSubview(webView)
+
+        NSLayoutConstraint.activate([
+            banner.topAnchor.constraint(equalTo: rootView.safeAreaLayoutGuide.topAnchor),
+            banner.centerXAnchor.constraint(equalTo: rootView.centerXAnchor),
+            webView.topAnchor.constraint(equalTo: banner.bottomAnchor),
+            webView.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
+            webView.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
+            webView.bottomAnchor.constraint(equalTo: rootView.bottomAnchor)
+        ])
+
+        banner.load(Request())
+        bannerView = banner
+    }
+
+    private func adMobBannerAdUnitID() -> String {
+        #if DEBUG
+        return testBannerAdUnitID
+        #else
+        return productionBannerAdUnitID
+        #endif
     }
 
     private func showOfflineError() {
