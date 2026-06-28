@@ -867,8 +867,10 @@ export function useGame(): UseGameResult {
       if (result.purchased) {
         trackEvent("shop_purchase", {
           item_id: itemId,
+          item_name: itemId,
           item_type: "event_reward",
-          event_id: eventId
+          event_id: eventId,
+          currency_type: itemId.includes("_paid") || itemId.includes("_egg_paid") ? "paid_coin" : "free_coin"
         });
       }
       if (user && result.purchased) {

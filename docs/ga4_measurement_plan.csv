@@ -10,7 +10,8 @@ monster_evolved,task completion causes evolution,previous_monster_id next_monste
 daily_review_answer,daily review answer,task_id completed rewarded exp free_coins,前日振り返り利用状況,implemented
 daily_review_skip,daily review later/skip,,前日振り返り離脱,implemented
 daily_review_finish,daily review completion,,前日振り返り完了,implemented
-shop_purchase,free/paid coin shop item purchase,item_id item_type currency_type price event_id,ショップ購入傾向,implemented
+shop_purchase,free/paid coin shop item purchase,item_id item_name item_type currency_type price event_id app_platform,購入された商品・使用通貨・価格・媒体の確認,implemented
+spend_virtual_currency,successful shop_purchase,item_id item_name item_type virtual_currency_name value event_id app_platform,商品別のフリーコイン/モンタコイン消費量,implemented
 begin_checkout,Stripe/App Store/Google Play checkout start,item_id item_type value currency payment_provider app_platform,媒体・決済元別の決済開始数,implemented
 purchase,verified purchase completion,transaction_id value currency payment_provider app_platform monta_coins_granted items,Web/iOS/Android別のモンタコイン購入完了数と売上,implemented
 item_equipped,equip background/frame/decoration,item_id item_type,装備変更傾向,implemented

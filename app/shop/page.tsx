@@ -279,8 +279,8 @@ export default function ShopPage() {
       return;
     }
 
-    trackEvent("shop_purchase", { item_id: itemId, item_type: "background", currency_type: "free_coin", price });
     const item = SHOP_EVERGREEN_BACKGROUNDS.find((background) => background.itemId === itemId);
+    trackEvent("shop_purchase", { item_id: itemId, item_name: item?.title ?? itemId, item_type: "background", currency_type: "free_coin", price });
     setRecentPurchase({ itemId, itemType: "background", title: item?.title ?? "背景" });
     setPurchaseModal(null);
     setMessage("こうにゅうしました");
@@ -305,8 +305,8 @@ export default function ShopPage() {
       return;
     }
 
-    trackEvent("shop_purchase", { item_id: itemId, item_type: "frame", currency_type: "free_coin", price });
     const item = SHOP_EVERGREEN_FRAMES.find((frame) => frame.itemId === itemId);
+    trackEvent("shop_purchase", { item_id: itemId, item_name: item?.title ?? itemId, item_type: "frame", currency_type: "free_coin", price });
     setRecentPurchase({ itemId, itemType: "frame", title: item?.title ?? "フレーム" });
     setPurchaseModal(null);
     setMessage("こうにゅうしました");
@@ -323,6 +323,7 @@ export default function ShopPage() {
 
     trackEvent("shop_purchase", {
       item_id: item?.itemId ?? `${attribute}_charm`,
+      item_name: item?.title ?? `${attribute}_charm`,
       item_type: "attribute_charm",
       currency_type: "free_coin",
       price: item?.price ?? 300
@@ -346,6 +347,7 @@ export default function ShopPage() {
 
     trackEvent("shop_purchase", {
       item_id: item?.itemId ?? `paid_charm_${attribute}_01`,
+      item_name: item?.title ?? `paid_charm_${attribute}_01`,
       item_type: "premium_attribute_charm",
       currency_type: "paid_coin",
       price: item?.price ?? 300
@@ -373,6 +375,7 @@ export default function ShopPage() {
 
     trackEvent("shop_purchase", {
       item_id: item?.itemId ?? itemId,
+      item_name: item?.title ?? itemId,
       item_type: "booster",
       currency_type: item?.currencyType ?? "paid_coin",
       price: item?.price ?? 0
@@ -395,7 +398,7 @@ export default function ShopPage() {
     }
 
     if (item) {
-      trackEvent("shop_purchase", { item_id: item.itemId, item_type: "background", currency_type: "paid_coin", price: item.price });
+      trackEvent("shop_purchase", { item_id: item.itemId, item_name: item.title, item_type: "background", currency_type: "paid_coin", price: item.price });
       setRecentPurchase({ itemId, itemType: "background", title: item.title });
       setPurchaseModal(null);
     }
@@ -412,7 +415,7 @@ export default function ShopPage() {
     }
 
     if (item) {
-      trackEvent("shop_purchase", { item_id: item.itemId, item_type: "frame", currency_type: "paid_coin", price: item.price });
+      trackEvent("shop_purchase", { item_id: item.itemId, item_name: item.title, item_type: "frame", currency_type: "paid_coin", price: item.price });
       setRecentPurchase({ itemId, itemType: "frame", title: item.title });
       setPurchaseModal(null);
     }
@@ -429,7 +432,7 @@ export default function ShopPage() {
     }
 
     if (item) {
-      trackEvent("shop_purchase", { item_id: item.itemId, item_type: "bundle", currency_type: "paid_coin", price: item.price });
+      trackEvent("shop_purchase", { item_id: item.itemId, item_name: item.title, item_type: "bundle", currency_type: "paid_coin", price: item.price });
       if (item.itemId === "paid_bundle_spring_deco_01") {
         openInventoryPopup(item.title, ["ピクニックバスケット", "花灯りランタン", "春の芽吹きたまご"]);
       } else {
@@ -501,7 +504,7 @@ export default function ShopPage() {
     }
 
     if (item) {
-      trackEvent("shop_purchase", { item_id: item.itemId, item_type: "decoration", currency_type: "paid_coin", price: item.price });
+      trackEvent("shop_purchase", { item_id: item.itemId, item_name: item.title, item_type: "decoration", currency_type: "paid_coin", price: item.price });
       openInventoryPopup(item.title, [item.title]);
       setMessage(`${item.title} をこうにゅうしました`);
       return;
