@@ -72,7 +72,7 @@ export default function DexPage() {
                 {unlocked ? (
                   <>
                     {rarityBadge && <img src={rarityBadge} alt={monster.rarity} className="rarity-badge-small" />}
-                    {isEventMonster(monster.monsterId) && <span className="event-dex-badge">春イベント</span>}
+                    {isEventMonster(monster.monsterId) && <span className="event-dex-badge">イベント限定</span>}
                   </>
                 ) : (
                   <>

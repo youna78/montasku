@@ -1,8 +1,8 @@
 import type { GameEventConfig } from "@/types/event";
 import { getGameNow } from "@/lib/game/virtualTime";
-import { GAME_EVENTS, JULY_SUMMERTIME_EVENT, JUNE_SHRINE_EVENT, SPRING_EASTER_EVENT, createInitialUserEventState, normalizeUserEventState } from "./config";
+import { AUGUST_NATSUMATSURI_EVENT, GAME_EVENTS, JULY_SUMMERTIME_EVENT, JUNE_SHRINE_EVENT, SPRING_EASTER_EVENT, createInitialUserEventState, normalizeUserEventState } from "./config";
 
-export { GAME_EVENTS, JULY_SUMMERTIME_EVENT, JUNE_SHRINE_EVENT, SPRING_EASTER_EVENT, createInitialUserEventState, normalizeUserEventState };
+export { AUGUST_NATSUMATSURI_EVENT, GAME_EVENTS, JULY_SUMMERTIME_EVENT, JUNE_SHRINE_EVENT, SPRING_EASTER_EVENT, createInitialUserEventState, normalizeUserEventState };
 
 export function getEventById(eventId: string): GameEventConfig | null {
   return GAME_EVENTS.find((event) => event.eventId === eventId) ?? null;
@@ -40,8 +40,9 @@ export function getActiveEvents(now: Date = getGameNow()): GameEventConfig[] {
 export function getRemainingDaysLabel(event: GameEventConfig, now: Date = getGameNow()): string {
   const end = new Date(event.endsAt).getTime();
   const diff = end - now.getTime();
-  if (diff <= 0) return "終了しました";
-  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+  if (diff < 0) return "終了しました";
+  const days = Math.ceil((diff + 1) / (1000 * 60 * 60 * 24));
+  if (days <= 1) return "本日終了";
   return `あと${days}日`;
 }
 

@@ -43,9 +43,23 @@ function resolveCandidateMonsterId(
     return candidateMonsters[0].monsterId;
   }
 
-  const matched = candidateMonsters.find((monster) => splitCandidates(monster.unlockCondition).includes(dominantAttr));
-  if (matched) {
-    return matched.monsterId;
+  const matched = candidateMonsters.filter((monster) => splitCandidates(monster.unlockCondition).includes(dominantAttr));
+  if (matched.length === 1) {
+    return matched[0].monsterId;
+  }
+
+  if (matched.length > 1) {
+    const sharedConditions = splitCandidates(matched[0].unlockCondition);
+    const allShareConditions = matched.every(
+      (monster) => splitCandidates(monster.unlockCondition).join("|") === sharedConditions.join("|")
+    );
+    const attributeIndex = sharedConditions.indexOf(dominantAttr);
+
+    if (allShareConditions && attributeIndex >= 0 && attributeIndex < matched.length) {
+      return matched[attributeIndex].monsterId;
+    }
+
+    return matched[0].monsterId;
   }
 
   return candidateMonsters[0].monsterId;

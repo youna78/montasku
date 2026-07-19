@@ -307,6 +307,22 @@ export const SHOP_BACKGROUNDS: ShopBackgroundItem[] = [
     price: 0,
     imagePath: "/img/background/bg_july_summertime_beach_night_01.png",
     availability: "event_limited"
+  },
+  {
+    itemId: "august_natsumatsuri_bonodori",
+    title: "盆踊り会場",
+    description: "お昼の明るい盆踊りステージでお祭りを楽しめる背景です。",
+    price: 0,
+    imagePath: "/img/background/bg_august_bonodori_01.png",
+    availability: "event_limited"
+  },
+  {
+    itemId: "august_natsumatsuri_bg_night",
+    title: "夜の夏まつり屋台",
+    description: "夜の夏祭りの屋台風景で素敵な時間を過ごせる背景です。",
+    price: 0,
+    imagePath: "/img/background/bg_august_natsumatsuri_night_01.png",
+    availability: "event_limited"
   }
 ].map((item) => applyBackgroundMaster(item as ShopBackgroundItem));
 
@@ -387,6 +403,24 @@ export const SHOP_FRAMES: ShopFrameItem[] = [
     price: 0,
     previewClassName: "frame-preview-july-hibiscus",
     imagePath: "/img/deco_frame/frame_july_hibiscus_01_aligned_01.png",
+    availability: "event_limited"
+  },
+  {
+    itemId: "august_yatai_frame",
+    title: "屋台フレーム",
+    description: "金魚すくいやヨーヨー、かき氷が入った夏まつりフレームです。",
+    price: 0,
+    previewClassName: "frame-preview-august-yatai",
+    imagePath: "/img/deco_frame/frame_august_yatai_01_aligned_01.png",
+    availability: "event_limited"
+  },
+  {
+    itemId: "august_morningglory",
+    title: "あさがおフレーム",
+    description: "朝顔をあしらった8月イベントのログイン報酬フレームです。",
+    price: 0,
+    previewClassName: "frame-preview-august-morningglory",
+    imagePath: "/img/deco_frame/frame_august_morningglory_01_aligned_01.png",
     availability: "event_limited"
   }
 ].map((item) => applyFrameMaster(item as ShopFrameItem));
@@ -769,6 +803,10 @@ export function getFrameThemeClass(frameId: string): string {
       return "theme-frame-july-shell";
     case "july_hibiscus":
       return "theme-frame-july-hibiscus";
+    case "august_yatai_frame":
+      return "theme-frame-august-yatai";
+    case "august_morningglory":
+      return "theme-frame-august-morningglory";
     case "paid_frame_starlight_01":
       return "theme-frame-starlight";
     case "classic_gold":

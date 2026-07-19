@@ -63,3 +63,17 @@ monster_id,name,attribute,stage,rarity,unlock_lv,unlock_condition,evolution_from
 62,夢見るクジラ,special,final,rare,70,heal|knowledge,シャークジョー|サマードルフィン,,大きな夢を抱いて泳ぐクジラモンスター,TRUE,ground
 63,ポセイドン,special,final,ultra_rare,70,power|create,シャークジョー,,海を統べる力を持つ夏イベントの守護者,TRUE,ground
 64,サーフィンキャット,special,final,ultra_rare,70,power|create,マリンキャット,,波を乗りこなす陽気な猫モンスター,TRUE,ground
+65,夏まつり卵,special,egg,rare,0,august_event1_start,,まつりピンクスライム|まつりブルースライム,卵に狐のお面をつけた卵、夏祭りの時期のみ現れる,TRUE,ground
+66,まつりピンクスライム,special,baby,rare,5,heal|knowledge,夏まつり卵,ミニまつりフェアリー|まつりミニドラ,おかめのお面をつけたピンクスライム、ヨーヨーを持っている,TRUE,ground
+67,まつりブルースライム,special,baby,rare,5,power|create,夏まつり卵,ミニまつりフェアリー|まつりミニビースト,狐のお面をつけたブルースライム、かき氷を持っている,TRUE,ground
+68,ミニまつりフェアリー,special,child,rare,20,heal|knowledge,まつりピンクスライム|まつりブルースライム,盆踊りみならい|獅子舞ビースト,浴衣姿のミニフェアリー。夏祭りを楽しんでいる,TRUE,floating
+69,まつりミニドラ,special,child,ultra_rare,20,power|create,まつりピンクスライム,盆踊りみならい|屋台ドラゴン,浴衣姿のミニドラ。夏祭りを楽しんでいる,TRUE,ground
+70,まつりミニビースト,special,child,ultra_rare,20,power|create,まつりブルースライム,獅子舞ビースト|お面ビースト,浴衣姿のミニビースト。夏祭りを楽しんでいる,TRUE,ground
+71,屋台ドラゴン,special,adult,rare,40,heal|knowledge,まつりミニドラ,祭り雷神|盆踊りマスター,夏祭りの屋台を守るドラゴン。焼きとうもろこしの香りにつられて、いつも人だかりができる,TRUE,floating
+72,盆踊りみならい,special,adult,rare,40,heal|knowledge,ミニまつりフェアリー|まつりミニドラ,盆踊りマスター|花火ノカミ,盆踊りを習い始めたモンスター,TRUE,ground
+73,獅子舞ビースト,special,adult,ultra_rare,40,power|create,ミニまつりフェアリー|まつりミニビースト,盆踊りマスター|花火ノカミ,獅子舞を踊れるビーストモンスター。,TRUE,ground
+74,お面ビースト,special,adult,ultra_rare,40,power|create,まつりミニビースト,花火ノカミ|神輿ノオウ,たくさんのお面を集めているビーストモンスター。気分によって顔を変えるいたずら好き,TRUE,ground
+75,祭り雷神,special,final,rare,70,heal|knowledge,屋台ドラゴン,,夏祭りと聞いて飛んできた雷神。太鼓で盆踊りを盛り上げてくれる,TRUE,floating
+76,盆踊りマスター,special,final,rare,70,heal|knowledge,屋台ドラゴン|盆踊りみならい|獅子舞ビースト,,盆踊りをマスターしたモンスター。この時のために頑張ってきた,TRUE,ground
+77,花火ノカミ,special,final,ultra_rare,70,power|create,お面ビースト|盆踊りみならい|獅子舞ビースト,,夜空に大輪の花火を咲かせる夏祭りの守り神。現れると祭りの熱気が最高潮になる,TRUE,floating
+78,神輿ノオウ,special,final,ultra_rare,70,power|create,お面ビースト,,祭りの神輿と一体になった王様モンスター。力強い掛け声で仲間を奮い立たせる,TRUE,floating

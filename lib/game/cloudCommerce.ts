@@ -1,6 +1,7 @@
 import { collection, doc, getDoc, getDocs, serverTimestamp, setDoc } from "firebase/firestore";
 import type { GameState } from "@/types/game";
 import type { InventoryProfile, PurchaseHistoryRecord, WalletSummary } from "@/types/commerce";
+import { getFirebaseAuth } from "@/lib/firebase/auth";
 import { getFirebaseFirestore } from "@/lib/firebase/firestore";
 
 const COMMERCE_SCHEMA_VERSION = 1;
@@ -93,6 +94,38 @@ export async function loadCloudInventoryProfile(uid: string): Promise<Partial<In
   const snapshot = await getDoc(getInventoryDocRef(uid));
   if (!snapshot.exists()) return null;
   return snapshot.data() as Partial<InventoryProfile>;
+}
+
+export async function spendCloudPaidCoins(
+  eventId: string,
+  itemId: string
+): Promise<{ spent: boolean; paidCoinBalance: number }> {
+  const user = getFirebaseAuth().currentUser;
+  if (!user) throw new Error("Authentication is required to spend paid coins.");
+
+  const idToken = await user.getIdToken();
+  const response = await fetch("/api/wallet/spend", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ eventId, itemId })
+  });
+  const payload = (await response.json()) as {
+    spent?: boolean;
+    paidCoinBalance?: number;
+    error?: string;
+  };
+
+  if (!response.ok || typeof payload.paidCoinBalance !== "number") {
+    throw new Error(payload.error || "Failed to spend paid coins.");
+  }
+
+  return {
+    spent: payload.spent === true,
+    paidCoinBalance: Math.max(0, payload.paidCoinBalance)
+  };
 }
 
 export async function saveCloudWalletSummary(uid: string, state: GameState): Promise<void> {

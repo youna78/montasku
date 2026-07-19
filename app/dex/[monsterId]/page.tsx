@@ -93,7 +93,7 @@ export default function DexDetailPage() {
             </div>
           </div>
         </div>
-        {monster && isEventMonster(monster.monsterId) && <p className="event-monster-note">春イベント限定モンスター</p>}
+        {monster && isEventMonster(monster.monsterId) && <p className="event-monster-note">イベント限定モンスター</p>}
         <div className="status-panel compact-status-panel dex-detail-status">
           <div className="status-row">
             <span>名前</span>

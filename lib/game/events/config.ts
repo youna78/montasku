@@ -3,6 +3,7 @@ import type { GameEventConfig, UserEventState } from "@/types/event";
 export const SPRING_EASTER_EVENT_ID = "spring_easter_2026";
 export const JUNE_SHRINE_EVENT_ID = "june_shrine_2026";
 export const JULY_SUMMERTIME_EVENT_ID = "july_summertime_2026";
+export const AUGUST_NATSUMATSURI_EVENT_ID = "august_natsumatsuri_2026";
 
 export const SPRING_EASTER_EVENT: GameEventConfig = {
   eventId: SPRING_EASTER_EVENT_ID,
@@ -236,7 +237,90 @@ export const JULY_SUMMERTIME_EVENT: GameEventConfig = {
   }
 };
 
-export const GAME_EVENTS: GameEventConfig[] = [SPRING_EASTER_EVENT, JUNE_SHRINE_EVENT, JULY_SUMMERTIME_EVENT];
+export const AUGUST_NATSUMATSURI_EVENT: GameEventConfig = {
+  eventId: AUGUST_NATSUMATSURI_EVENT_ID,
+  slug: "august_natsumatsuri",
+  name: "モンタスク夏祭り",
+  startsAt: "2026-08-01T00:00:00+09:00",
+  endsAt: "2026-08-31T23:59:59+09:00",
+  announcementStartsAt: "2026-07-29T00:00:00+09:00",
+  targetUsers: "all",
+  heroImagePath: "/img/illustration/icatch_august_natsumatsuri_01.png",
+  homeBannerImagePath: "/img/illustration/icatch_august_natsumatsuri_home_01.png",
+  shopBannerImagePath: "/img/illustration/icatch_august_shop_01.png",
+  bannerLabel: "イベント開催中",
+  description: "8月限定の夏祭りモンスター登場！タスクを達成して育ててみよう",
+  notice: "期間限定です。イベントショップは開催中のみ利用できます。",
+  freeEggMonsterId: 65,
+  freeEggClaimCount: 1,
+  rewardPreviewMonsterIds: [65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78],
+  featuredMonsterIds: [66, 67],
+  freeCoinShopItems: [
+    {
+      itemId: "august_natsumatsuri_bg_free",
+      title: "盆踊り会場",
+      description: "お昼の明るい盆踊りステージでお祭りを楽しめる背景です。",
+      rewardType: "background",
+      currencyType: "free_coin",
+      price: 500,
+      imagePath: "/img/background/bg_august_bonodori_01.png",
+      grantValue: "august_natsumatsuri_bonodori",
+      rarity: "rare",
+      availability: "active_only"
+    }
+  ],
+  paidCoinShopItems: [
+    {
+      itemId: "august_natsumatsuri_egg_paid",
+      title: "夏まつり卵",
+      description: "夏祭りモンスターに出会える8月イベント卵です。",
+      rewardType: "event_egg",
+      currencyType: "paid_coin",
+      price: 300,
+      imagePath: "/img/monster/monster_renewal_65_august_natsumatsuri_egg_01.png",
+      grantValue: "65",
+      rarity: "rare",
+      availability: "active_only"
+    },
+    {
+      itemId: "august_natsumatsuri_bg_night_paid",
+      title: "夜の夏まつり屋台",
+      description: "夜の夏祭りの屋台風景で素敵な時間を過ごせる背景です。",
+      rewardType: "background",
+      currencyType: "paid_coin",
+      price: 500,
+      imagePath: "/img/background/bg_august_natsumatsuri_night_01.png",
+      grantValue: "august_natsumatsuri_bg_night",
+      rarity: "rare",
+      availability: "active_only"
+    },
+    {
+      itemId: "august_natsumatsuri_frame_paid",
+      title: "屋台フレーム",
+      description: "金魚すくいやヨーヨー、かき氷が入った夏まつりフレームです。",
+      rewardType: "frame",
+      currencyType: "paid_coin",
+      price: 500,
+      imagePath: "/img/deco_frame/frame_august_yatai_01_aligned_01.png",
+      grantValue: "august_yatai_frame",
+      rarity: "rare",
+      availability: "active_only"
+    }
+  ],
+  mission: {
+    loginDaysRequired: 7,
+    dailyLoginBonusFreeCoins: 2,
+    loginRewardFrameId: "august_morningglory",
+    loginRewardTitle: "あさがおフレーム"
+  }
+};
+
+export const GAME_EVENTS: GameEventConfig[] = [
+  SPRING_EASTER_EVENT,
+  JUNE_SHRINE_EVENT,
+  JULY_SUMMERTIME_EVENT,
+  AUGUST_NATSUMATSURI_EVENT
+];
 
 export function createInitialUserEventState(eventId: string): UserEventState {
   return {

@@ -14,7 +14,7 @@ import type {
 } from "@/types/game";
 import type { LevelingMaster, MonsterMaster, TaskMaster } from "@/types/master";
 import { LETTER_ITEM_IMAGES } from "./assets";
-import { GAME_EVENTS, JULY_SUMMERTIME_EVENT, JUNE_SHRINE_EVENT, SPRING_EASTER_EVENT, getEventById, isEventActive, normalizeUserEventState } from "./events";
+import { GAME_EVENTS, JUNE_SHRINE_EVENT, SPRING_EASTER_EVENT, getEventById, isEventActive, normalizeUserEventState } from "./events";
 import { getGameNow } from "./virtualTime";
 import { evaluateEvolution, resolveBirthMonsterId, resolveEggEvolutionMonsterId } from "./evolution";
 import { getAttributeCharmItem, getBoosterShopItem, getDecorationShopItem, getPaidBackgroundShopItem, getPaidBundleShopItem, getPaidFrameShopItem } from "./shop";
@@ -148,7 +148,7 @@ export type ForceStartEventEggResult = {
 export type PurchaseEventRewardResult = {
   nextState: GameState;
   purchased: boolean;
-  reason?: "event_not_found" | "event_inactive" | "item_not_found" | "already_owned" | "insufficient_free_coins" | "insufficient_paid_coins";
+  reason?: "event_not_found" | "event_inactive" | "item_not_found" | "already_owned" | "insufficient_free_coins" | "insufficient_paid_coins" | "wallet_sync_failed";
 };
 
 export type FinishEndEventResult = GameState;
@@ -543,11 +543,11 @@ function buildFarewellLetter(state: GameState, monster: MonsterMaster | undefine
 }
 
 function buildSeasonalFarewellLetter(state: GameState, monster: MonsterMaster | undefined): LetterRecord {
-  const fromMonsterName = monster?.name ?? "春のモンスター";
+  const fromMonsterName = monster?.name ?? "イベントモンスター";
   return {
-    letterId: `seasonal-farewell-${SPRING_EASTER_EVENT.eventId}-${fromMonsterName}-${state.lastPlayedDate}`,
-    title: "あめのきせつへ",
-    body: `${fromMonsterName} は 春のひかりを たっぷり あつめて つぎの旅へ 出かけました。\n梅雨のあいだも きみのタスクを そっと おうえんしています。`,
+    letterId: `seasonal-farewell-${monster?.monsterId ?? state.currentMonsterId}-${fromMonsterName}-${state.lastPlayedDate}`,
+    title: "つぎのきせつへ",
+    body: `${fromMonsterName} は たくさんの おもいでを むねに、つぎの旅へ 出かけました。\nこれからも きみのタスクを そっと おうえんしています。`,
     imagePath: LETTER_ITEM_IMAGES[0],
     fromMonsterId: monster?.monsterId ?? state.currentMonsterId,
     fromMonsterName,
@@ -989,7 +989,7 @@ export function reconcileMonsterProgress(params: {
   levelingRows: LevelingMaster[];
 }): GameState {
   const { state, monsters, levelingRows } = params;
-  let nextState = restorePrematureEventIntroSeen(retireEndedEventMonsterForActiveEvent(retireSpringEventMonsterForJune(state, monsters), monsters));
+  let nextState = retireEndedEventMonsterForActiveEvent(retireSpringEventMonsterForJune(state, monsters), monsters);
 
   if (nextState.hasCompletedCurrentBirth) {
     while (true) {
@@ -1016,30 +1016,18 @@ export function reconcileMonsterProgress(params: {
   return nextState;
 }
 
-function restorePrematureEventIntroSeen(state: GameState): GameState {
-  const now = getGameNow().getTime();
-  let nextState = state;
-
-  for (const eventConfig of GAME_EVENTS) {
-    const eventState = normalizeUserEventState(eventConfig.eventId, nextState.eventStates[eventConfig.eventId]);
-    if (!eventState.hasSeenIntroPopup || !eventState.updatedAt) continue;
-
-    const startsAt = new Date(eventConfig.startsAt).getTime();
-    const markedAt = new Date(eventState.updatedAt).getTime();
-    if (Number.isNaN(markedAt) || now < startsAt || markedAt >= startsAt) continue;
-
-    nextState = updateEventState(nextState, eventConfig.eventId, (current) => ({
-      ...current,
-      hasSeenIntroPopup: false
-    }));
-  }
-
-  return nextState;
-}
-
 function retireEndedEventMonsterForActiveEvent(state: GameState, monsters: MonsterMaster[] = []): GameState {
-  if (!isEventActive(JULY_SUMMERTIME_EVENT)) return state;
-  if (!JUNE_SHRINE_EVENT.rewardPreviewMonsterIds.includes(state.currentMonsterId)) return state;
+  const activeEvent = GAME_EVENTS
+    .filter((eventConfig) => isEventActive(eventConfig))
+    .sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime())[0];
+  if (!activeEvent) return state;
+
+  const previousEvent = GAME_EVENTS.find((eventConfig) =>
+    eventConfig.eventId !== activeEvent.eventId &&
+    new Date(eventConfig.endsAt).getTime() < new Date(activeEvent.startsAt).getTime() &&
+    eventConfig.rewardPreviewMonsterIds.includes(state.currentMonsterId)
+  );
+  if (!previousEvent) return state;
 
   const currentMonster = monsters.find((monster) => monster.monsterId === state.currentMonsterId);
   const nextLetter = buildSeasonalFarewellLetter(state, currentMonster);

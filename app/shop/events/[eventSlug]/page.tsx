@@ -173,13 +173,14 @@ export default function EventShopDetailPage() {
     router.push("/tasks");
   };
 
-  const onPurchase = (itemId: string) => {
+  const onPurchase = async (itemId: string) => {
     const item = [...eventConfig.freeCoinShopItems, ...eventConfig.paidCoinShopItems].find((entry) => entry.itemId === itemId);
-    const result = purchaseEventReward(eventConfig.eventId, itemId);
+    const result = await purchaseEventReward(eventConfig.eventId, itemId);
     if (!item || !result) return;
     if (!result.purchased) {
       if (result.reason === "insufficient_free_coins") setMessage("フリーコインがたりません");
       else if (result.reason === "insufficient_paid_coins") setMessage("モンタコインがたりません");
+      else if (result.reason === "wallet_sync_failed") setMessage("残高を確認できませんでした。通信状態を確認して、もう一度お試しください");
       else if (result.reason === "already_owned") setMessage("すでに所持しています");
       else setMessage("交換できませんでした");
       return;

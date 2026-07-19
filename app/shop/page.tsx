@@ -1361,7 +1361,7 @@ export default function ShopPage() {
 
       {activeEvent && (
         <Link href={`/shop/events/${activeEvent.slug}`} className="card decorated-card event-shop-link-card">
-          <img src="/img/illustration/icatch_july_shop_icon_01.png" alt="" className="event-shop-link-card-icon" />
+          <img src={activeEvent.shopBannerImagePath?.replace("_shop_01.png", "_shop_icon_01.png") ?? "/img/icon/icon_shop_01.png"} alt="" className="event-shop-link-card-icon" />
           <div className="event-shop-link-card-copy">
             <span className="notification-badge notification-badge-event">イベントショップ</span>
             <strong>{activeEvent.name}</strong>

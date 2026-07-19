@@ -64,7 +64,21 @@ const MONSTER_IMAGE_BY_ID: Record<number, string> = {
   61: "/img/monster/monster_renewal_61_summer_mermaid_01.png",
   62: "/img/monster/monster_renewal_62_dreaming_whale_01.png",
   63: "/img/monster/monster_renewal_63_poseidon_01.png",
-  64: "/img/monster/monster_renewal_64_surfing_cat_01.png"
+  64: "/img/monster/monster_renewal_64_surfing_cat_01.png",
+  65: "/img/monster/monster_renewal_65_august_natsumatsuri_egg_01.png",
+  66: "/img/monster/monster_renewal_66_matsuri_pink_slime_01.png",
+  67: "/img/monster/monster_renewal_67_matsuri_blue_slime_01.png",
+  68: "/img/monster/monster_renewal_68_mini_matsuri_fairy_01.png",
+  69: "/img/monster/monster_renewal_69_matsuri_mini_dragon_01.png",
+  70: "/img/monster/monster_renewal_70_matsuri_mini_beast_01.png",
+  71: "/img/monster/monster_renewal_71_yatai_dragon_01.png",
+  72: "/img/monster/monster_renewal_72_bonodori_minara_i_01.png",
+  73: "/img/monster/monster_renewal_73_shishimai_beast_01.png",
+  74: "/img/monster/monster_renewal_74_omen_beast_01.png",
+  75: "/img/monster/monster_renewal_75_matsuri_raijin_01.png",
+  76: "/img/monster/monster_renewal_76_bonodori_master_01.png",
+  77: "/img/monster/monster_renewal_77_hanabi_no_kami_01.png",
+  78: "/img/monster/monster_renewal_78_mikoshi_no_ou_01.png"
 };
 
 const MONSTER_RENEWAL_STARTS_AT = "2026-06-01T00:00:00+09:00";
@@ -207,7 +221,24 @@ const MONSTER_RENEWAL_MOTION_BY_ID: Record<number, Partial<Record<MonsterMotionK
   61: { walk: createRenewalMotion("monster_renewal_61_summer_mermaid", "walk", 182), happy: createRenewalMotion("monster_renewal_61_summer_mermaid", "happy", 182) },
   62: { walk: createRenewalMotion("monster_renewal_62_dreaming_whale", "walk"), happy: createRenewalMotion("monster_renewal_62_dreaming_whale", "happy") },
   63: { walk: createRenewalMotion("monster_renewal_63_poseidon", "walk", 175), happy: createRenewalMotion("monster_renewal_63_poseidon", "happy", 175) },
-  64: { walk: createRenewalMotion("monster_renewal_64_surfing_cat", "walk", 190), happy: createRenewalMotion("monster_renewal_64_surfing_cat", "happy", 190) }
+  64: { walk: createRenewalMotion("monster_renewal_64_surfing_cat", "walk", 190), happy: createRenewalMotion("monster_renewal_64_surfing_cat", "happy", 190) },
+  65: {
+    sway: { ...FOUR_FRAME_MOTION, imagePath: "/img/monster/monster_renewal_65_august_natsumatsuri_egg_sway_4f.png", displaySize: 190 },
+    happy: createRenewalMotion("monster_renewal_65_august_natsumatsuri_egg", "happy", 190)
+  },
+  66: { walk: createRenewalMotion("monster_renewal_66_matsuri_pink_slime", "walk"), happy: createRenewalMotion("monster_renewal_66_matsuri_pink_slime", "happy") },
+  67: { walk: createRenewalMotion("monster_renewal_67_matsuri_blue_slime", "walk"), happy: createRenewalMotion("monster_renewal_67_matsuri_blue_slime", "happy") },
+  68: { walk: createRenewalMotion("monster_renewal_68_mini_matsuri_fairy", "walk"), happy: createRenewalMotion("monster_renewal_68_mini_matsuri_fairy", "happy") },
+  69: { walk: createRenewalMotion("monster_renewal_69_matsuri_mini_dragon", "walk"), happy: createRenewalMotion("monster_renewal_69_matsuri_mini_dragon", "happy") },
+  70: { walk: createRenewalMotion("monster_renewal_70_matsuri_mini_beast", "walk"), happy: createRenewalMotion("monster_renewal_70_matsuri_mini_beast", "happy") },
+  71: { walk: createRenewalMotion("monster_renewal_71_yatai_dragon", "walk"), happy: createRenewalMotion("monster_renewal_71_yatai_dragon", "happy") },
+  72: { walk: createRenewalMotion("monster_renewal_72_bonodori_minara_i", "walk"), happy: createRenewalMotion("monster_renewal_72_bonodori_minara_i", "happy") },
+  73: { walk: createRenewalMotion("monster_renewal_73_shishimai_beast", "walk"), happy: createRenewalMotion("monster_renewal_73_shishimai_beast", "happy") },
+  74: { walk: createRenewalMotion("monster_renewal_74_omen_beast", "walk"), happy: createRenewalMotion("monster_renewal_74_omen_beast", "happy") },
+  75: { walk: createRenewalMotion("monster_renewal_75_matsuri_raijin", "walk"), happy: createRenewalMotion("monster_renewal_75_matsuri_raijin", "happy") },
+  76: { walk: createRenewalMotion("monster_renewal_76_bonodori_master", "walk"), happy: createRenewalMotion("monster_renewal_76_bonodori_master", "happy") },
+  77: { walk: createRenewalMotion("monster_renewal_77_hanabi_no_kami", "walk"), happy: createRenewalMotion("monster_renewal_77_hanabi_no_kami", "happy") },
+  78: { walk: createRenewalMotion("monster_renewal_78_mikoshi_no_ou", "walk"), happy: createRenewalMotion("monster_renewal_78_mikoshi_no_ou", "happy") }
 };
 
 function isMonsterRenewalActive(now: Date = getGameNow()): boolean {

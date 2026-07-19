@@ -8,12 +8,14 @@ import { loadMonstersMaster } from "@/lib/csv/monstersMaster";
 import { loadTasksMaster } from "@/lib/csv/tasksMaster";
 import { loadCloudGameState, saveCloudGameState } from "@/lib/game/cloudState";
 import { loadCloudEventStates, saveCloudEventStates } from "@/lib/game/cloudEvents";
+import { getEventById } from "@/lib/game/events";
 import {
   appendCloudPurchaseHistory,
   loadCloudInventoryProfile,
   loadCloudWalletSummary,
   mergeCommerceIntoGameState,
-  saveCloudCommerceState
+  saveCloudCommerceState,
+  spendCloudPaidCoins
 } from "@/lib/game/cloudCommerce";
 import {
   addTaskToActive,
@@ -113,7 +115,7 @@ type UseGameResult = {
   claimEventFreeEgg: (eventId: string) => EventEggClaimResult | null;
   queueEventEgg: (eventId: string) => EventEggUseResult | null;
   forceStartEventEgg: (eventId: string) => ForceStartEventEggResult | null;
-  purchaseEventReward: (eventId: string, itemId: string) => PurchaseEventRewardResult | null;
+  purchaseEventReward: (eventId: string, itemId: string) => Promise<PurchaseEventRewardResult | null>;
   markEventIntroPopupSeen: (eventId: string) => void;
 };
 
@@ -859,18 +861,46 @@ export function useGame(): UseGameResult {
   );
 
   const purchaseEventReward = useCallback(
-    (eventId: string, itemId: string): PurchaseEventRewardResult | null => {
+    async (eventId: string, itemId: string): Promise<PurchaseEventRewardResult | null> => {
       const current = gameStateRef.current;
       if (!current) return null;
       const result = runPurchaseEventReward(current, eventId, itemId);
+      const eventConfig = getEventById(eventId);
+      const item = eventConfig
+        ? [...eventConfig.freeCoinShopItems, ...eventConfig.paidCoinShopItems].find((entry) => entry.itemId === itemId)
+        : null;
+
+      if (result.purchased && item?.currencyType === "paid_coin" && user) {
+        try {
+          const spendResult = await spendCloudPaidCoins(eventId, itemId);
+          if (!spendResult.spent) {
+            const insufficientResult: PurchaseEventRewardResult = {
+              nextState: { ...current, paidCoinBalance: spendResult.paidCoinBalance },
+              purchased: false,
+              reason: "insufficient_paid_coins"
+            };
+            commitState(insufficientResult.nextState);
+            return insufficientResult;
+          }
+          result.nextState = {
+            ...result.nextState,
+            paidCoinBalance: spendResult.paidCoinBalance
+          };
+        } catch (error) {
+          console.error("[useGame] failed to spend cloud paid coins", error);
+          return { nextState: current, purchased: false, reason: "wallet_sync_failed" };
+        }
+      }
+
       commitState(result.nextState);
       if (result.purchased) {
         trackEvent("shop_purchase", {
           item_id: itemId,
-          item_name: itemId,
-          item_type: "event_reward",
+          item_name: item?.title ?? itemId,
+          item_type: item?.rewardType ?? "event_reward",
           event_id: eventId,
-          currency_type: itemId.includes("_paid") || itemId.includes("_egg_paid") ? "paid_coin" : "free_coin"
+          currency_type: item?.currencyType ?? (itemId.includes("_paid") || itemId.includes("_egg_paid") ? "paid_coin" : "free_coin"),
+          price: item?.price ?? 0
         });
       }
       if (user && result.purchased) {
