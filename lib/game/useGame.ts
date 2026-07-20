@@ -9,6 +9,7 @@ import { loadTasksMaster } from "@/lib/csv/tasksMaster";
 import { loadCloudGameState, saveCloudGameState } from "@/lib/game/cloudState";
 import { loadCloudEventStates, saveCloudEventStates } from "@/lib/game/cloudEvents";
 import { getEventById } from "@/lib/game/events";
+import { getMonsterImage, getMonsterMotionAsset } from "@/lib/game/assets";
 import {
   appendCloudPurchaseHistory,
   loadCloudInventoryProfile,
@@ -78,6 +79,65 @@ import type { CharmAttribute, GameState } from "@/types/game";
 import { getBoosterShopItem, getDecorationShopItem, getPaidBackgroundShopItem, getPaidBundleShopItem, getPaidFrameShopItem } from "@/lib/game/shop";
 import type { PurchaseHistoryRecord } from "@/types/commerce";
 import type { LevelingMaster, MonsterMaster, TaskMaster } from "@/types/master";
+
+type GameMasters = {
+  tasks: TaskMaster[];
+  levelingRows: LevelingMaster[];
+  monsters: MonsterMaster[];
+};
+
+let gameMastersPromise: Promise<GameMasters> | null = null;
+let hydratedUserUidThisSession: string | null = null;
+
+function loadGameMasters(): Promise<GameMasters> {
+  if (!gameMastersPromise) {
+    gameMastersPromise = Promise.all([
+      loadTasksMaster(),
+      loadLevelingMaster(),
+      loadMonstersMaster()
+    ])
+      .then(([tasks, levelingRows, monsters]) => ({ tasks, levelingRows, monsters }))
+      .catch((error) => {
+        gameMastersPromise = null;
+        throw error;
+      });
+  }
+  return gameMastersPromise;
+}
+
+async function preloadMonsterAssets(monsterId: number): Promise<void> {
+  if (typeof window === "undefined") return;
+
+  const paths = new Set<string>([getMonsterImage(monsterId)]);
+  for (const kind of ["walk", "sway"] as const) {
+    const motionAsset = getMonsterMotionAsset(monsterId, kind);
+    if (motionAsset) paths.add(motionAsset.imagePath);
+  }
+
+  await Promise.all(
+    [...paths].map(
+      (path) =>
+        new Promise<void>((resolve) => {
+          const image = new Image();
+          const finish = () => resolve();
+          const timeout = window.setTimeout(finish, 3000);
+          image.onload = () => {
+            window.clearTimeout(timeout);
+            finish();
+          };
+          image.onerror = () => {
+            window.clearTimeout(timeout);
+            finish();
+          };
+          image.src = path;
+          if (image.complete) {
+            window.clearTimeout(timeout);
+            finish();
+          }
+        })
+    )
+  );
+}
 
 type UseGameResult = {
   tasks: TaskMaster[];
@@ -165,13 +225,33 @@ export function useGame(): UseGameResult {
 
   useEffect(() => {
     if (isAuthLoading) return;
+    let cancelled = false;
 
     async function init() {
+      setIsLoading(true);
+      let localState: GameState | null = null;
       try {
-        const loadedTasks = await loadTasksMaster();
-        const loadedLeveling = await loadLevelingMaster();
-        const localState = loadGameState(loadedTasks, loadedLeveling);
+        const {
+          tasks: loadedTasks,
+          levelingRows: loadedLeveling,
+          monsters: loadedMonsters
+        } = await loadGameMasters();
+        localState = loadGameState(loadedTasks, loadedLeveling);
         let loadedState = localState;
+        let shouldMarkMigrated = false;
+        const canRenderLocalState = !user || hydratedUserUidThisSession === user.uid;
+
+        if (cancelled) return;
+        setTasks(loadedTasks);
+        setLevelingRows(loadedLeveling);
+        setMonsters(loadedMonsters);
+        await preloadMonsterAssets(localState.currentMonsterId);
+        if (cancelled) return;
+        if (canRenderLocalState) {
+          setGameState(localState);
+          gameStateRef.current = localState;
+          setIsLoading(false);
+        }
 
         if (user) {
           const [cloudState, cloudWallet, cloudInventory, cloudEventStates] = await Promise.all([
@@ -193,7 +273,7 @@ export function useGame(): UseGameResult {
               loadedLeveling
             );
           } else {
-            await saveCloudGameState(user.uid, localState, { migratedFromLocal: true });
+            shouldMarkMigrated = true;
             loadedState = hydrateGameState(
               {
                 ...localState,
@@ -208,54 +288,63 @@ export function useGame(): UseGameResult {
           }
 
           loadedState = mergeCommerceIntoGameState(loadedState, cloudWallet, cloudInventory);
-          await saveCloudCommerceState(user.uid, loadedState);
-          await saveCloudEventStates(user.uid, loadedState.eventStates);
         }
 
-        setTasks(loadedTasks);
-        setLevelingRows(loadedLeveling);
-        setGameState(loadedState);
-        gameStateRef.current = loadedState;
+        const reconciledState = reconcileMonsterProgress({
+          state: loadedState,
+          monsters: loadedMonsters,
+          levelingRows: loadedLeveling
+        });
+        await preloadMonsterAssets(reconciledState.currentMonsterId);
+        if (cancelled) return;
 
-        try {
-          const loadedMonsters = await loadMonstersMaster();
-          const reconciledState = reconcileMonsterProgress({
-            state: loadedState,
-            monsters: loadedMonsters,
-            levelingRows: loadedLeveling
+        setGameState(reconciledState);
+        gameStateRef.current = reconciledState;
+        saveGameState(reconciledState);
+        if (user) hydratedUserUidThisSession = user.uid;
+
+        if (user) {
+          void saveCloudGameState(
+            user.uid,
+            reconciledState,
+            shouldMarkMigrated ? { migratedFromLocal: true } : undefined
+          ).catch((error) => {
+            console.error("[useGame] failed to save initialized cloud state", error);
           });
-          setMonsters(loadedMonsters);
-          if (reconciledState !== loadedState) {
-            setGameState(reconciledState);
-            gameStateRef.current = reconciledState;
-            saveGameState(reconciledState);
-            if (user) {
-              await saveCloudGameState(user.uid, reconciledState);
-              await saveCloudCommerceState(user.uid, reconciledState);
-              await saveCloudEventStates(user.uid, reconciledState.eventStates);
-            }
-          }
-        } catch (monsterError) {
-          console.error("[useGame] failed to load monsters CSV", monsterError);
-          setMonsters([]);
+          void saveCloudCommerceState(user.uid, reconciledState).catch((error) => {
+            console.error("[useGame] failed to save initialized commerce state", error);
+          });
+          void saveCloudEventStates(user.uid, reconciledState.eventStates).catch((error) => {
+            console.error("[useGame] failed to save initialized event state", error);
+          });
         }
       } catch (taskError) {
         console.error("[useGame] failed to initialize game", taskError);
-        const fallbackState = loadGameState([]);
-        setTasks([]);
-        setMonsters([]);
-        setLevelingRows([]);
-        setGameState(fallbackState);
-        gameStateRef.current = fallbackState;
+        if (localState && !cancelled) {
+          setGameState(localState);
+          gameStateRef.current = localState;
+          saveGameState(localState);
+        } else if (!cancelled) {
+          const fallbackState = loadGameState([]);
+          setTasks([]);
+          setMonsters([]);
+          setLevelingRows([]);
+          setGameState(fallbackState);
+          gameStateRef.current = fallbackState;
+        }
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     }
 
     init().catch((unexpectedError) => {
       console.error("[useGame] unexpected init error", unexpectedError);
-      setIsLoading(false);
+      if (!cancelled) setIsLoading(false);
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [isAuthLoading, user]);
   useEffect(() => {
     gameStateRef.current = gameState;

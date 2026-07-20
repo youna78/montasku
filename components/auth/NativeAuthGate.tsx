@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { isNativeMobileApp } from "@/lib/platform/capacitor";
+import { GameLoadingScreen } from "@/components/common/GameLoadingScreen";
 import { useAuth } from "./AuthProvider";
 
 export function NativeAuthGate({ children }: { children: ReactNode }) {
@@ -15,7 +16,7 @@ export function NativeAuthGate({ children }: { children: ReactNode }) {
   }, []);
 
   if (!hasCheckedPlatform || (isNativeApp && isConfigured && isLoading)) {
-    return <main className="page-shell"><div className="card decorated-card auth-card-message auth-card-message-centered">ログイン状態を確認しています...</div></main>;
+    return <GameLoadingScreen message="ログイン状態を確認しています..." />;
   }
 
   return <>{children}</>;

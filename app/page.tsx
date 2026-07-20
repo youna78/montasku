@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { GameLoadingScreen } from "@/components/common/GameLoadingScreen";
 import { loadLevelingMaster } from "@/lib/csv/levelingMaster";
 import { loadTasksMaster } from "@/lib/csv/tasksMaster";
 import { getInitialRoute, loadGameState } from "@/lib/game/state";
@@ -11,8 +12,7 @@ export default function Page() {
 
   useEffect(() => {
     async function bootstrap() {
-      const tasks = await loadTasksMaster();
-      const levelingRows = await loadLevelingMaster();
+      const [tasks, levelingRows] = await Promise.all([loadTasksMaster(), loadLevelingMaster()]);
       const gameState = loadGameState(tasks, levelingRows);
       router.replace(getInitialRoute(gameState));
     }
@@ -22,5 +22,5 @@ export default function Page() {
     });
   }, [router]);
 
-  return <main>Loading...</main>;
+  return <GameLoadingScreen />;
 }

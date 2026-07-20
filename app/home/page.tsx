@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { EvolutionOverlay } from "@/components/common/EvolutionOverlay";
+import { GameLoadingScreen } from "@/components/common/GameLoadingScreen";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { trackEvent } from "@/lib/analytics/gtag";
 import { HOME_ANNOUNCEMENTS } from "@/lib/game/announcements";
@@ -88,7 +89,7 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (!gameState) return;
+    if (isLoading || !gameState) return;
     if (gameState.endEventPending) {
       router.replace("/end-event");
       return;
@@ -104,7 +105,7 @@ export default function HomePage() {
     if (!gameState.hasSeenTutorial) {
       router.replace("/tutorial");
     }
-  }, [gameState, router]);
+  }, [gameState, isLoading, router]);
 
   const visibleEvents = getVisibleHomeEvents();
   const activeEvent = visibleEvents[0] ?? null;
@@ -147,7 +148,10 @@ export default function HomePage() {
   };
 
   if (isLoading || !gameState) {
-    return <main>Loading...</main>;
+    const loadingMonster = gameState
+      ? monsters.find((monster) => monster.monsterId === gameState.currentMonsterId)
+      : null;
+    return <GameLoadingScreen monsterImagePath={loadingMonster ? getMonsterImage(loadingMonster.monsterId) : null} />;
   }
 
   const currentMonster = monsters.find((m) => m.monsterId === gameState.currentMonsterId);
