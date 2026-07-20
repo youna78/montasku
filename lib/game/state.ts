@@ -100,7 +100,7 @@ export type ToggleDecorationResult = {
 export type PurchaseCharmResult = {
   nextState: GameState;
   purchased: boolean;
-  reason?: "insufficient_coins" | "invalid_item";
+  reason?: "insufficient_coins" | "invalid_item" | "login_required" | "wallet_sync_failed";
 };
 
 export type UseCharmResult = {
@@ -148,7 +148,7 @@ export type ForceStartEventEggResult = {
 export type PurchaseEventRewardResult = {
   nextState: GameState;
   purchased: boolean;
-  reason?: "event_not_found" | "event_inactive" | "item_not_found" | "already_owned" | "insufficient_free_coins" | "insufficient_paid_coins" | "wallet_sync_failed";
+  reason?: "event_not_found" | "event_inactive" | "item_not_found" | "already_owned" | "insufficient_free_coins" | "insufficient_paid_coins" | "login_required" | "wallet_sync_failed";
 };
 
 export type FinishEndEventResult = GameState;

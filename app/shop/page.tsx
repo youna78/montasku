@@ -336,12 +336,14 @@ export default function ShopPage() {
     setMessage("こうにゅうしました");
   };
 
-  const onBuyPaidCharm = (attribute: (typeof SHOP_PAID_ATTRIBUTE_CHARMS)[number]["attribute"]) => {
-    const result = purchasePaidAttributeCharm(attribute);
+  const onBuyPaidCharm = async (attribute: (typeof SHOP_PAID_ATTRIBUTE_CHARMS)[number]["attribute"]) => {
+    const result = await purchasePaidAttributeCharm(attribute);
     const item = SHOP_PAID_ATTRIBUTE_CHARMS.find((charm) => charm.attribute === attribute);
     if (!result) return;
     if (!result.purchased) {
-      setMessage(item ? `${item.title} を買うモンタコインがたりません` : "モンタコインがたりません");
+      if (result.reason === "login_required") setMessage("モンタコインの商品を購入するにはログインしてください");
+      else if (result.reason === "wallet_sync_failed") setMessage("残高を確認できませんでした。通信状態を確認して、もう一度お試しください");
+      else setMessage(item ? `${item.title} を買うモンタコインがたりません` : "モンタコインがたりません");
       return;
     }
 

@@ -99,7 +99,11 @@ export async function loadCloudInventoryProfile(uid: string): Promise<Partial<In
 export async function spendCloudPaidCoins(
   eventId: string,
   itemId: string
-): Promise<{ spent: boolean; paidCoinBalance: number }> {
+): Promise<{
+  spent: boolean;
+  paidCoinBalance: number;
+  reason?: "already_owned" | "insufficient_paid_coins";
+}> {
   const user = getFirebaseAuth().currentUser;
   if (!user) throw new Error("Authentication is required to spend paid coins.");
 
@@ -115,6 +119,7 @@ export async function spendCloudPaidCoins(
   const payload = (await response.json()) as {
     spent?: boolean;
     paidCoinBalance?: number;
+    reason?: "already_owned" | "insufficient_paid_coins";
     error?: string;
   };
 
@@ -124,7 +129,43 @@ export async function spendCloudPaidCoins(
 
   return {
     spent: payload.spent === true,
-    paidCoinBalance: Math.max(0, payload.paidCoinBalance)
+    paidCoinBalance: Math.max(0, payload.paidCoinBalance),
+    reason: payload.reason
+  };
+}
+
+export async function purchaseCloudPaidCharm(
+  itemId: string,
+  purchaseId: string,
+  platform: PurchaseHistoryRecord["platform"]
+): Promise<{ spent: boolean; paidCoinBalance: number; itemCount: number }> {
+  const user = getFirebaseAuth().currentUser;
+  if (!user) throw new Error("Authentication is required to purchase paid items.");
+
+  const idToken = await user.getIdToken();
+  const response = await fetch("/api/wallet/shop-purchase", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ itemId, purchaseId, platform })
+  });
+  const payload = (await response.json()) as {
+    spent?: boolean;
+    paidCoinBalance?: number;
+    itemCount?: number;
+    error?: string;
+  };
+
+  if (!response.ok || typeof payload.paidCoinBalance !== "number" || typeof payload.itemCount !== "number") {
+    throw new Error(payload.error || "Failed to purchase paid item.");
+  }
+
+  return {
+    spent: payload.spent === true,
+    paidCoinBalance: Math.max(0, payload.paidCoinBalance),
+    itemCount: Math.max(0, Math.floor(payload.itemCount))
   };
 }
 

@@ -15,6 +15,7 @@ import {
   loadCloudInventoryProfile,
   loadCloudWalletSummary,
   mergeCommerceIntoGameState,
+  purchaseCloudPaidCharm,
   saveCloudCommerceState,
   spendCloudPaidCoins
 } from "@/lib/game/cloudCommerce";
@@ -155,7 +156,7 @@ type UseGameResult = {
   equipFrame: (frameId: string) => EquipFrameResult | null;
   unequipFrame: () => EquipFrameResult | null;
   purchaseAttributeCharm: (attribute: CharmAttribute) => PurchaseCharmResult | null;
-  purchasePaidAttributeCharm: (attribute: CharmAttribute) => PurchaseCharmResult | null;
+  purchasePaidAttributeCharm: (attribute: CharmAttribute) => Promise<PurchaseCharmResult | null>;
   useAttributeCharm: (attribute: CharmAttribute, variant?: "free" | "paid") => UseCharmResult | null;
   purchaseBooster: (itemId: string) => PurchaseBoosterResult | null;
   purchasePaidBackground: (itemId: string) => PurchasePaidInventoryResult | null;
@@ -564,23 +565,48 @@ export function useGame(): UseGameResult {
   );
 
   const purchasePaidAttributeCharm = useCallback(
-    (attribute: CharmAttribute): PurchaseCharmResult | null => {
+    async (attribute: CharmAttribute): Promise<PurchaseCharmResult | null> => {
       const current = gameStateRef.current;
       if (!current) return null;
       const result = runPurchasePaidAttributeCharmItem(current, attribute);
-      commitState(result.nextState);
-      if (user && result.purchased) {
-        const record = buildPurchaseHistoryRecord({
-          productId: `paid_charm_${attribute}_01`,
-          productType: "premium_attribute_charm",
-          grantedItemIds: [`paid_charm_${attribute}_01`],
-          amountTotalMinor: 300,
-          currencyType: "paid_coin"
-        });
-        void appendCloudPurchaseHistory(user.uid, record).catch((error) => {
-          console.error("[useGame] failed to save paid attribute charm purchase history", error);
-        });
+      if (!result.purchased) return result;
+      if (!user) return { nextState: current, purchased: false, reason: "login_required" };
+
+      const itemId = `paid_charm_${attribute}_01`;
+      const record = buildPurchaseHistoryRecord({
+        productId: itemId,
+        productType: "premium_attribute_charm",
+        grantedItemIds: [itemId],
+        amountTotalMinor: 300,
+        currencyType: "paid_coin"
+      });
+
+      try {
+        const purchase = await purchaseCloudPaidCharm(itemId, record.purchaseId, record.platform);
+        if (!purchase.spent) {
+          const failedResult: PurchaseCharmResult = {
+            nextState: { ...current, paidCoinBalance: purchase.paidCoinBalance },
+            purchased: false,
+            reason: "insufficient_coins"
+          };
+          commitState(failedResult.nextState);
+          return failedResult;
+        }
+
+        result.nextState = {
+          ...result.nextState,
+          paidCoinBalance: purchase.paidCoinBalance,
+          ownedPaidCharmItemCounts: {
+            ...result.nextState.ownedPaidCharmItemCounts,
+            [attribute]: purchase.itemCount
+          }
+        };
+      } catch (error) {
+        console.error("[useGame] failed to purchase paid attribute charm", error);
+        return { nextState: current, purchased: false, reason: "wallet_sync_failed" };
       }
+
+      commitState(result.nextState);
       return result;
     },
     [buildPurchaseHistoryRecord, commitState, user]
@@ -959,17 +985,24 @@ export function useGame(): UseGameResult {
         ? [...eventConfig.freeCoinShopItems, ...eventConfig.paidCoinShopItems].find((entry) => entry.itemId === itemId)
         : null;
 
-      if (result.purchased && item?.currencyType === "paid_coin" && user) {
+      if (result.purchased && item?.currencyType === "paid_coin") {
+        if (!user) {
+          return { nextState: current, purchased: false, reason: "login_required" };
+        }
+
         try {
           const spendResult = await spendCloudPaidCoins(eventId, itemId);
           if (!spendResult.spent) {
-            const insufficientResult: PurchaseEventRewardResult = {
-              nextState: { ...current, paidCoinBalance: spendResult.paidCoinBalance },
+            const failedResult: PurchaseEventRewardResult = {
+              nextState:
+                spendResult.reason === "already_owned"
+                  ? { ...result.nextState, paidCoinBalance: spendResult.paidCoinBalance }
+                  : { ...current, paidCoinBalance: spendResult.paidCoinBalance },
               purchased: false,
-              reason: "insufficient_paid_coins"
+              reason: spendResult.reason ?? "insufficient_paid_coins"
             };
-            commitState(insufficientResult.nextState);
-            return insufficientResult;
+            commitState(failedResult.nextState);
+            return failedResult;
           }
           result.nextState = {
             ...result.nextState,

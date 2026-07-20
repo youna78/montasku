@@ -180,6 +180,7 @@ export default function EventShopDetailPage() {
     if (!result.purchased) {
       if (result.reason === "insufficient_free_coins") setMessage("フリーコインがたりません");
       else if (result.reason === "insufficient_paid_coins") setMessage("モンタコインがたりません");
+      else if (result.reason === "login_required") setMessage("モンタコインの商品を購入するにはログインしてください");
       else if (result.reason === "wallet_sync_failed") setMessage("残高を確認できませんでした。通信状態を確認して、もう一度お試しください");
       else if (result.reason === "already_owned") setMessage("すでに所持しています");
       else setMessage("交換できませんでした");
