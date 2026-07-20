@@ -3603,6 +3603,10 @@ button:disabled {
   padding: 20px;
 }
 
+.purchase-processing-overlay {
+  z-index: 100;
+}
+
 .auth-email-modal-card {
   width: min(100%, 480px);
   padding: clamp(18px, 4vw, 28px);

@@ -56,7 +56,7 @@ type PurchaseConfirmState = {
   priceLabel: string;
   message?: string;
   confirmLabel?: string;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
 };
 
 type FreeCategoryTab = "background" | "frame" | "deco" | "item";
@@ -118,7 +118,8 @@ export default function ShopPage() {
     purchaseDecoration,
     purchasePaidBackground,
     purchasePaidFrame,
-    purchasePaidBundle
+    purchasePaidBundle,
+    waitForPendingSave
   } = useGame();
 
   const [message, setMessage] = useState("");
@@ -135,6 +136,7 @@ export default function ShopPage() {
   const [nativePlatformLabel, setNativePlatformLabel] = useState("アプリ");
   const [nativeStoreProducts, setNativeStoreProducts] = useState<NativeStoreProductMap>({});
   const [nativeStoreProductError, setNativeStoreProductError] = useState("");
+  const [isPurchasePending, setIsPurchasePending] = useState(false);
 
   useEffect(() => {
     setIsNativeApp(isNativeMobileApp());
@@ -259,16 +261,27 @@ export default function ShopPage() {
 
   const requestPurchase = (
     confirm: Omit<PurchaseConfirmState, "onConfirm">,
-    onConfirm: () => void
+    onConfirm: () => void | Promise<void>
   ) => {
     setPurchaseConfirm({ ...confirm, onConfirm });
+  };
+
+  const runPurchaseAction = async (action: () => void | Promise<void>) => {
+    if (isPurchasePending) return;
+    setIsPurchasePending(true);
+    try {
+      await action();
+      await waitForPendingSave();
+    } finally {
+      setIsPurchasePending(false);
+    }
   };
 
   const onConfirmPurchase = () => {
     if (!purchaseConfirm) return;
     const action = purchaseConfirm.onConfirm;
     setPurchaseConfirm(null);
-    action();
+    void runPurchaseAction(action);
   };
 
   const onBuy = (itemId: string, price: number) => {
@@ -337,8 +350,8 @@ export default function ShopPage() {
   };
 
   const onBuyPaidCharm = async (attribute: (typeof SHOP_PAID_ATTRIBUTE_CHARMS)[number]["attribute"]) => {
-    const result = await purchasePaidAttributeCharm(attribute);
     const item = SHOP_PAID_ATTRIBUTE_CHARMS.find((charm) => charm.attribute === attribute);
+    const result = await purchasePaidAttributeCharm(attribute);
     if (!result) return;
     if (!result.purchased) {
       if (result.reason === "login_required") setMessage("モンタコインの商品を購入するにはログインしてください");
@@ -493,7 +506,7 @@ export default function ShopPage() {
     if (!bundleConfirm) return;
     const itemId = bundleConfirm.itemId;
     setBundleConfirm(null);
-    onBuyPaidBundle(itemId);
+    void runPurchaseAction(() => onBuyPaidBundle(itemId));
   };
 
   const onBuyDecoration = (itemId: string) => {
@@ -1278,6 +1291,14 @@ export default function ShopPage() {
       </section>
 
       {message && <div className="toast">{message}</div>}
+
+      {(isPurchasePending || checkoutItemId !== null) && (
+        <div className="auth-email-modal-overlay purchase-processing-overlay" role="status" aria-live="polite">
+          <div className="card decorated-card auth-email-modal-card">
+            <p className="auth-email-modal-title">購入処理中...</p>
+          </div>
+        </div>
+      )}
 
       {recentPurchase && (
         <div className="auth-email-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="shop-equip-modal-title">

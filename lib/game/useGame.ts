@@ -168,8 +168,8 @@ type UseGameResult = {
   unequipDecoration: (itemId: string) => ToggleDecorationResult | null;
   useBooster: (itemId: string) => UseBoosterResult | null;
   resolveDailyReviewTask: (taskId: number, didComplete: boolean) => DailyReviewResolveResult | null;
-  skipDailyReview: () => void;
-  finishDailyReview: () => void;
+  skipDailyReview: () => Promise<void>;
+  finishDailyReview: () => Promise<void>;
   startTutorialFlow: () => void;
   finishBirthEvent: () => void;
   finishEndEvent: () => void;
@@ -178,6 +178,7 @@ type UseGameResult = {
   forceStartEventEgg: (eventId: string) => ForceStartEventEggResult | null;
   purchaseEventReward: (eventId: string, itemId: string) => Promise<PurchaseEventRewardResult | null>;
   markEventIntroPopupSeen: (eventId: string) => void;
+  waitForPendingSave: () => Promise<void>;
 };
 
 export function useGame(): UseGameResult {
@@ -188,6 +189,7 @@ export function useGame(): UseGameResult {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const gameStateRef = useRef<GameState | null>(null);
+  const pendingSaveRef = useRef<Promise<void>>(Promise.resolve());
 
   const buildPurchaseHistoryRecord = useCallback(
     (params: {
@@ -366,22 +368,31 @@ export function useGame(): UseGameResult {
     window.sessionStorage.setItem(storageKey, "1");
   }, [gameState]);
 
-  const commitState = useCallback((next: GameState) => {
+  const commitState = useCallback(async (next: GameState): Promise<void> => {
     gameStateRef.current = next;
     setGameState(next);
     saveGameState(next);
     if (user) {
-      void saveCloudGameState(user.uid, next).catch((error) => {
-        console.error("[useGame] failed to save cloud game state", error);
+      pendingSaveRef.current = pendingSaveRef.current.then(async () => {
+        await Promise.all([
+          saveCloudGameState(user.uid, next).catch((error) => {
+            console.error("[useGame] failed to save cloud game state", error);
+          }),
+          saveCloudCommerceState(user.uid, next).catch((error) => {
+            console.error("[useGame] failed to save cloud commerce state", error);
+          }),
+          saveCloudEventStates(user.uid, next.eventStates).catch((error) => {
+            console.error("[useGame] failed to save cloud event state", error);
+          })
+        ]);
       });
-      void saveCloudCommerceState(user.uid, next).catch((error) => {
-        console.error("[useGame] failed to save cloud commerce state", error);
-      });
-      void saveCloudEventStates(user.uid, next.eventStates).catch((error) => {
-        console.error("[useGame] failed to save cloud event state", error);
-      });
+      await pendingSaveRef.current;
     }
   }, [user]);
+
+  const waitForPendingSave = useCallback(async () => {
+    await pendingSaveRef.current;
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -589,7 +600,7 @@ export function useGame(): UseGameResult {
             purchased: false,
             reason: "insufficient_coins"
           };
-          commitState(failedResult.nextState);
+          await commitState(failedResult.nextState);
           return failedResult;
         }
 
@@ -606,7 +617,7 @@ export function useGame(): UseGameResult {
         return { nextState: current, purchased: false, reason: "wallet_sync_failed" };
       }
 
-      commitState(result.nextState);
+      await commitState(result.nextState);
       return result;
     },
     [buildPurchaseHistoryRecord, commitState, user]
@@ -892,17 +903,17 @@ export function useGame(): UseGameResult {
     [commitState, monsters, tasks, levelingRows]
   );
 
-  const skipDailyReview = useCallback(() => {
+  const skipDailyReview = useCallback(async () => {
     const current = gameStateRef.current;
     if (!current) return;
-    commitState(runSkipDailyReview(current));
+    await commitState(runSkipDailyReview(current));
     trackEvent("daily_review_skip");
   }, [commitState]);
 
-  const finishDailyReview = useCallback(() => {
+  const finishDailyReview = useCallback(async () => {
     const current = gameStateRef.current;
     if (!current) return;
-    commitState(runFinishDailyReview(current));
+    await commitState(runFinishDailyReview(current));
     trackEvent("daily_review_finish");
   }, [commitState]);
 
@@ -1096,6 +1107,7 @@ export function useGame(): UseGameResult {
     queueEventEgg,
     forceStartEventEgg,
     purchaseEventReward,
-    markEventIntroPopupSeen
+    markEventIntroPopupSeen,
+    waitForPendingSave
   };
 }

@@ -27,6 +27,7 @@ export default function DailyReviewPage() {
     nextMonsterId: number;
   } | null>(null);
   const [afterEvolutionRoute, setAfterEvolutionRoute] = useState<string | null>(null);
+  const [isLeaving, setIsLeaving] = useState(false);
 
   useEffect(() => {
     if (!message) return;
@@ -98,6 +99,7 @@ export default function DailyReviewPage() {
 
   const leavePage = (nextRoute: string) => {
     if (pendingEvolutionScene) {
+      setIsLeaving(false);
       setAfterEvolutionRoute(nextRoute);
       setActiveEvolutionScene(pendingEvolutionScene);
       return;
@@ -105,13 +107,17 @@ export default function DailyReviewPage() {
     router.push(nextRoute);
   };
 
-  const onSkip = () => {
-    skipDailyReview();
+  const onSkip = async () => {
+    if (isLeaving) return;
+    setIsLeaving(true);
+    await skipDailyReview();
     leavePage("/home");
   };
 
-  const onFinish = () => {
-    finishDailyReview();
+  const onFinish = async () => {
+    if (isLeaving) return;
+    setIsLeaving(true);
+    await finishDailyReview();
     leavePage(getInitialRoute({ ...gameState, pendingDailyReview: null }));
   };
 
@@ -167,10 +173,10 @@ export default function DailyReviewPage() {
 
       <section className="card decorated-card review-actions-card">
         <div className="task-global-menu">
-          <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={onSkip}>
+          <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={onSkip} disabled={isLeaving}>
             あとで
           </button>
-          <button className="quest-btn task-global-menu-button task-global-menu-button-primary task-global-menu-button-wide" onClick={onFinish}>
+          <button className="quest-btn task-global-menu-button task-global-menu-button-primary task-global-menu-button-wide" onClick={onFinish} disabled={isLeaving}>
             確認を終える
           </button>
         </div>
@@ -178,6 +184,13 @@ export default function DailyReviewPage() {
 
       <DevDebugPanel gameState={gameState} monsters={monsters} />
       <BottomNav />
+      {isLeaving && (
+        <div className="auth-email-modal-overlay" role="status" aria-live="polite">
+          <div className="card decorated-card auth-email-modal-card">
+            <p className="auth-email-modal-title">保存しています...</p>
+          </div>
+        </div>
+      )}
       {activeEvolutionScene && (
         <EvolutionOverlay
           previousMonsterName={activeEvolutionScene.previousMonsterName}

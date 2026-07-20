@@ -20,7 +20,7 @@ type PurchaseConfirmState = {
   priceLabel: string;
   message?: string;
   confirmLabel?: string;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
 };
 
 export default function EventShopDetailPage() {
@@ -38,7 +38,8 @@ export default function EventShopDetailPage() {
     purchasePaidBundle,
     claimEventFreeEgg,
     queueEventEgg,
-    forceStartEventEgg
+    forceStartEventEgg,
+    waitForPendingSave
   } = useGame();
   const [message, setMessage] = useState("");
   const [showStartNowConfirm, setShowStartNowConfirm] = useState(false);
@@ -48,6 +49,7 @@ export default function EventShopDetailPage() {
   const [checkoutItemId, setCheckoutItemId] = useState<string | null>(null);
   const [isNativeApp, setIsNativeApp] = useState(false);
   const [nativePlatformLabel, setNativePlatformLabel] = useState("アプリ");
+  const [isPurchasePending, setIsPurchasePending] = useState(false);
 
   useEffect(() => {
     setIsNativeApp(isNativeMobileApp());
@@ -218,15 +220,29 @@ export default function EventShopDetailPage() {
     setMessage(`${item.title} をこうにゅうしました`);
   };
 
-  const requestPurchase = (confirm: Omit<PurchaseConfirmState, "onConfirm">, onConfirm: () => void) => {
+  const requestPurchase = (
+    confirm: Omit<PurchaseConfirmState, "onConfirm">,
+    onConfirm: () => void | Promise<void>
+  ) => {
     setPurchaseConfirm({ ...confirm, onConfirm });
+  };
+
+  const runPurchaseAction = async (action: () => void | Promise<void>) => {
+    if (isPurchasePending) return;
+    setIsPurchasePending(true);
+    try {
+      await action();
+      await waitForPendingSave();
+    } finally {
+      setIsPurchasePending(false);
+    }
   };
 
   const onConfirmPurchase = () => {
     if (!purchaseConfirm) return;
     const action = purchaseConfirm.onConfirm;
     setPurchaseConfirm(null);
-    action();
+    void runPurchaseAction(action);
   };
 
   const getBundleConfirmState = (itemId: string) => {
@@ -276,7 +292,7 @@ export default function EventShopDetailPage() {
     if (!bundleConfirm) return;
     const itemId = bundleConfirm.itemId;
     setBundleConfirm(null);
-    onPurchaseBundle(itemId);
+    void runPurchaseAction(() => onPurchaseBundle(itemId));
   };
 
   const onStartPaidCheckout = async (item: (typeof SHOP_PAID_COIN_ITEMS)[number]) => {
@@ -673,6 +689,14 @@ export default function EventShopDetailPage() {
 
       <DevDebugPanel gameState={gameState} monsters={monsters} />
       <BottomNav />
+
+      {(isPurchasePending || checkoutItemId !== null) && (
+        <div className="auth-email-modal-overlay event-shop-modal-overlay purchase-processing-overlay" role="status" aria-live="polite">
+          <div className="card decorated-card auth-email-modal-card event-shop-modal-card">
+            <p className="auth-email-modal-title">購入処理中...</p>
+          </div>
+        </div>
+      )}
 
       {showStartNowConfirm ? (
         <div className="auth-email-modal-overlay event-shop-modal-overlay">
