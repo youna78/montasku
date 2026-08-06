@@ -201,6 +201,11 @@ export default function HomePage() {
     : undefined;
   const monsterMotionClass = growthStage === "egg" ? "monster-img-alive" : "monster-img-walk-hop";
   const monsterMovementType = currentMonster?.movementType ?? "ground";
+  const hasAugustHappyHop =
+    monsterMotionKind === "happy" &&
+    typeof currentMonster?.monsterId === "number" &&
+    currentMonster.monsterId >= 65 &&
+    currentMonster.monsterId <= 78;
   const activeDecorations = gameState.selectedDecorationIds
     .map((itemId) => getDecorationShopItem(itemId))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
@@ -315,7 +320,7 @@ export default function HomePage() {
                 <div
                   role="img"
                   aria-label={currentMonster?.name ?? "monster"}
-                  className={`monster-motion-frame monster-motion-frame-${monsterMovementType} ${monsterMotionKind === "walk" ? "monster-motion-frame-walk" : ""}`}
+                  className={`monster-motion-frame monster-motion-frame-${monsterMovementType} ${monsterMotionKind === "walk" ? "monster-motion-frame-walk" : ""} ${hasAugustHappyHop ? "monster-motion-frame-happy-hop" : ""}`}
                 >
                   <div
                     key={`${monsterMotionKind}-${monsterCelebration?.id ?? "idle"}`}

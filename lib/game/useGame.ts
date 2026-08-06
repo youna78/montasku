@@ -90,6 +90,28 @@ type GameMasters = {
 let gameMastersPromise: Promise<GameMasters> | null = null;
 let hydratedUserUidThisSession: string | null = null;
 
+function getStateUpdatedAtMs(state: Partial<GameState> | null | undefined): number {
+  if (!state?.stateUpdatedAt) return 0;
+  const timestamp = new Date(state.stateUpdatedAt).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function mergeNewestEventStates(
+  localStates: GameState["eventStates"],
+  cloudStates: GameState["eventStates"]
+): GameState["eventStates"] {
+  const merged = { ...localStates };
+  for (const [eventId, cloudState] of Object.entries(cloudStates)) {
+    const localState = merged[eventId];
+    const localTime = localState?.updatedAt ? new Date(localState.updatedAt).getTime() : 0;
+    const cloudTime = cloudState.updatedAt ? new Date(cloudState.updatedAt).getTime() : 0;
+    if (!localState || !Number.isFinite(localTime) || cloudTime >= localTime) {
+      merged[eventId] = cloudState;
+    }
+  }
+  return merged;
+}
+
 function loadGameMasters(): Promise<GameMasters> {
   if (!gameMastersPromise) {
     gameMastersPromise = Promise.all([
@@ -110,7 +132,7 @@ async function preloadMonsterAssets(monsterId: number): Promise<void> {
   if (typeof window === "undefined") return;
 
   const paths = new Set<string>([getMonsterImage(monsterId)]);
-  for (const kind of ["walk", "sway"] as const) {
+  for (const kind of ["walk", "happy", "sway"] as const) {
     const motionAsset = getMonsterMotionAsset(monsterId, kind);
     if (motionAsset) paths.add(motionAsset.imagePath);
   }
@@ -264,13 +286,18 @@ export function useGame(): UseGameResult {
             loadCloudEventStates(user.uid)
           ]);
           if (cloudState) {
+            const mergedCloudEventStates = {
+              ...(cloudState.eventStates ?? {}),
+              ...cloudEventStates
+            };
+            const shouldPreferLocalState =
+              hydratedUserUidThisSession === user.uid &&
+              getStateUpdatedAtMs(localState) > getStateUpdatedAtMs(cloudState);
+            const baseState = shouldPreferLocalState ? localState : cloudState;
             loadedState = hydrateGameState(
               {
-                ...cloudState,
-                eventStates: {
-                  ...(cloudState.eventStates ?? {}),
-                  ...cloudEventStates
-                }
+                ...baseState,
+                eventStates: mergeNewestEventStates(localState.eventStates, mergedCloudEventStates)
               },
               loadedTasks,
               loadedLeveling
@@ -369,19 +396,23 @@ export function useGame(): UseGameResult {
   }, [gameState]);
 
   const commitState = useCallback(async (next: GameState): Promise<void> => {
-    gameStateRef.current = next;
-    setGameState(next);
-    saveGameState(next);
+    const updatedState: GameState = {
+      ...next,
+      stateUpdatedAt: new Date().toISOString()
+    };
+    gameStateRef.current = updatedState;
+    setGameState(updatedState);
+    saveGameState(updatedState);
     if (user) {
       pendingSaveRef.current = pendingSaveRef.current.then(async () => {
         await Promise.all([
-          saveCloudGameState(user.uid, next).catch((error) => {
+          saveCloudGameState(user.uid, updatedState).catch((error) => {
             console.error("[useGame] failed to save cloud game state", error);
           }),
-          saveCloudCommerceState(user.uid, next).catch((error) => {
+          saveCloudCommerceState(user.uid, updatedState).catch((error) => {
             console.error("[useGame] failed to save cloud commerce state", error);
           }),
-          saveCloudEventStates(user.uid, next.eventStates).catch((error) => {
+          saveCloudEventStates(user.uid, updatedState.eventStates).catch((error) => {
             console.error("[useGame] failed to save cloud event state", error);
           })
         ]);

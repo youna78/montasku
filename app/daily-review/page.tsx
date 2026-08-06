@@ -37,10 +37,10 @@ export default function DailyReviewPage() {
 
   useEffect(() => {
     if (!gameState) return;
-    if (!gameState.pendingDailyReview) {
+    if (!gameState.pendingDailyReview && !isLeaving && !pendingEvolutionScene && !activeEvolutionScene) {
       router.replace(getInitialRoute(gameState));
     }
-  }, [gameState, router]);
+  }, [activeEvolutionScene, gameState, isLeaving, pendingEvolutionScene, router]);
 
   if (isLoading || !gameState) {
     return <main>Loading...</main>;

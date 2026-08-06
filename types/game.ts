@@ -82,6 +82,7 @@ export type SavedUserEventState = {
 };
 
 export type GameState = {
+  stateUpdatedAt?: string;
   currentMonsterId: number;
   currentMonsterLevel: number;
   currentMonsterExp: number;

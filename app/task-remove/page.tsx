@@ -14,8 +14,9 @@ import type { TaskMaster } from "@/types/master";
 
 export default function TaskRemovePage() {
   const router = useRouter();
-  const { tasks, monsters, gameState, isLoading, removeTask } = useGame();
+  const { tasks, monsters, gameState, isLoading, removeTask, waitForPendingSave } = useGame();
   const [message, setMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!gameState) return;
@@ -49,7 +50,8 @@ export default function TaskRemovePage() {
   const currentMonster = monsters.find((monster) => monster.monsterId === gameState.currentMonsterId);
   const isAtMinTasks = limits.current <= limits.min;
 
-  const onRemoveTask = (taskId: number) => {
+  const onRemoveTask = async (taskId: number) => {
+    if (isSaving) return;
     const result = removeTask(taskId);
     if (!result) {
       setMessage("削除に失敗しました");
@@ -58,6 +60,9 @@ export default function TaskRemovePage() {
     if (result.removed) {
       playSfx("s_delete");
       setMessage("タスクを削除しました");
+      setIsSaving(true);
+      await waitForPendingSave();
+      setIsSaving(false);
       return;
     }
     if (result.reason === "min_reached") {
@@ -135,7 +140,7 @@ export default function TaskRemovePage() {
                   </small>
                 </div>
               </div>
-              <button className="quest-btn quest-btn-primary task-remove-button" onClick={() => onRemoveTask(task.taskId)} disabled={isAtMinTasks}>
+              <button className="quest-btn quest-btn-primary task-remove-button" onClick={() => onRemoveTask(task.taskId)} disabled={isAtMinTasks || isSaving}>
                 削除
               </button>
             </li>
@@ -145,6 +150,13 @@ export default function TaskRemovePage() {
 
       <DevDebugPanel gameState={gameState} monsters={monsters} />
       <BottomNav />
+      {isSaving && (
+        <div className="auth-email-modal-overlay purchase-processing-overlay" role="status" aria-live="polite">
+          <div className="card decorated-card auth-email-modal-card">
+            <p className="auth-email-modal-title">保存しています...</p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

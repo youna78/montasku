@@ -142,7 +142,7 @@ export type EventEggUseResult = {
 export type ForceStartEventEggResult = {
   nextState: GameState;
   started: boolean;
-  reason?: "event_not_found" | "no_egg" | "already_active";
+  reason?: "event_not_found" | "no_egg" | "already_active" | "tutorial_active";
 };
 
 export type PurchaseEventRewardResult = {
@@ -716,18 +716,25 @@ function normalizeState(
       ? legacyTotalExp(parsedLevel, parsedExp)
       : parsedExp;
   const resolvedLevel = resolveLevelFromExp(totalExp, table);
-  const hasCompletedInitialBirth =
+  const parsedHasCompletedInitialBirth =
     typeof parsed.hasCompletedInitialBirth === "boolean"
       ? parsed.hasCompletedInitialBirth
       : Number(parsed.currentMonsterId ?? initial.currentMonsterId) !== 1;
+  const hasSeenTutorial =
+    typeof parsed.hasSeenTutorial === "boolean" ? parsed.hasSeenTutorial : parsedHasCompletedInitialBirth;
+  const hasCompletedInitialBirth = hasSeenTutorial && parsedHasCompletedInitialBirth;
   const hasCompletedCurrentBirth =
-    typeof parsed.hasCompletedCurrentBirth === "boolean"
+    hasSeenTutorial &&
+    (typeof parsed.hasCompletedCurrentBirth === "boolean"
       ? parsed.hasCompletedCurrentBirth
-      : hasCompletedInitialBirth && Number(parsed.currentMonsterId ?? initial.currentMonsterId) !== 1;
+      : hasCompletedInitialBirth && Number(parsed.currentMonsterId ?? initial.currentMonsterId) !== 1);
+  const currentMonsterId = hasSeenTutorial
+    ? Number(parsed.currentMonsterId ?? initial.currentMonsterId)
+    : initial.currentMonsterId;
   const shouldQueueEndEvent =
     isEndLevel(resolvedLevel.level, table) &&
     hasCompletedCurrentBirth &&
-    Number(parsed.currentMonsterId ?? initial.currentMonsterId) !== 1;
+    currentMonsterId !== 1;
   const rawDiscovered = Array.isArray(parsed.discoveredMonsterIds) ? parsed.discoveredMonsterIds : [];
   const normalizedActiveTasks = normalizeActiveTasks(parsed.activeTasks, initial.activeTasks);
   const normalizedPendingDailyReview = normalizePendingDailyReview(parsed.pendingDailyReview);
@@ -761,6 +768,8 @@ function normalizeState(
   return {
     ...initial,
     ...parsed,
+    stateUpdatedAt: typeof parsed.stateUpdatedAt === "string" ? parsed.stateUpdatedAt : undefined,
+    currentMonsterId,
     currentMonsterLevel: resolvedLevel.level,
     currentMonsterExp: totalExp,
     freeCoins: typeof parsed.freeCoins === "number" ? Math.max(0, parsed.freeCoins) : initial.freeCoins,
@@ -790,10 +799,10 @@ function normalizeState(
     discoveredMonsterIds: uniqueNumbers([
       ...initial.discoveredMonsterIds,
       ...rawDiscovered,
-      Number(parsed.currentMonsterId ?? 1)
+      currentMonsterId
     ]),
     acquiredLetters: normalizeLetters(parsed.acquiredLetters),
-    hasSeenTutorial: typeof parsed.hasSeenTutorial === "boolean" ? parsed.hasSeenTutorial : hasCompletedInitialBirth,
+    hasSeenTutorial,
     isInTutorialFlow: typeof parsed.isInTutorialFlow === "boolean" ? parsed.isInTutorialFlow : false,
     onboardingCompletedTaskCount:
       typeof parsed.onboardingCompletedTaskCount === "number"
@@ -1944,6 +1953,9 @@ export function forceStartEventEgg(state: GameState, eventId: string, monsters: 
   if (!eventConfig) {
     return { nextState: state, started: false, reason: "event_not_found" };
   }
+  if (!state.hasSeenTutorial || state.isInTutorialFlow) {
+    return { nextState: state, started: false, reason: "tutorial_active" };
+  }
 
   const current = normalizeUserEventState(eventId, state.eventStates[eventId]);
   if (current.ownedEggCount <= 0) {
@@ -2055,6 +2067,7 @@ export function startTutorialFlow(state: GameState): GameState {
   }
   return {
     ...state,
+    currentMonsterId: 1,
     isInTutorialFlow: true
   };
 }

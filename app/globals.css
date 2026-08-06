@@ -3094,6 +3094,16 @@ button:disabled {
   animation: monster-walk-travel 5.4s ease-in-out infinite;
 }
 
+.monster-motion-frame-happy-hop {
+  transform-origin: 50% 90%;
+  animation: monster-happy-hop 800ms ease-in-out infinite;
+}
+
+.monster-motion-frame-happy-hop.monster-motion-frame-flying,
+.monster-motion-frame-happy-hop.monster-motion-frame-floating {
+  animation-name: monster-happy-hop-air;
+}
+
 .monster-img-alive {
   animation: monster-hop 1.15s steps(2, end) infinite;
   transform-origin: 50% 85%;
@@ -3143,6 +3153,32 @@ button:disabled {
   }
   100% {
     transform: translateX(-40px);
+  }
+}
+
+@keyframes monster-happy-hop {
+  0%,
+  100% {
+    transform: translateY(0) scaleX(1) scaleY(1);
+  }
+  18% {
+    transform: translateY(2px) scaleX(1.04) scaleY(0.96);
+  }
+  48% {
+    transform: translateY(-20px) scaleX(0.98) scaleY(1.02);
+  }
+  72% {
+    transform: translateY(0) scaleX(1.02) scaleY(0.98);
+  }
+}
+
+@keyframes monster-happy-hop-air {
+  0%,
+  100% {
+    transform: translateY(-30px);
+  }
+  50% {
+    transform: translateY(-48px);
   }
 }
 
@@ -3216,6 +3252,7 @@ button:disabled {
   .monster-img-alive,
   .monster-img-walk-hop,
   .monster-motion-frame-walk,
+  .monster-motion-frame-happy-hop,
   .monster-sprite {
     animation: none;
   }
