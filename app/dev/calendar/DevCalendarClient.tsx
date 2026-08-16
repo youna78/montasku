@@ -7,10 +7,11 @@ import { GAME_EVENTS, getEventStatusLabel, getRemainingDaysLabel, getVisibleHome
 import { clearVirtualGameNow, getGameNow, getVirtualGameNow, setVirtualGameNow } from "@/lib/game/virtualTime";
 
 const PRESETS = [
-  { label: "告知開始", value: "2026-05-28T00:00:00+09:00" },
-  { label: "6月開始", value: "2026-06-01T00:00:00+09:00" },
-  { label: "6月最終日", value: "2026-06-30T12:00:00+09:00" },
-  { label: "終了後", value: "2026-07-01T00:00:00+09:00" }
+  { label: "9月告知開始", value: "2026-08-29T00:00:00+09:00" },
+  { label: "9月開始", value: "2026-09-01T00:00:00+09:00" },
+  { label: "9月中旬", value: "2026-09-15T12:00:00+09:00" },
+  { label: "9月最終日", value: "2026-09-30T12:00:00+09:00" },
+  { label: "9月終了後", value: "2026-10-01T00:00:00+09:00" }
 ];
 
 function toDateTimeLocalValue(value: string): string {
@@ -102,7 +103,7 @@ export function DevCalendarClient() {
       <section className="card decorated-card">
         <div className="notification-card-head">
           <span className="notification-badge notification-badge-event">プリセット</span>
-          <h2>6月イベント確認</h2>
+          <h2>9月イベント確認</h2>
         </div>
         <div className="task-global-menu">
           {PRESETS.map((preset) => (
@@ -140,11 +141,11 @@ export function DevCalendarClient() {
           <Link href="/home" className="ui-link-button settings-menu-button settings-menu-button-primary">
             ホームで確認
           </Link>
-          <Link href="/event/june-shrine" className="ui-link-button settings-menu-button settings-menu-button-secondary">
-            6月イベントを見る
+          <Link href="/event/September_Fullmoon" className="ui-link-button settings-menu-button settings-menu-button-secondary">
+            9月イベントを見る
           </Link>
-          <Link href="/shop/events/june-shrine" className="ui-link-button settings-menu-button settings-menu-button-neutral">
-            6月ショップを見る
+          <Link href="/shop/events/September_Fullmoon" className="ui-link-button settings-menu-button settings-menu-button-neutral">
+            9月ショップを見る
           </Link>
         </div>
       </section>

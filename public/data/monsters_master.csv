@@ -77,3 +77,17 @@ monster_id,name,attribute,stage,rarity,unlock_lv,unlock_condition,evolution_from
 76,盆踊りマスター,special,final,rare,70,heal|knowledge,屋台ドラゴン|盆踊りみならい|獅子舞ビースト,,盆踊りをマスターしたモンスター。この時のために頑張ってきた,TRUE,ground
 77,花火ノカミ,special,final,ultra_rare,70,power|create,お面ビースト|盆踊りみならい|獅子舞ビースト,,夜空に大輪の花火を咲かせる夏祭りの守り神。現れると祭りの熱気が最高潮になる,TRUE,floating
 78,神輿ノオウ,special,final,ultra_rare,70,power|create,お面ビースト,,祭りの神輿と一体になった王様モンスター。力強い掛け声で仲間を奮い立たせる,TRUE,floating
+79,お月見卵,special,egg,rare,0,september_event1_start,,ススキのミニウサギ|団子作りミニウサギ,月の紋様が浮かぶ、お月見の時期だけ現れる特別なたまご。満月の夜になるとほのかに光る,TRUE,ground
+80,ススキのミニウサギ,special,baby,rare,5,heal|knowledge,お月見卵,月見モモンガ,ススキを抱えて月を眺める小さなウサギモンスター。月明かりの下でうとうとするのが好き,TRUE,ground
+81,団子作りミニウサギ,special,baby,rare,5,power|create,お月見卵,もちもちタヌキ|星拾いキツネ,月見団子をせっせと作る小さなウサギモンスター。つまみ食いの量は企業秘密,TRUE,ground
+82,月見モモンガ,special,child,rare,20,heal|knowledge,ススキのミニウサギ,月灯りフクロウ|雲渡りバク,月をもっと近くで見たいと願い、夜空を滑空できる姿になったモンスター。満月の夜はいつもより遠くまで飛べる,TRUE,flying
+83,もちもちタヌキ,special,child,ultra_rare,20,power|create,団子作りミニウサギ,銀河ウサギ機関士,月見団子を食べすぎて、いつの間にか丸々としたタヌキのような姿になった。力持ちで餅つきも得意,TRUE,ground
+84,星拾いキツネ,special,child,ultra_rare,20,power|create,団子作りミニウサギ,銀河ウサギ機関士|星空シカ,夜空からこぼれ落ちた星屑を集めるキツネモンスター。尻尾の先には集めた星の光が宿っている,TRUE,ground
+85,月灯りフクロウ,special,adult,rare,40,heal|knowledge,月見モモンガ,月読ノ白狼,古い望遠鏡で月と星を観測するフクロウモンスター。銀河鉄道の時刻を星の並びから読み取れるらしい,TRUE,flying
+86,雲渡りバク,special,adult,rare,40,heal|knowledge,月見モモンガ,夢渡リノ獏,月へ続く雲の上を歩くバクモンスター。眠る者の夢を食べ、やさしい星雲へ変えて夜空に返す,TRUE,floating
+87,銀河ウサギ機関士,special,adult,ultra_rare,40,power|create,もちもちタヌキ|星拾いキツネ,銀河鉄道ノ機関長,星の駅で機関車を整備するウサギモンスター。大きなレンチと油まみれの帽子を何より大切にしている,TRUE,ground
+88,星空シカ,special,adult,ultra_rare,40,power|create,星拾いキツネ,月影ノ白鹿,角の間に小さな星座を浮かべるシカモンスター。銀河を旅する者に進むべき道を示してくれる,TRUE,ground
+89,月読ノ白狼,special,final,rare,70,heal|knowledge,月灯りフクロウ,,満月の光を身に宿した白狼。静かな遠吠えは迷った旅人を月夜の道へ導くという,TRUE,ground
+90,夢渡リノ獏,special,final,rare,70,heal|knowledge,雲渡りバク,,夜空をゆっくり泳ぎながら夢と星雲を食べる幻想の獏。彼が通ったあとは淡い天の川が残る,TRUE,floating
+91,銀河鉄道ノ機関長,special,final,ultra_rare,70,power|create,銀河ウサギ機関士,,月へ向かう銀河鉄道を動かすウサギモンスターの機関長。星屑を蒸気に変え、満月の夜だけ列車を走らせる,TRUE,ground
+92,月影ノ白鹿,special,final,ultra_rare,70,power|create,星空シカ,,銀河の道を守る神秘的な白鹿。月光を宿した角が星の線路を照らし、列車を正しい旅路へ導く,TRUE,ground

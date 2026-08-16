@@ -4,6 +4,7 @@ export const SPRING_EASTER_EVENT_ID = "spring_easter_2026";
 export const JUNE_SHRINE_EVENT_ID = "june_shrine_2026";
 export const JULY_SUMMERTIME_EVENT_ID = "july_summertime_2026";
 export const AUGUST_NATSUMATSURI_EVENT_ID = "august_natsumatsuri_2026";
+export const SEPTEMBER_FULLMOON_EVENT_ID = "September_Fullmoon_2026";
 
 export const SPRING_EASTER_EVENT: GameEventConfig = {
   eventId: SPRING_EASTER_EVENT_ID,
@@ -315,11 +316,115 @@ export const AUGUST_NATSUMATSURI_EVENT: GameEventConfig = {
   }
 };
 
+export const SEPTEMBER_FULLMOON_EVENT: GameEventConfig = {
+  eventId: SEPTEMBER_FULLMOON_EVENT_ID,
+  slug: "September_Fullmoon",
+  name: "お月見銀河鉄道",
+  startsAt: "2026-09-01T00:00:00+09:00",
+  endsAt: "2026-09-30T23:59:59+09:00",
+  announcementStartsAt: "2026-08-29T00:00:00+09:00",
+  targetUsers: "all",
+  heroImagePath: "/img/illustration/icatch_september_otsukimiginga_01.png",
+  homeBannerImagePath: "/img/illustration/icatch_august_otsukimi_home_01.png",
+  shopBannerImagePath: "/img/illustration/icatch_september_shop_icon_01.png",
+  shopIconImagePath: "/img/illustration/icatch_august_otsukimi_home_01.png",
+  bannerLabel: "イベント開催中",
+  description: "9月限定のお月見モンスター登場！タスクを達成して育ててみよう",
+  notice: "期間限定です。イベントショップは開催中のみ利用できます。",
+  freeEggMonsterId: 79,
+  freeEggClaimCount: 1,
+  rewardPreviewMonsterIds: [79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92],
+  featuredMonsterIds: [80, 81],
+  freeCoinShopItems: [
+    {
+      itemId: "September_Fullmoon_bg_free",
+      title: "お部屋でお月見",
+      description: "和室から月を眺められる、お月見銀河鉄道イベント限定の背景です。",
+      rewardType: "background",
+      currencyType: "free_coin",
+      price: 500,
+      imagePath: "/img/background/bg_september_fullmoon_otsukimi_01.png",
+      grantValue: "September_Fullmoon_othukimi",
+      rarity: "rare",
+      availability: "active_only"
+    },
+    {
+      itemId: "September_Fullmoon_deco_free",
+      title: "お月見団子",
+      description: "お月見団子を飾って秋の夜を楽しめるイベント限定デコです。",
+      rewardType: "decoration",
+      currencyType: "free_coin",
+      price: 300,
+      imagePath: "/img/decoration/deco_september_moon_dumplings_01.png",
+      grantValue: "September_moondumplings_deco",
+      rarity: "rare",
+      availability: "active_only"
+    }
+  ],
+  paidCoinShopItems: [
+    {
+      itemId: "September_Fullmoon_egg_paid",
+      title: "お月見卵",
+      description: "お月見銀河鉄道イベントの進化ラインで育てられる特別なたまごです。",
+      rewardType: "event_egg",
+      currencyType: "paid_coin",
+      price: 300,
+      imagePath: "/img/monster/monster_renewal_79_moon_viewing_egg_01.png",
+      grantValue: "79",
+      rarity: "rare",
+      availability: "active_only"
+    },
+    {
+      itemId: "September_Fullmoon_frame_paid",
+      title: "銀河フレーム",
+      description: "月や雲、団子をあしらったお月見銀河鉄道イベント限定フレームです。",
+      rewardType: "frame",
+      currencyType: "paid_coin",
+      price: 300,
+      imagePath: "/img/deco_frame/frame_september_galaxy_01_aligned_01.png",
+      grantValue: "September_ginga_frame",
+      rarity: "rare",
+      availability: "active_only"
+    },
+    {
+      itemId: "September_Fullmoon_bg_night_paid",
+      title: "銀河へようこそ",
+      description: "銀河鉄道と満月を眺めて過ごせるイベント限定背景です。",
+      rewardType: "background",
+      currencyType: "paid_coin",
+      price: 500,
+      imagePath: "/img/background/bg_september_fullmoon_galaxy_01.png",
+      grantValue: "September_Fullmoon_bg_ginga",
+      rarity: "rare",
+      availability: "active_only"
+    },
+    {
+      itemId: "September_Fullmoon_deco_paid",
+      title: "銀河鉄道",
+      description: "銀河鉄道をホームに飾れる、お月見銀河鉄道イベント限定デコです。",
+      rewardType: "decoration",
+      currencyType: "paid_coin",
+      price: 300,
+      imagePath: "/img/decoration/deco_september_galaxy_railway_01.png",
+      grantValue: "September_galaxyrailway_deco",
+      rarity: "rare",
+      availability: "active_only"
+    }
+  ],
+  mission: {
+    loginDaysRequired: 7,
+    dailyLoginBonusFreeCoins: 2,
+    loginRewardFrameId: "September_othukimi_frame",
+    loginRewardTitle: "お月見フレーム"
+  }
+};
+
 export const GAME_EVENTS: GameEventConfig[] = [
   SPRING_EASTER_EVENT,
   JUNE_SHRINE_EVENT,
   JULY_SUMMERTIME_EVENT,
-  AUGUST_NATSUMATSURI_EVENT
+  AUGUST_NATSUMATSURI_EVENT,
+  SEPTEMBER_FULLMOON_EVENT
 ];
 
 export function createInitialUserEventState(eventId: string): UserEventState {

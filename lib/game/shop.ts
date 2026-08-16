@@ -97,7 +97,7 @@ export type ShopDecorationItem = {
   title: string;
   description: string;
   price: number;
-  currencyType: "paid_coin";
+  currencyType: "free_coin" | "paid_coin";
   imagePath: string;
   previewClassName?: string;
   availability?: "always" | "event_limited";
@@ -214,7 +214,9 @@ function applyDecorationMaster(item: ShopDecorationItem): ShopDecorationItem {
     ...item,
     title: row.display_name || item.title,
     description: row.short_description || item.description,
-    price: toNumber(row.price_monta_coins, item.price),
+    price: item.currencyType === "free_coin"
+      ? toNumber(row.price_free_coins, item.price)
+      : toNumber(row.price_monta_coins, item.price),
     imagePath: resolveAssetPath(row.current_path, item.imagePath) ?? item.imagePath
   };
 }
@@ -323,6 +325,22 @@ export const SHOP_BACKGROUNDS: ShopBackgroundItem[] = [
     price: 0,
     imagePath: "/img/background/bg_august_natsumatsuri_night_01.png",
     availability: "event_limited"
+  },
+  {
+    itemId: "September_Fullmoon_othukimi",
+    title: "お部屋でお月見",
+    description: "和室から月を眺められる9月イベント限定背景です。",
+    price: 0,
+    imagePath: "/img/background/bg_september_fullmoon_otsukimi_01.png",
+    availability: "event_limited"
+  },
+  {
+    itemId: "September_Fullmoon_bg_ginga",
+    title: "銀河へようこそ",
+    description: "銀河鉄道と満月を眺められる9月イベント限定背景です。",
+    price: 0,
+    imagePath: "/img/background/bg_september_fullmoon_galaxy_01.png",
+    availability: "event_limited"
   }
 ].map((item) => applyBackgroundMaster(item as ShopBackgroundItem));
 
@@ -421,6 +439,24 @@ export const SHOP_FRAMES: ShopFrameItem[] = [
     price: 0,
     previewClassName: "frame-preview-august-morningglory",
     imagePath: "/img/deco_frame/frame_august_morningglory_01_aligned_01.png",
+    availability: "event_limited"
+  },
+  {
+    itemId: "September_ginga_frame",
+    title: "銀河フレーム",
+    description: "月や雲、団子をあしらった9月イベント限定フレームです。",
+    price: 0,
+    previewClassName: "frame-preview-september-galaxy",
+    imagePath: "/img/deco_frame/frame_september_galaxy_01_aligned_01.png",
+    availability: "event_limited"
+  },
+  {
+    itemId: "September_othukimi_frame",
+    title: "お月見フレーム",
+    description: "7日ログインで受け取れる9月イベント限定フレームです。",
+    price: 0,
+    previewClassName: "frame-preview-september-otsukimi",
+    imagePath: "/img/deco_frame/frame_september_otsukimi_01_aligned_01.png",
     availability: "event_limited"
   }
 ].map((item) => applyFrameMaster(item as ShopFrameItem));
@@ -712,6 +748,24 @@ export const SHOP_DECORATIONS: ShopDecorationItem[] = [
     currencyType: "paid_coin",
     imagePath: "/img/decoration/deco_flower_lantern_01.png",
     availability: "event_limited"
+  },
+  {
+    itemId: "September_moondumplings_deco",
+    title: "お月見団子",
+    description: "お月見団子をホームに飾れる9月イベント限定デコです。",
+    price: 300,
+    currencyType: "free_coin",
+    imagePath: "/img/decoration/deco_september_moon_dumplings_01.png",
+    availability: "event_limited"
+  },
+  {
+    itemId: "September_galaxyrailway_deco",
+    title: "銀河鉄道",
+    description: "銀河鉄道をホームに飾れる9月イベント限定デコです。",
+    price: 300,
+    currencyType: "paid_coin",
+    imagePath: "/img/decoration/deco_september_galaxy_railway_01.png",
+    availability: "event_limited"
   }
 ].map((item) => applyDecorationMaster(item as ShopDecorationItem));
 
@@ -807,6 +861,10 @@ export function getFrameThemeClass(frameId: string): string {
       return "theme-frame-august-yatai";
     case "august_morningglory":
       return "theme-frame-august-morningglory";
+    case "September_ginga_frame":
+      return "theme-frame-september-galaxy";
+    case "September_othukimi_frame":
+      return "theme-frame-september-otsukimi";
     case "paid_frame_starlight_01":
       return "theme-frame-starlight";
     case "classic_gold":

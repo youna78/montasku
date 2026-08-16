@@ -36,17 +36,17 @@ export default function EndEventPage() {
       ? `${currentMonster?.name ?? "モンスター"} はここを去ったようだ。\nあれ、何かあるみたい。`
       : `てがみを てにいれた。\n${currentMonster?.name ?? "モンスター"} は タマゴを おいていったようだ。`;
 
-  const onContinue = () => {
+  const onContinue = async () => {
+    if (isFinishing) return;
+
     if (phase === "farewell") {
       setPhase("letter");
       return;
     }
 
-    finishEndEvent();
     setIsFinishing(true);
-    window.setTimeout(() => {
-      router.replace("/home");
-    }, 80);
+    await finishEndEvent();
+    router.replace("/home");
   };
 
   return (
@@ -62,8 +62,8 @@ export default function EndEventPage() {
           <p className="rpg-dialogue-text">{dialogue}</p>
         </div>
         <div className="centered-button-wrap">
-          <button className="primary ui-image-button" onClick={onContinue}>
-            {phase === "farewell" ? "ネクスト" : "新しいタマゴへ"}
+          <button className="primary ui-image-button" onClick={onContinue} disabled={isFinishing}>
+            {isFinishing ? "保存中..." : phase === "farewell" ? "ネクスト" : "新しいタマゴへ"}
           </button>
         </div>
       </section>

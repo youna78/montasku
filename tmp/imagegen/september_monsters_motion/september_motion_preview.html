@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>September monster motion preview</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; }
+    body { margin: 0; padding: 32px; color: #241c31; background: #eef2f8; }
+    h1 { margin: 0 0 24px; font-size: 32px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+    .card { padding: 14px; border: 1px solid #aab5ca; border-radius: 8px; background: #fff; }
+    .checker { display: grid; place-items: center; aspect-ratio: 1; overflow: hidden; background-color: #f6f7fa; background-image: linear-gradient(45deg, #dfe4ed 25%, transparent 25%), linear-gradient(-45deg, #dfe4ed 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #dfe4ed 75%), linear-gradient(-45deg, transparent 75%, #dfe4ed 75%); background-position: 0 0, 0 12px, 12px -12px, -12px 0; background-size: 24px 24px; }
+    img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+    h2 { margin: 12px 0 2px; font-size: 17px; }
+    p { margin: 0; color: #667085; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>September monster motion preview</h1>
+  <div class="grid" id="grid"></div>
+  <script>
+    const monsters = [
+      [79, 'お月見卵', 'moon_viewing_egg', ['sway', 'happy']],
+      [80, 'ススキのミニウサギ', 'susuki_mini_rabbit', ['walk', 'happy']],
+      [81, '団子作りミニウサギ', 'dango_maker_mini_rabbit', ['walk', 'happy']],
+      [82, '月見モモンガ', 'moon_viewing_flying_squirrel', ['walk', 'happy']],
+      [83, 'もちもちタヌキ', 'mochi_tanuki', ['walk', 'happy']],
+      [84, '星拾いキツネ', 'star_gathering_fox', ['walk', 'happy']],
+      [85, '月灯りフクロウ', 'moonlight_owl', ['walk', 'happy']],
+      [86, '雲渡りバク', 'cloud_walking_baku', ['walk', 'happy']],
+      [87, '銀河ウサギ機関士', 'galaxy_rabbit_engineer', ['walk', 'happy']],
+      [88, '星空シカ', 'starry_sky_deer', ['walk', 'happy']],
+      [89, '月読ノ白狼', 'tsukuyomi_white_wolf', ['walk', 'happy']],
+      [90, '夢渡リノ獏', 'dream_walking_baku', ['walk', 'happy']],
+      [91, '銀河鉄道ノ機関長', 'galaxy_railway_conductor', ['walk', 'happy']],
+      [92, '月影ノ白鹿', 'moon_shadow_white_deer', ['walk', 'happy']],
+    ];
+    const grid = document.querySelector('#grid');
+    for (const [id, name, slug, motions] of monsters) {
+      for (const motion of motions) {
+        const file = `monster_renewal_${id}_${slug}_${motion}_4f.gif`;
+        grid.insertAdjacentHTML('beforeend', `<article class="card"><div class="checker"><img src="gifs/${file}" alt="${name} ${motion}"></div><h2>${id} ${name} / ${motion}</h2><p>${file}</p></article>`);
+      }
+    }
+  </script>
+</body>
+</html>

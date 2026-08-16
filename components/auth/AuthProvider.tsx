@@ -57,6 +57,10 @@ function toAuthErrorMessage(error: unknown, fallback: string): string {
   const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
   const nativeMessage = error instanceof Error ? error.message : "";
 
+  if (code.startsWith("auth/requests-from-referer-") && code.endsWith("-are-blocked.")) {
+    return "この検証URLはGoogleログインの許可対象に登録されていません。localhostで開くか、Google CloudのAPIキー設定に検証URLを追加してください。";
+  }
+
   switch (code) {
     case "auth/invalid-email":
       return "メールアドレスの形式が正しくありません。";

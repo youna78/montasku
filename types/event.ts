@@ -1,4 +1,4 @@
-export type EventRewardType = "event_egg" | "background" | "frame";
+export type EventRewardType = "event_egg" | "background" | "frame" | "decoration";
 export type EventCurrencyType = "free_coin" | "paid_coin";
 
 export type EventRewardShopItem = {
@@ -32,6 +32,7 @@ export type GameEventConfig = {
   heroImagePath: string;
   homeBannerImagePath?: string;
   shopBannerImagePath?: string;
+  shopIconImagePath?: string;
   bannerLabel: string;
   description: string;
   notice: string;

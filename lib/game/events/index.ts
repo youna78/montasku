@@ -1,8 +1,8 @@
 import type { GameEventConfig } from "@/types/event";
 import { getGameNow } from "@/lib/game/virtualTime";
-import { AUGUST_NATSUMATSURI_EVENT, GAME_EVENTS, JULY_SUMMERTIME_EVENT, JUNE_SHRINE_EVENT, SPRING_EASTER_EVENT, createInitialUserEventState, normalizeUserEventState } from "./config";
+import { AUGUST_NATSUMATSURI_EVENT, GAME_EVENTS, JULY_SUMMERTIME_EVENT, JUNE_SHRINE_EVENT, SEPTEMBER_FULLMOON_EVENT, SPRING_EASTER_EVENT, createInitialUserEventState, normalizeUserEventState } from "./config";
 
-export { AUGUST_NATSUMATSURI_EVENT, GAME_EVENTS, JULY_SUMMERTIME_EVENT, JUNE_SHRINE_EVENT, SPRING_EASTER_EVENT, createInitialUserEventState, normalizeUserEventState };
+export { AUGUST_NATSUMATSURI_EVENT, GAME_EVENTS, JULY_SUMMERTIME_EVENT, JUNE_SHRINE_EVENT, SEPTEMBER_FULLMOON_EVENT, SPRING_EASTER_EVENT, createInitialUserEventState, normalizeUserEventState };
 
 export function getEventById(eventId: string): GameEventConfig | null {
   return GAME_EVENTS.find((event) => event.eventId === eventId) ?? null;

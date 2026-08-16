@@ -733,7 +733,6 @@ function normalizeState(
     : initial.currentMonsterId;
   const shouldQueueEndEvent =
     isEndLevel(resolvedLevel.level, table) &&
-    hasCompletedCurrentBirth &&
     currentMonsterId !== 1;
   const rawDiscovered = Array.isArray(parsed.discoveredMonsterIds) ? parsed.discoveredMonsterIds : [];
   const normalizedActiveTasks = normalizeActiveTasks(parsed.activeTasks, initial.activeTasks);
@@ -1015,7 +1014,7 @@ export function reconcileMonsterProgress(params: {
     }
   }
 
-  if (nextState.hasCompletedCurrentBirth && isEndLevel(nextState.currentMonsterLevel, levelingRows) && nextState.currentMonsterId !== 1) {
+  if (isEndLevel(nextState.currentMonsterLevel, levelingRows) && nextState.currentMonsterId !== 1) {
     nextState = {
       ...nextState,
       endEventPending: true
@@ -1119,7 +1118,7 @@ function applyEvolutionAndEndChecks(
     }
   }
 
-  if (nextState.hasCompletedCurrentBirth && didLevelUp && isEndLevel(nextState.currentMonsterLevel, levelingRows)) {
+  if (didLevelUp && isEndLevel(nextState.currentMonsterLevel, levelingRows) && nextState.currentMonsterId !== 1) {
     nextState = {
       ...nextState,
       endEventPending: true
@@ -2034,6 +2033,9 @@ export function purchaseEventReward(state: GameState, eventId: string, itemId: s
   if (item.rewardType === "frame" && state.ownedFrameIds.includes(item.grantValue)) {
     return { nextState: state, purchased: false, reason: "already_owned" };
   }
+  if (item.rewardType === "decoration" && state.ownedDecorationIds.includes(item.grantValue)) {
+    return { nextState: state, purchased: false, reason: "already_owned" };
+  }
 
   let nextState = spendEventCurrency(state, item.currencyType, item.price);
   if (item.rewardType === "background") {
@@ -2045,6 +2047,11 @@ export function purchaseEventReward(state: GameState, eventId: string, itemId: s
     nextState = {
       ...nextState,
       ownedFrameIds: uniqueStrings([...nextState.ownedFrameIds, item.grantValue])
+    };
+  } else if (item.rewardType === "decoration") {
+    nextState = {
+      ...nextState,
+      ownedDecorationIds: uniqueStrings([...nextState.ownedDecorationIds, item.grantValue])
     };
   } else {
     nextState = updateEventState(nextState, eventId, (eventState) => ({

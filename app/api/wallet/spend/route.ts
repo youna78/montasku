@@ -55,6 +55,8 @@ export async function POST(request: Request) {
           ? inventory?.ownedBackgroundIds
           : item.rewardType === "frame"
             ? inventory?.ownedFrameIds
+            : item.rewardType === "decoration"
+              ? inventory?.ownedDecorationIds
             : null;
 
       if (Array.isArray(ownedItemIds) && ownedItemIds.includes(item.grantValue)) {
@@ -84,8 +86,12 @@ export async function POST(request: Request) {
         { merge: true }
       );
 
-      if (item.rewardType === "background" || item.rewardType === "frame") {
-        const ownedField = item.rewardType === "background" ? "ownedBackgroundIds" : "ownedFrameIds";
+      if (item.rewardType === "background" || item.rewardType === "frame" || item.rewardType === "decoration") {
+        const ownedField = item.rewardType === "background"
+          ? "ownedBackgroundIds"
+          : item.rewardType === "frame"
+            ? "ownedFrameIds"
+            : "ownedDecorationIds";
         transaction.set(
           inventoryRef,
           {

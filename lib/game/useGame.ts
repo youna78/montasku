@@ -194,7 +194,7 @@ type UseGameResult = {
   finishDailyReview: () => Promise<void>;
   startTutorialFlow: () => void;
   finishBirthEvent: () => void;
-  finishEndEvent: () => void;
+  finishEndEvent: () => Promise<void>;
   claimEventFreeEgg: (eventId: string) => EventEggClaimResult | null;
   queueEventEgg: (eventId: string) => EventEggUseResult | null;
   forceStartEventEgg: (eventId: string) => ForceStartEventEggResult | null;
@@ -958,10 +958,10 @@ export function useGame(): UseGameResult {
     }
   }, [commitState, monsters, levelingRows]);
 
-  const finishEndEvent = useCallback(() => {
+  const finishEndEvent = useCallback(async () => {
     const current = gameStateRef.current;
     if (!current) return;
-    commitState(runFinishEndEvent(current, monsters));
+    await commitState(runFinishEndEvent(current, monsters));
     trackEvent("monster_cycle_restart", {
       previous_monster_id: current.currentMonsterId
     });

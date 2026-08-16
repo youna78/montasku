@@ -339,6 +339,7 @@ export default function EventShopDetailPage() {
   const previewMonster = monsters.find((monster) => monster.monsterId === eventConfig.freeEggMonsterId);
   const eventEggName = previewMonster?.name ?? "イベントたまご";
   const isSpringEvent = eventConfig.eventId === "spring_easter_2026";
+  const springEventDecorations = SHOP_EVENT_DECORATIONS.filter((item) => item.itemId.startsWith("paid_deco_"));
   const starterCheckoutItem = isSpringEvent
     ? SHOP_PAID_COIN_ITEMS.find((item) => item.itemId === "starter_bundle_boost_01" && item.status === "confirmed") ?? null
     : null;
@@ -366,7 +367,7 @@ export default function EventShopDetailPage() {
       </section>
 
       <section className="card decorated-card quest-heading-card">
-        <p>イベント限定の背景やフレーム、イベントたまごを交換できます。イベントモンスターを育てるには、受け取ったたまごを「次のたまごに予約する」でセットしてください。</p>
+        <p>イベント限定の背景やフレーム、デコ、イベントたまごを交換できます。イベントモンスターを育てるには、受け取ったたまごを「次のたまごに予約する」でセットしてください。</p>
       </section>
 
       <section className="card decorated-card event-progress-card">
@@ -450,11 +451,19 @@ export default function EventShopDetailPage() {
           {eventConfig.freeCoinShopItems.map((item) => {
             const alreadyOwned = item.rewardType === "background"
               ? gameState.ownedBackgroundIds.includes(item.grantValue)
-              : gameState.ownedFrameIds.includes(item.grantValue);
+              : item.rewardType === "frame"
+                ? gameState.ownedFrameIds.includes(item.grantValue)
+                : item.rewardType === "decoration"
+                  ? gameState.ownedDecorationIds.includes(item.grantValue)
+                  : false;
             const insufficientCoins = gameState.freeCoins < item.price;
             return (
               <section className="card decorated-card shop-grid-card" key={item.itemId}>
-                <div className="shop-grid-preview" style={{ backgroundImage: `url("${item.imagePath}")` }}>
+                <div
+                  className={`shop-grid-preview ${item.rewardType === "decoration" ? "shop-decoration-preview" : ""}`}
+                  style={item.rewardType === "decoration" ? undefined : { backgroundImage: `url("${item.imagePath}")` }}
+                >
+                  {item.rewardType === "decoration" ? <img src={item.imagePath} alt={item.title} className="shop-decoration-image" /> : null}
                   {alreadyOwned && <span className="equipped-badge">所持中</span>}
                 </div>
                 <div className="shop-grid-meta">
@@ -547,14 +556,20 @@ export default function EventShopDetailPage() {
               ? gameState.ownedBackgroundIds.includes(item.grantValue)
               : item.rewardType === "frame"
                 ? gameState.ownedFrameIds.includes(item.grantValue)
-                : false;
+                : item.rewardType === "decoration"
+                  ? gameState.ownedDecorationIds.includes(item.grantValue)
+                  : false;
             const insufficientCoins = gameState.paidCoinBalance < item.price;
             return (
               <section className="card decorated-card shop-grid-card" key={item.itemId}>
-                <div className="shop-grid-preview" style={{ backgroundImage: `url("${item.imagePath}")` }}>
+                <div
+                  className={`shop-grid-preview ${item.rewardType === "decoration" ? "shop-decoration-preview" : ""}`}
+                  style={item.rewardType === "decoration" ? undefined : { backgroundImage: `url("${item.imagePath}")` }}
+                >
                   <div className="shop-badge-stack">
                     <span className="shop-paid-badge">限定</span>
                   </div>
+                  {item.rewardType === "decoration" ? <img src={item.imagePath} alt={item.title} className="shop-decoration-image" /> : null}
                   {alreadyOwned && <span className="equipped-badge">所持中</span>}
                 </div>
                 <div className="shop-grid-meta">
@@ -583,7 +598,7 @@ export default function EventShopDetailPage() {
         </div>
       </section>
 
-      {isSpringEvent && SHOP_EVENT_DECORATIONS.length > 0 ? (
+      {isSpringEvent && springEventDecorations.length > 0 ? (
         <>
           <section className="card decorated-card">
             <div className="notification-card-head">
@@ -594,7 +609,7 @@ export default function EventShopDetailPage() {
           </section>
 
           <section className="shop-grid">
-            {SHOP_EVENT_DECORATIONS.map((item) => {
+            {springEventDecorations.map((item) => {
               const owned = gameState.ownedDecorationIds.includes(item.itemId);
               const insufficientCoins = gameState.paidCoinBalance < item.price;
               return (

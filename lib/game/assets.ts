@@ -78,7 +78,21 @@ const MONSTER_IMAGE_BY_ID: Record<number, string> = {
   75: "/img/monster/monster_renewal_75_matsuri_raijin_01.png",
   76: "/img/monster/monster_renewal_76_bonodori_master_01.png",
   77: "/img/monster/monster_renewal_77_hanabi_no_kami_01.png",
-  78: "/img/monster/monster_renewal_78_mikoshi_no_ou_01.png"
+  78: "/img/monster/monster_renewal_78_mikoshi_no_ou_01.png",
+  79: "/img/monster/monster_renewal_79_moon_viewing_egg_01.png",
+  80: "/img/monster/monster_renewal_80_susuki_mini_rabbit_01.png",
+  81: "/img/monster/monster_renewal_81_dango_maker_mini_rabbit_01.png",
+  82: "/img/monster/monster_renewal_82_moon_viewing_flying_squirrel_01.png",
+  83: "/img/monster/monster_renewal_83_mochi_tanuki_01.png",
+  84: "/img/monster/monster_renewal_84_star_gathering_fox_01.png",
+  85: "/img/monster/monster_renewal_85_moonlight_owl_01.png",
+  86: "/img/monster/monster_renewal_86_cloud_walking_baku_01.png",
+  87: "/img/monster/monster_renewal_87_galaxy_rabbit_engineer_01.png",
+  88: "/img/monster/monster_renewal_88_starry_sky_deer_01.png",
+  89: "/img/monster/monster_renewal_89_tsukuyomi_white_wolf_01.png",
+  90: "/img/monster/monster_renewal_90_dream_walking_baku_01.png",
+  91: "/img/monster/monster_renewal_91_galaxy_railway_conductor_01.png",
+  92: "/img/monster/monster_renewal_92_moon_shadow_white_deer_01.png"
 };
 
 const MONSTER_RENEWAL_STARTS_AT = "2026-06-01T00:00:00+09:00";
@@ -238,7 +252,27 @@ const MONSTER_RENEWAL_MOTION_BY_ID: Record<number, Partial<Record<MonsterMotionK
   75: { walk: createRenewalMotion("monster_renewal_75_matsuri_raijin", "walk"), happy: createRenewalMotion("monster_renewal_75_matsuri_raijin", "happy") },
   76: { walk: createRenewalMotion("monster_renewal_76_bonodori_master", "walk"), happy: createRenewalMotion("monster_renewal_76_bonodori_master", "happy") },
   77: { walk: createRenewalMotion("monster_renewal_77_hanabi_no_kami", "walk"), happy: createRenewalMotion("monster_renewal_77_hanabi_no_kami", "happy") },
-  78: { walk: createRenewalMotion("monster_renewal_78_mikoshi_no_ou", "walk"), happy: createRenewalMotion("monster_renewal_78_mikoshi_no_ou", "happy") }
+  78: { walk: createRenewalMotion("monster_renewal_78_mikoshi_no_ou", "walk"), happy: createRenewalMotion("monster_renewal_78_mikoshi_no_ou", "happy") },
+  79: {
+    sway: { ...FOUR_FRAME_MOTION, imagePath: "/img/monster/monster_renewal_79_moon_viewing_egg_sway_4f.png", displaySize: 190 },
+    happy: createRenewalMotion("monster_renewal_79_moon_viewing_egg", "happy", 190)
+  },
+  80: { walk: createRenewalMotion("monster_renewal_80_susuki_mini_rabbit", "walk"), happy: createRenewalMotion("monster_renewal_80_susuki_mini_rabbit", "happy") },
+  81: { walk: createRenewalMotion("monster_renewal_81_dango_maker_mini_rabbit", "walk"), happy: createRenewalMotion("monster_renewal_81_dango_maker_mini_rabbit", "happy") },
+  82: { walk: createRenewalMotion("monster_renewal_82_moon_viewing_flying_squirrel", "walk"), happy: createRenewalMotion("monster_renewal_82_moon_viewing_flying_squirrel", "happy") },
+  83: { walk: createRenewalMotion("monster_renewal_83_mochi_tanuki", "walk"), happy: createRenewalMotion("monster_renewal_83_mochi_tanuki", "happy") },
+  84: { walk: createRenewalMotion("monster_renewal_84_star_gathering_fox", "walk"), happy: createRenewalMotion("monster_renewal_84_star_gathering_fox", "happy") },
+  85: { walk: createRenewalMotion("monster_renewal_85_moonlight_owl", "walk"), happy: createRenewalMotion("monster_renewal_85_moonlight_owl", "happy") },
+  86: { walk: createRenewalMotion("monster_renewal_86_cloud_walking_baku", "walk"), happy: createRenewalMotion("monster_renewal_86_cloud_walking_baku", "happy") },
+  87: { walk: createRenewalMotion("monster_renewal_87_galaxy_rabbit_engineer", "walk"), happy: createRenewalMotion("monster_renewal_87_galaxy_rabbit_engineer", "happy") },
+  88: { walk: createRenewalMotion("monster_renewal_88_starry_sky_deer", "walk"), happy: createRenewalMotion("monster_renewal_88_starry_sky_deer", "happy") },
+  89: { walk: createRenewalMotion("monster_renewal_89_tsukuyomi_white_wolf", "walk"), happy: createRenewalMotion("monster_renewal_89_tsukuyomi_white_wolf", "happy") },
+  90: { walk: createRenewalMotion("monster_renewal_90_dream_walking_baku", "walk"), happy: createRenewalMotion("monster_renewal_90_dream_walking_baku", "happy") },
+  91: {
+    walk: createRenewalMotion("monster_renewal_91_galaxy_railway_conductor", "walk", 175),
+    happy: createRenewalMotion("monster_renewal_91_galaxy_railway_conductor", "happy", 175)
+  },
+  92: { walk: createRenewalMotion("monster_renewal_92_moon_shadow_white_deer", "walk"), happy: createRenewalMotion("monster_renewal_92_moon_shadow_white_deer", "happy") }
 };
 
 function isMonsterRenewalActive(now: Date = getGameNow()): boolean {

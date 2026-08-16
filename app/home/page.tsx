@@ -201,11 +201,11 @@ export default function HomePage() {
     : undefined;
   const monsterMotionClass = growthStage === "egg" ? "monster-img-alive" : "monster-img-walk-hop";
   const monsterMovementType = currentMonster?.movementType ?? "ground";
-  const hasAugustHappyHop =
+  const hasEventHappyHop =
     monsterMotionKind === "happy" &&
     typeof currentMonster?.monsterId === "number" &&
     currentMonster.monsterId >= 65 &&
-    currentMonster.monsterId <= 78;
+    currentMonster.monsterId <= 92;
   const activeDecorations = gameState.selectedDecorationIds
     .map((itemId) => getDecorationShopItem(itemId))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
@@ -312,7 +312,17 @@ export default function HomePage() {
                 key={decoration.itemId}
                 className={`home-decoration home-decoration-${decoration.itemId}`}
               >
-                <img src={decoration.imagePath} alt={decoration.title} className="home-decoration-image" />
+                {decoration.itemId === "September_galaxyrailway_deco" ? (
+                  <div className="home-decoration-galaxyrailway-runner">
+                    <div
+                      role="img"
+                      aria-label={decoration.title}
+                      className="home-decoration-galaxyrailway-sprite"
+                    />
+                  </div>
+                ) : (
+                  <img src={decoration.imagePath} alt={decoration.title} className="home-decoration-image" />
+                )}
               </div>
             ))}
             <div className="monster-wrap">
@@ -320,7 +330,7 @@ export default function HomePage() {
                 <div
                   role="img"
                   aria-label={currentMonster?.name ?? "monster"}
-                  className={`monster-motion-frame monster-motion-frame-${monsterMovementType} ${monsterMotionKind === "walk" ? "monster-motion-frame-walk" : ""} ${hasAugustHappyHop ? "monster-motion-frame-happy-hop" : ""}`}
+                  className={`monster-motion-frame monster-motion-frame-${monsterMovementType} ${monsterMotionKind === "walk" ? "monster-motion-frame-walk" : ""} ${hasEventHappyHop ? "monster-motion-frame-happy-hop" : ""}`}
                 >
                   <div
                     key={`${monsterMotionKind}-${monsterCelebration?.id ?? "idle"}`}
