@@ -2882,6 +2882,59 @@ button:disabled {
   }
 }
 
+.home-decoration-october_ghost_parade {
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+}
+
+.home-decoration-ghost-parade-runner {
+  position: absolute;
+  top: 8%;
+  left: 0;
+  width: 64%;
+  aspect-ratio: 1;
+  animation: october-ghost-parade-travel 14s linear infinite;
+}
+
+.home-decoration-ghost-parade-sprite {
+  width: 100%;
+  height: 100%;
+  background-image: url("/img/decoration/october_ghost_parade_sprite_01.png");
+  background-repeat: no-repeat;
+  background-size: 300% 100%;
+  image-rendering: pixelated;
+  animation: october-ghost-parade-frames 1080ms step-end infinite,
+    october-ghost-parade-float 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes october-ghost-parade-travel {
+  from { transform: translateX(160%); }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes october-ghost-parade-frames {
+  0% { background-position: 0 0; }
+  33.333% { background-position: 50% 0; }
+  66.667% { background-position: 100% 0; }
+}
+
+@keyframes october-ghost-parade-float {
+  from { transform: translateY(-5px); }
+  to { transform: translateY(5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-decoration-ghost-parade-runner {
+    left: 18%;
+    animation: none;
+  }
+
+  .home-decoration-ghost-parade-sprite {
+    animation: none;
+  }
+}
+
 .home-stage-actions {
   position: relative;
   z-index: 6;

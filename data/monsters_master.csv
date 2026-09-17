@@ -1,4 +1,4 @@
-monster_id,name,attribute,stage,rarity,unlock_lv,unlock_condition,evolution_from,evolution_to,description,is_special
+monster_id,name,attribute,stage,rarity,unlock_lv,unlock_condition,evolution_from,evolution_to,description,is_special,movement_type
 1,タマゴ,none,egg,common,0,start,,ピンクスライム|ブルースライム|グリーンスライム|パープルスライム,どんなモンスターになるかまだ分からない不思議なタマゴ,FALSE
 2,ピンクスライム,heal,baby,common,5,heal,タマゴ,ミニフェアリー,ぷるぷるしていて触ると少し元気をくれる優しいスライム,FALSE
 3,ブルースライム,power,baby,common,5,power,タマゴ,プチドラ,元気いっぱいで跳ね回る活発なスライム,FALSE
@@ -63,3 +63,17 @@ monster_id,name,attribute,stage,rarity,unlock_lv,unlock_condition,evolution_from
 62,夢見るクジラ,special,final,rare,70,heal|knowledge,シャークジョー|サマードルフィン,,大きな夢を抱いて泳ぐクジラモンスター,TRUE
 63,ポセイドン,special,final,ultra_rare,70,power|create,シャークジョー,,海を統べる力を持つ夏イベントの守護者,TRUE
 64,サーフィンキャット,special,final,ultra_rare,70,power|create,マリンキャット,,波を乗りこなす陽気な猫モンスター,TRUE
+93,ハロウィン卵,special,egg,rare,0,october_event1_start,,パンプキンプチ|キャンディゴースト,かぼちゃ色の灯りと小さなおばけが漂う、ハロウィンの夜だけ現れる特別なたまご。,TRUE,ground
+94,キャンディゴースト,special,baby,rare,5,heal|knowledge,ハロウィン卵,魔女見習いフェアリー|黒マントのミニビースト,キャンディを抱えてふわふわ漂うおばけモンスター。いたずら好きだが根はやさしい。,TRUE,floating
+95,パンプキンプチ,special,baby,rare,5,power|create,ハロウィン卵,パンプキンドラゴン|黒マントのミニビースト,ころんと丸い小さなかぼちゃ精霊。お菓子の気配を感じると元気よく跳ね回る。,TRUE,ground
+96,魔女見習いフェアリー,special,child,rare,20,heal|knowledge,キャンディゴースト,キャンドルウィッチ|シャドウファング,小さな帽子とほうきを持った見習い魔女の妖精。失敗しても毎日こつこつ修行する。,TRUE,flying
+97,黒マントのミニビースト,special,child,rare,20,power|create|heal|knowledge,キャンディゴースト|パンプキンプチ,シャドウファング|ミイラ男,黒いマントをなびかせる小さなビースト。夜道の案内は得意だが少し照れ屋。,TRUE,ground
+98,パンプキンドラゴン,special,child,rare,20,power|create,パンプキンプチ,ランタンワイバーン|ミイラ男,かぼちゃの角と小さな翼を持つドラゴン。楽しい祭りの気配に反応して炎が明るくなる。,TRUE,ground
+99,キャンドルウィッチ,special,adult,rare,40,heal|knowledge,魔女見習いフェアリー,ハロウィンクイーン|冥夜のベヒモス,ランタンとキャンドルの灯りを操る魔女。やさしい魔法で夜の会場をあたたかく照らす。,TRUE,floating
+100,シャドウファング,special,adult,rare,40,power|create|heal|knowledge,魔女見習いフェアリー|黒マントのミニビースト,冥夜のベヒモス|砂塵ノミイラキング,影のように静かに歩く鋭牙のビースト。満月の夜ほど知性と感覚が冴えわたる。,TRUE,ground
+101,ランタンワイバーン,special,adult,rare,40,power|create,パンプキンドラゴン,百鬼ノパンプキンロード|砂塵ノミイラキング,灯火の翼で夜空を舞うワイバーン。尻尾のランタンは迷子を導く目印になる。,TRUE,flying
+102,ミイラ男,special,adult,rare,40,power|create|heal|knowledge,黒マントのミニビースト|パンプキンドラゴン,冥夜のベヒモス|砂塵ノミイラキング,包帯をゆらして歩くコミカルなミイラ。古代の呪いよりもお菓子集めに夢中らしい。,TRUE,ground
+103,ハロウィンクイーン,special,final,ultra_rare,70,heal|knowledge,キャンドルウィッチ,,夜会を彩る高貴な魔女の女王。満月の祝福を受け、やさしい魔法で皆を包みこむ。,TRUE,flying
+104,冥夜のベヒモス,special,final,ultra_rare,70,power|create|heal|knowledge,シャドウファング|ミイラ男|キャンドルウィッチ,,深い夜の闇をまとった獣王。恐ろしく見えるが、静かに世界を見守る賢き守護者。,TRUE,ground
+105,砂塵ノミイラキング,special,final,ultra_rare,70,power|create|heal|knowledge,シャドウファング|ミイラ男|ランタンワイバーン,,古代の砂漠王の力を宿したミイラの王。包帯に刻まれた紋様から神秘の力があふれ出す。,TRUE,ground
+106,百鬼ノパンプキンロード,special,final,ultra_rare,70,power|create,ランタンワイバーン,,百鬼夜行を率いる伝説のパンプキンドラゴン。笑い声ひとつで祭りの熱気が最高潮に達する。,TRUE,flying

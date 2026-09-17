@@ -11,7 +11,11 @@ const PRESETS = [
   { label: "9月開始", value: "2026-09-01T00:00:00+09:00" },
   { label: "9月中旬", value: "2026-09-15T12:00:00+09:00" },
   { label: "9月最終日", value: "2026-09-30T12:00:00+09:00" },
-  { label: "9月終了後", value: "2026-10-01T00:00:00+09:00" }
+  { label: "10月告知開始", value: "2026-09-29T00:00:00+09:00" },
+  { label: "10月開始", value: "2026-10-01T00:00:00+09:00" },
+  { label: "10月7日目", value: "2026-10-07T12:00:00+09:00" },
+  { label: "10月最終日", value: "2026-10-31T23:59:59+09:00" },
+  { label: "10月終了後", value: "2026-11-01T00:00:00+09:00" }
 ];
 
 function toDateTimeLocalValue(value: string): string {
@@ -103,7 +107,7 @@ export function DevCalendarClient() {
       <section className="card decorated-card">
         <div className="notification-card-head">
           <span className="notification-badge notification-badge-event">プリセット</span>
-          <h2>9月イベント確認</h2>
+          <h2>9月・10月イベント確認</h2>
         </div>
         <div className="task-global-menu">
           {PRESETS.map((preset) => (
@@ -140,6 +144,12 @@ export function DevCalendarClient() {
         <div className="settings-menu-grid centered-actions">
           <Link href="/home" className="ui-link-button settings-menu-button settings-menu-button-primary">
             ホームで確認
+          </Link>
+          <Link href="/event/october-halloween" className="ui-link-button settings-menu-button settings-menu-button-secondary">
+            10月イベントを見る
+          </Link>
+          <Link href="/shop/events/october-halloween" className="ui-link-button settings-menu-button settings-menu-button-neutral">
+            10月ショップを見る
           </Link>
           <Link href="/event/September_Fullmoon" className="ui-link-button settings-menu-button settings-menu-button-secondary">
             9月イベントを見る
