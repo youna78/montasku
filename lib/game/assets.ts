@@ -92,7 +92,21 @@ const MONSTER_IMAGE_BY_ID: Record<number, string> = {
   89: "/img/monster/monster_renewal_89_tsukuyomi_white_wolf_01.png",
   90: "/img/monster/monster_renewal_90_dream_walking_baku_01.png",
   91: "/img/monster/monster_renewal_91_galaxy_railway_conductor_01.png",
-  92: "/img/monster/monster_renewal_92_moon_shadow_white_deer_01.png"
+  92: "/img/monster/monster_renewal_92_moon_shadow_white_deer_01.png",
+  93: "/img/monster/monster_renewal_93_halloween_egg_01.png",
+  94: "/img/monster/monster_renewal_95_candy_ghost_01.png",
+  95: "/img/monster/monster_renewal_94_pumpkin_petit_01.png",
+  96: "/img/monster/monster_renewal_96_apprentice_witch_fairy_01.png",
+  97: "/img/monster/monster_renewal_97_black_cloak_mini_beast_01.png",
+  98: "/img/monster/monster_renewal_98_pumpkin_dragon_01.png",
+  99: "/img/monster/monster_renewal_99_candle_witch_01.png",
+  100: "/img/monster/monster_renewal_100_shadow_fang_01.png",
+  101: "/img/monster/monster_renewal_101_lantern_wyvern_01.png",
+  102: "/img/monster/monster_renewal_102_mummy_man_01.png",
+  103: "/img/monster/monster_renewal_103_halloween_queen_01.png",
+  104: "/img/monster/monster_renewal_104_midnight_behemoth_01.png",
+  105: "/img/monster/monster_renewal_106_sandstorm_mummy_king_01.png",
+  106: "/img/monster/monster_renewal_105_hyakki_pumpkin_lord_01.png"
 };
 
 const MONSTER_RENEWAL_STARTS_AT = "2026-06-01T00:00:00+09:00";
@@ -272,7 +286,21 @@ const MONSTER_RENEWAL_MOTION_BY_ID: Record<number, Partial<Record<MonsterMotionK
     walk: createRenewalMotion("monster_renewal_91_galaxy_railway_conductor", "walk", 175),
     happy: createRenewalMotion("monster_renewal_91_galaxy_railway_conductor", "happy", 175)
   },
-  92: { walk: createRenewalMotion("monster_renewal_92_moon_shadow_white_deer", "walk"), happy: createRenewalMotion("monster_renewal_92_moon_shadow_white_deer", "happy") }
+  92: { walk: createRenewalMotion("monster_renewal_92_moon_shadow_white_deer", "walk"), happy: createRenewalMotion("monster_renewal_92_moon_shadow_white_deer", "happy") },
+  93: { sway: { ...FOUR_FRAME_MOTION, imagePath: "/img/monster/monster_renewal_93_halloween_egg_sway_4f.png", displaySize: 190 }, happy: createRenewalMotion("monster_renewal_93_halloween_egg", "happy", 190) },
+  94: { walk: createRenewalMotion("monster_renewal_95_candy_ghost", "walk"), happy: createRenewalMotion("monster_renewal_95_candy_ghost", "happy") },
+  95: { walk: createRenewalMotion("monster_renewal_94_pumpkin_petit", "walk"), happy: createRenewalMotion("monster_renewal_94_pumpkin_petit", "happy") },
+  96: { walk: createRenewalMotion("monster_renewal_96_apprentice_witch_fairy", "walk"), happy: createRenewalMotion("monster_renewal_96_apprentice_witch_fairy", "happy") },
+  97: { walk: createRenewalMotion("monster_renewal_97_black_cloak_mini_beast", "walk"), happy: createRenewalMotion("monster_renewal_97_black_cloak_mini_beast", "happy") },
+  98: { walk: createRenewalMotion("monster_renewal_98_pumpkin_dragon", "walk"), happy: createRenewalMotion("monster_renewal_98_pumpkin_dragon", "happy") },
+  99: { walk: createRenewalMotion("monster_renewal_99_candle_witch", "walk"), happy: createRenewalMotion("monster_renewal_99_candle_witch", "happy") },
+  100: { walk: createRenewalMotion("monster_renewal_100_shadow_fang", "walk"), happy: createRenewalMotion("monster_renewal_100_shadow_fang", "happy") },
+  101: { walk: createRenewalMotion("monster_renewal_101_lantern_wyvern", "walk"), happy: createRenewalMotion("monster_renewal_101_lantern_wyvern", "happy") },
+  102: { walk: createRenewalMotion("monster_renewal_102_mummy_man", "walk"), happy: createRenewalMotion("monster_renewal_102_mummy_man", "happy") },
+  103: { walk: createRenewalMotion("monster_renewal_103_halloween_queen", "walk"), happy: createRenewalMotion("monster_renewal_103_halloween_queen", "happy") },
+  104: { walk: createRenewalMotion("monster_renewal_104_midnight_behemoth", "walk"), happy: createRenewalMotion("monster_renewal_104_midnight_behemoth", "happy") },
+  105: { walk: createRenewalMotion("monster_renewal_106_sandstorm_mummy_king", "walk"), happy: createRenewalMotion("monster_renewal_106_sandstorm_mummy_king", "happy") },
+  106: { walk: createRenewalMotion("monster_renewal_105_hyakki_pumpkin_lord", "walk"), happy: createRenewalMotion("monster_renewal_105_hyakki_pumpkin_lord", "happy") }
 };
 
 function isMonsterRenewalActive(now: Date = getGameNow()): boolean {

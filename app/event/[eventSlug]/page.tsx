@@ -121,7 +121,7 @@ export default function EventDetailPage() {
     .map((item) => item.title);
   const rewardSummary = [...ownedBackgroundTitles, ...ownedFrameTitles];
   const eventEggName = monsters.find((monster) => monster.monsterId === eventConfig.freeEggMonsterId)?.name ?? "イベントたまご";
-  const featuredMonsterNames = eventMonsters.map((monster) => monster.name).slice(0, 2);
+  const featuredMonsterNames = eventMonsters.map((monster) => monster.name);
   const eventMonsterLabel = featuredMonsterNames.length > 0 ? featuredMonsterNames.join(" と ") : "イベントモンスター";
 
   const onClaimFreeEgg = () => {

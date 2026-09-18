@@ -1,9 +1,11 @@
 import type { MonsterMaster } from "@/types/master";
 import type { AttributeTotals, GameState } from "@/types/game";
+import { OCTOBER_EVOLUTION_BRANCHES, type EvolutionBranch } from "./events/octoberEvolution";
 
 export type EvolutionContext = {
   gameState: GameState;
   monsters: MonsterMaster[];
+  random?: () => number;
 };
 
 type MainAttribute = "heal" | "power" | "knowledge" | "create";
@@ -29,7 +31,9 @@ function findMonsterByName(monsters: MonsterMaster[], name: string): MonsterMast
 function resolveCandidateMonsterId(
   candidateNames: string[],
   dominantAttr: MainAttribute,
-  monsters: MonsterMaster[]
+  monsters: MonsterMaster[],
+  branches?: readonly EvolutionBranch[],
+  random: () => number = Math.random
 ): number | null {
   if (candidateNames.length === 0) return null;
 
@@ -43,12 +47,17 @@ function resolveCandidateMonsterId(
     return candidateMonsters[0].monsterId;
   }
 
-  const matched = candidateMonsters.filter((monster) => splitCandidates(monster.unlockCondition).includes(dominantAttr));
+  const matched = candidateMonsters.filter((monster) => branches
+    ? branches.some((branch) => branch.monsterId === monster.monsterId && branch.attributes.includes(dominantAttr))
+    : splitCandidates(monster.unlockCondition).includes(dominantAttr));
   if (matched.length === 1) {
     return matched[0].monsterId;
   }
 
   if (matched.length > 1) {
+    if (branches) {
+      return matched[Math.floor(random() * matched.length)].monsterId;
+    }
     const sharedConditions = splitCandidates(matched[0].unlockCondition);
     const allShareConditions = matched.every(
       (monster) => splitCandidates(monster.unlockCondition).join("|") === sharedConditions.join("|")
@@ -86,11 +95,14 @@ function requiredLevelForEvolution(stage: MonsterMaster["stage"]): number | null
 
 export function resolveEggEvolutionMonsterId(currentMonster: MonsterMaster, totals: AttributeTotals, monsters: MonsterMaster[]): number | null {
   if (currentMonster.stage !== "egg") return null;
-  return resolveCandidateMonsterId(splitCandidates(currentMonster.evolutionTo), dominantAttribute(totals), monsters);
+  return resolveCandidateMonsterId(
+    splitCandidates(currentMonster.evolutionTo), dominantAttribute(totals), monsters,
+    OCTOBER_EVOLUTION_BRANCHES[currentMonster.monsterId]
+  );
 }
 
 // CSV-driven evolution for normal and special branches.
-export function evaluateEvolution({ gameState, monsters }: EvolutionContext): number | null {
+export function evaluateEvolution({ gameState, monsters, random }: EvolutionContext): number | null {
   const current = monsters.find((monster) => monster.monsterId === gameState.currentMonsterId);
   if (!current) return null;
 
@@ -99,5 +111,8 @@ export function evaluateEvolution({ gameState, monsters }: EvolutionContext): nu
     return null;
   }
 
-  return resolveCandidateMonsterId(splitCandidates(current.evolutionTo), dominantAttribute(gameState.attributeTotals), monsters);
+  return resolveCandidateMonsterId(
+    splitCandidates(current.evolutionTo), dominantAttribute(gameState.attributeTotals), monsters,
+    OCTOBER_EVOLUTION_BRANCHES[current.monsterId], random
+  );
 }

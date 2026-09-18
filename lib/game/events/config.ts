@@ -5,6 +5,7 @@ export const JUNE_SHRINE_EVENT_ID = "june_shrine_2026";
 export const JULY_SUMMERTIME_EVENT_ID = "july_summertime_2026";
 export const AUGUST_NATSUMATSURI_EVENT_ID = "august_natsumatsuri_2026";
 export const SEPTEMBER_FULLMOON_EVENT_ID = "September_Fullmoon_2026";
+export const OCTOBER_HALLOWEEN_EVENT_ID = "october_halloween_2026";
 
 export const SPRING_EASTER_EVENT: GameEventConfig = {
   eventId: SPRING_EASTER_EVENT_ID,
@@ -419,12 +420,104 @@ export const SEPTEMBER_FULLMOON_EVENT: GameEventConfig = {
   }
 };
 
+export const OCTOBER_HALLOWEEN_EVENT: GameEventConfig = {
+  eventId: OCTOBER_HALLOWEEN_EVENT_ID,
+  slug: "october-halloween",
+  name: "モンタスクハロウィン",
+  startsAt: "2026-10-01T00:00:00+09:00",
+  endsAt: "2026-10-31T23:59:59+09:00",
+  announcementStartsAt: "2026-09-29T00:00:00+09:00",
+  targetUsers: "all",
+  heroImagePath: "/img/background/bg_october_halloween_night_01.png",
+  homeBannerImagePath: "/img/background/bg_october_halloween_fair_01.png",
+  shopBannerImagePath: "/img/background/bg_october_halloween_night_01.png",
+  shopIconImagePath: "/img/monster/monster_renewal_94_pumpkin_petit_01.png",
+  bannerLabel: "イベント開催中",
+  description: "10月限定のハロウィンモンスター登場！タスクを達成して育ててみよう",
+  notice: "期間限定です。イベントショップは開催中のみ利用できます。",
+  freeEggMonsterId: 93,
+  freeEggClaimCount: 1,
+  featuredMonsterIds: [96, 97, 98],
+  rewardPreviewMonsterIds: [93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106],
+  freeCoinShopItems: [
+    {
+      itemId: "october_halloween_bg_fair_free",
+      title: "明るいハロウィン会場",
+      description: "かぼちゃやキャンディが彩る、明るくにぎやかなハロウィン会場のイベント限定背景です。",
+      rewardType: "background",
+      currencyType: "free_coin",
+      price: 500,
+      imagePath: "/img/background/bg_october_halloween_fair_01.png",
+      grantValue: "october_halloween_fair",
+      rarity: "rare",
+      availability: "active_only"
+    },
+    {
+      itemId: "october_pumpkin_frame_free",
+      title: "パンプキンフレーム",
+      description: "ジャックオーランタンやお菓子をあしらったイベント限定フレームです。",
+      rewardType: "frame",
+      currencyType: "free_coin",
+      price: 500,
+      imagePath: "/img/deco_frame/frame_october_pumpkin_01.png",
+      grantValue: "october_pumpkin_frame",
+      rarity: "rare",
+      availability: "active_only"
+    }
+  ],
+  paidCoinShopItems: [
+    {
+      itemId: "october_halloween_egg_paid",
+      title: "ハロウィン卵",
+      description: "モンタスクハロウィンの進化ラインで育てられる特別なたまごです。",
+      rewardType: "event_egg",
+      currencyType: "paid_coin",
+      price: 300,
+      imagePath: "/img/monster/event_october_halloween_egg_01.png",
+      grantValue: "93",
+      rarity: "rare",
+      availability: "active_only"
+    },
+    {
+      itemId: "october_halloween_bg_night_paid",
+      title: "夜のロマンチックハロウィン",
+      description: "月明かりとランタンに包まれた、幻想的でロマンチックなハロウィン限定背景です。",
+      rewardType: "background",
+      currencyType: "paid_coin",
+      price: 500,
+      imagePath: "/img/background/bg_october_halloween_night_01.png",
+      grantValue: "october_halloween_night",
+      rarity: "rare",
+      availability: "active_only"
+    },
+    {
+      itemId: "october_ghost_parade",
+      title: "ゴーストパレード",
+      description: "小さなゴーストたちがふわふわと列になってホームを横切る、モンタスクハロウィン限定の動くデコです。",
+      rewardType: "decoration",
+      currencyType: "paid_coin",
+      price: 300,
+      imagePath: "/img/decoration/october_ghost_parade.png",
+      grantValue: "october_ghost_parade",
+      rarity: "rare",
+      availability: "active_only"
+    }
+  ],
+  mission: {
+    loginDaysRequired: 7,
+    dailyLoginBonusFreeCoins: 2,
+    loginRewardFrameId: "october_halloween_frame",
+    loginRewardTitle: "ハロウィンフレーム"
+  }
+};
+
 export const GAME_EVENTS: GameEventConfig[] = [
   SPRING_EASTER_EVENT,
   JUNE_SHRINE_EVENT,
   JULY_SUMMERTIME_EVENT,
   AUGUST_NATSUMATSURI_EVENT,
-  SEPTEMBER_FULLMOON_EVENT
+  SEPTEMBER_FULLMOON_EVENT,
+  OCTOBER_HALLOWEEN_EVENT
 ];
 
 export function createInitialUserEventState(eventId: string): UserEventState {

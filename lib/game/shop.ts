@@ -341,6 +341,22 @@ export const SHOP_BACKGROUNDS: ShopBackgroundItem[] = [
     price: 0,
     imagePath: "/img/background/bg_september_fullmoon_galaxy_01.png",
     availability: "event_limited"
+  },
+  {
+    itemId: "october_halloween_fair",
+    title: "明るいハロウィン会場",
+    description: "かぼちゃやキャンディが彩る、明るくにぎやかなハロウィン会場のイベント限定背景です。",
+    price: 0,
+    imagePath: "/img/background/bg_october_halloween_fair_01.png",
+    availability: "event_limited"
+  },
+  {
+    itemId: "october_halloween_night",
+    title: "夜のロマンチックハロウィン",
+    description: "月明かりとランタンに包まれた、幻想的でロマンチックなハロウィン限定背景です。",
+    price: 0,
+    imagePath: "/img/background/bg_october_halloween_night_01.png",
+    availability: "event_limited"
   }
 ].map((item) => applyBackgroundMaster(item as ShopBackgroundItem));
 
@@ -458,6 +474,24 @@ export const SHOP_FRAMES: ShopFrameItem[] = [
     previewClassName: "frame-preview-september-otsukimi",
     imagePath: "/img/deco_frame/frame_september_otsukimi_01_aligned_01.png",
     availability: "event_limited"
+  },
+  {
+    itemId: "october_pumpkin_frame",
+    title: "パンプキンフレーム",
+    description: "ジャックオーランタンやお菓子をあしらったイベント限定フレームです。",
+    price: 0,
+    imagePath: "/img/deco_frame/frame_october_pumpkin_01.png",
+    availability: "event_limited",
+    previewClassName: "frame-preview-october-pumpkin-frame"
+  },
+  {
+    itemId: "october_halloween_frame",
+    title: "ハロウィンフレーム",
+    description: "モンタスクハロウィン期間中7日ログインで受け取れる限定フレームです。",
+    price: 0,
+    imagePath: "/img/deco_frame/frame_october_halloween_01.png",
+    availability: "event_limited",
+    previewClassName: "frame-preview-october-halloween-frame"
   }
 ].map((item) => applyFrameMaster(item as ShopFrameItem));
 
@@ -766,6 +800,15 @@ export const SHOP_DECORATIONS: ShopDecorationItem[] = [
     currencyType: "paid_coin",
     imagePath: "/img/decoration/deco_september_galaxy_railway_01.png",
     availability: "event_limited"
+  },
+  {
+    itemId: "october_ghost_parade",
+    title: "ゴーストパレード",
+    description: "小さなゴーストたちがふわふわと列になってホームを横切る、モンタスクハロウィン限定の動くデコです。",
+    price: 300,
+    imagePath: "/img/decoration/october_ghost_parade.png",
+    availability: "event_limited",
+    currencyType: "paid_coin"
   }
 ].map((item) => applyDecorationMaster(item as ShopDecorationItem));
 

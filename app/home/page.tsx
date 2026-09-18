@@ -205,7 +205,7 @@ export default function HomePage() {
     monsterMotionKind === "happy" &&
     typeof currentMonster?.monsterId === "number" &&
     currentMonster.monsterId >= 65 &&
-    currentMonster.monsterId <= 92;
+    currentMonster.monsterId <= 106;
   const activeDecorations = gameState.selectedDecorationIds
     .map((itemId) => getDecorationShopItem(itemId))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
@@ -318,6 +318,14 @@ export default function HomePage() {
                       role="img"
                       aria-label={decoration.title}
                       className="home-decoration-galaxyrailway-sprite"
+                    />
+                  </div>
+                ) : decoration.itemId === "october_ghost_parade" ? (
+                  <div className="home-decoration-ghost-parade-runner">
+                    <div
+                      role="img"
+                      aria-label={decoration.title}
+                      className="home-decoration-ghost-parade-sprite"
                     />
                   </div>
                 ) : (
