@@ -1,3 +1,5 @@
+import { normalizeRecords } from "@/lib/game/records";
+import { normalizeCustomTasks } from "@/lib/game/customTasks";
 import type {
   ActiveExpBooster,
   ActiveAttributeCharm,
@@ -767,6 +769,9 @@ function normalizeState(
   return {
     ...initial,
     ...parsed,
+    achievementRecords: parsed.achievementRecords === undefined
+      ? uniqueNumbers(parsed.completedTaskIdsToday ?? []).map(taskId => ({ date: parsed.lastPlayedDate || initial.lastPlayedDate, taskId, name: tasks.find(task => task.taskId === taskId)?.name ?? "タスク", exp: null, coins: null }))
+      : normalizeRecords(parsed.achievementRecords),
     stateUpdatedAt: typeof parsed.stateUpdatedAt === "string" ? parsed.stateUpdatedAt : undefined,
     currentMonsterId,
     currentMonsterLevel: resolvedLevel.level,
@@ -795,6 +800,7 @@ function normalizeState(
     },
     completedTaskIdsToday: Array.isArray(parsed.completedTaskIdsToday) ? parsed.completedTaskIdsToday : [],
     activeTasks: normalizedActiveTasks,
+    customTasks: normalizeCustomTasks(parsed.customTasks),
     discoveredMonsterIds: uniqueNumbers([
       ...initial.discoveredMonsterIds,
       ...rawDiscovered,
@@ -954,6 +960,7 @@ function applyExpAndAttributes(
     currentMonsterExp: totalExp,
     freeCoins: state.freeCoins + FREE_COINS_PER_TASK,
     todayExp: includeTodayExp ? state.todayExp + gainedExp : state.todayExp,
+    achievementRecords: normalizeRecords([...(state.achievementRecords ?? []), { date: markCompletedToday ? state.lastPlayedDate : state.pendingDailyReview?.targetDate ?? state.lastPlayedDate, taskId: task.taskId, name: task.name, exp: gainedExp, coins: FREE_COINS_PER_TASK }]),
     attributeTotals: {
       power: state.attributeTotals.power + gains.power,
       heal: state.attributeTotals.heal + gains.heal,
@@ -1210,7 +1217,7 @@ function rebuildDailyReviewRewardedState(params: {
     const task = tasks.find((candidate) => candidate.taskId === taskId);
     if (!task) return nextState;
     return applyDailyReviewReward(nextState, task, monsters, levelingRows);
-  }, { ...baseState, pendingDailyReview: pending });
+  }, { ...baseState, achievementRecords: (baseState.achievementRecords ?? []).filter(row => row.date !== pending.targetDate || !pending.taskIds.includes(row.taskId)), pendingDailyReview: pending });
 }
 
 export function resolveDailyReviewTask(params: {
@@ -1334,7 +1341,7 @@ export function removeTaskFromActive(state: GameState, taskId: number): RemoveTa
     nextState: {
       ...state,
       activeTasks: nextActiveTasks,
-      completedTaskIdsToday: state.completedTaskIdsToday.filter((id) => id !== taskId)
+      completedTaskIdsToday: state.completedTaskIdsToday
     },
     removed: true
   };

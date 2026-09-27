@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { useGame } from "@/lib/game/useGame";
+import { TutorialSpotlight } from "@/components/common/TutorialSpotlight";
+import { isOctoberUiEnabled } from "@/lib/game/octoberUi";
 
 export default function TutorialPage() {
   const router = useRouter();
@@ -50,6 +52,7 @@ export default function TutorialPage() {
         </div>
       </section>
       <DevDebugPanel gameState={gameState} monsters={monsters} />
+      {isOctoberUiEnabled() && <TutorialSpotlight selector=".page-tutorial .primary" text="「はじめる」を押して、タマゴに会いにいこう！" />}
     </main>
   );
 }

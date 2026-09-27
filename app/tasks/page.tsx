@@ -1,6 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { EditableTaskBoard } from "@/components/common/EditableTaskBoard";
+import { TutorialSpotlight } from "@/components/common/TutorialSpotlight";
+import { GrowthHelp } from "@/components/common/GrowthHelp";
+import { TaskGrowthFeedback, type TaskGrowthReward } from "@/components/common/TaskGrowthFeedback";
+import { BirthTransition } from "@/components/common/BirthTransition";
+import { isOctoberUiEnabled, tasksUntilBirth } from "@/lib/game/octoberUi";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
@@ -10,7 +16,7 @@ import { trackEvent } from "@/lib/analytics/gtag";
 import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage } from "@/lib/game/assets";
 import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { playSfx } from "@/lib/game/sfx";
-import { shouldRouteToDailyReview } from "@/lib/game/state";
+import { progressToNextLevel, shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 import type { TaskMaster } from "@/types/master";
 
@@ -25,7 +31,9 @@ const TASK_FREE_COINS = 2;
 
 export default function TasksPage() {
   const router = useRouter();
-  const { tasks, monsters, gameState, isLoading, completeTask } = useGame();
+  const octoberUi = isOctoberUiEnabled();
+  const { tasks, monsters, levelingRows, gameState, isLoading, completeTask, addTask, removeTask, moveTask, saveCustomTask } = useGame();
+  const [growthReward, setGrowthReward] = useState<TaskGrowthReward | null>(null);
   const [feedback, setFeedback] = useState<string>("");
   const [feedbackKey, setFeedbackKey] = useState(0);
   const [pendingRewardRedirect, setPendingRewardRedirect] = useState(false);
@@ -33,9 +41,9 @@ export default function TasksPage() {
 
   useEffect(() => {
     if (!feedback) return;
-    const timer = window.setTimeout(() => setFeedback(""), 1800);
+    const timer = window.setTimeout(() => setFeedback(""), octoberUi ? 4000 : 1800);
     return () => window.clearTimeout(timer);
-  }, [feedback, feedbackKey]);
+  }, [feedback, feedbackKey, octoberUi]);
 
   useEffect(() => {
     if (!gameState) return;
@@ -61,6 +69,10 @@ export default function TasksPage() {
     return <main>Loading...</main>;
   }
 
+  if (octoberUi && gameState.birthEventPending && !gameState.endEventPending) {
+    return <BirthTransition />;
+  }
+
   const activeTasks = gameState.activeTasks
     .filter((t) => t.enabled)
     .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -69,11 +81,32 @@ export default function TasksPage() {
   const isTutorialMode = !gameState.hasSeenTutorial || gameState.isInTutorialFlow;
   const currentMonster = monsters.find((monster) => monster.monsterId === gameState.currentMonsterId);
   const completedToday = activeTasks.filter((task) => gameState.completedTaskIdsToday.includes(task.taskId)).length;
+  const summaryAttributes = [
+    { key: "power" as const, label: "Power", value: gameState.attributeTotals.power },
+    { key: "heal" as const, label: "Heal", value: gameState.attributeTotals.heal },
+    { key: "knowledge" as const, label: "Knowledge", value: gameState.attributeTotals.knowledge },
+    { key: "create" as const, label: "Create", value: gameState.attributeTotals.create }
+  ];
 
   const onComplete = (taskId: number) => {
+    if (gameState.birthEventPending || pendingRewardRedirect) return;
     const result = completeTask(taskId);
     if (!result || result.alreadyCompleted) return;
     playSfx("s_Check");
+    if (octoberUi) {
+      const next = result.nextState;
+      const before = progressToNextLevel(gameState.currentMonsterLevel, gameState.currentMonsterExp, levelingRows);
+      const after = progressToNextLevel(next.currentMonsterLevel, next.currentMonsterExp, levelingRows);
+      setGrowthReward({
+        monsterId: next.currentMonsterId,
+        monsterName: monsters.find(monster => monster.monsterId === next.currentMonsterId)?.name ?? "モンスター",
+        exp: result.gainedExp, coins: result.gainedFreeCoins, level: next.currentMonsterLevel,
+        levelUp: result.levelUp, beforePercent: result.levelUp ? 0 : before.required ? before.current / before.required * 100 : 100,
+        current: after.current, required: after.required,
+        birthRemaining: next.hasCompletedCurrentBirth ? null : tasksUntilBirth(next.onboardingCompletedTaskCount)
+      });
+    }
+
 
     const fragments = [`EXP +${result.gainedExp}`, `コイン +${result.gainedFreeCoins}`];
     trackEvent("coin_earned", {
@@ -96,6 +129,10 @@ export default function TasksPage() {
     }
 
     if (result.nextState.birthEventPending) {
+      if (octoberUi) {
+        router.replace("/birth-event");
+        return;
+      }
       setPendingRewardRedirect(true);
       window.setTimeout(() => {
         router.push("/birth-event");
@@ -125,17 +162,27 @@ export default function TasksPage() {
         <img src={getMonsterImage(currentMonster?.monsterId)} alt="" className="screen-summary-monster" />
         <div className="screen-summary-copy">
           <strong>今日のクエスト</strong>
-          <span>各タスクは1日1回だけ達成できます。</span>
+          <span>{octoberUi && !gameState.hasCompletedCurrentBirth ? `あと${tasksUntilBirth(gameState.onboardingCompletedTaskCount)}件でタマゴが生まれるよ！` : "各タスクは1日1回だけ達成できます。"}</span>
           <div className="task-progress-strip">
             <span>達成 {completedToday}/{activeTasks.length}</span>
             <span>無料コイン {gameState.freeCoins}</span>
             <Link href="/shop" className="task-summary-shop-button">
               ショップ
             </Link>
+            {octoberUi && !isTutorialMode && <GrowthHelp compact />}
+          </div>
+          <div className="task-summary-attributes" aria-label="現在の属性">
+            {summaryAttributes.map((bar) => (
+              <span key={bar.key}>
+                <img src={ATTRIBUTE_ICON_BY_KEY[bar.key]} alt="" />
+                <b>{bar.label}</b>
+                <strong>{bar.value}</strong>
+              </span>
+            ))}
           </div>
         </div>
       </section>
-      {!isTutorialMode && (
+      {!isTutorialMode && !octoberUi && (
         <section className="card decorated-card">
           <div className="task-global-menu">
             <Link href="/task-add" className="ui-link-button task-global-menu-button task-global-menu-button-primary">
@@ -151,9 +198,9 @@ export default function TasksPage() {
         </section>
       )}
 
-      {feedback && <div key={feedbackKey} className="reward-popup reward-popup-top home-reward-popup">{feedback}</div>}
+      {feedback && (octoberUi && growthReward ? <TaskGrowthFeedback key={feedbackKey} reward={growthReward} /> : <div key={feedbackKey} className="reward-popup reward-popup-top home-reward-popup">{feedback}</div>)}
 
-      <section className="card decorated-card task-board-card">
+      {octoberUi && !isTutorialMode ? <EditableTaskBoard tasks={tasks} activeTasks={activeTasks} completedIds={gameState.completedTaskIdsToday} onComplete={onComplete} onAdd={addTask} onRemove={removeTask} onMove={moveTask} onSaveCustom={saveCustomTask} /> : <section className="card decorated-card task-board-card">
         <h2 className="screen-section-title">クエスト一覧</h2>
         <ul className="quest-list">
           {activeTasks.map((task) => {
@@ -201,8 +248,9 @@ export default function TasksPage() {
             );
           })}
         </ul>
-      </section>
+      </section>}
 
+      {octoberUi && isTutorialMode && <TutorialSpotlight selector=".task-board-card .quest-btn:not(:disabled)" text={`できたタスクの「達成」を押そう。あと${tasksUntilBirth(gameState.onboardingCompletedTaskCount)}件で誕生！`} />}
       <DevDebugPanel gameState={gameState} monsters={monsters} />
       {!isTutorialMode && <BottomNav />}
       {evolutionScene && (

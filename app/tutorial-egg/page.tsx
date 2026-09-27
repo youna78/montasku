@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getMonsterImage } from "@/lib/game/assets";
 import { useGame } from "@/lib/game/useGame";
+import { TutorialSpotlight } from "@/components/common/TutorialSpotlight";
+import { isOctoberUiEnabled } from "@/lib/game/octoberUi";
 
 export default function TutorialEggPage() {
   const router = useRouter();
@@ -49,6 +51,7 @@ export default function TutorialEggPage() {
         </div>
       </section>
       <DevDebugPanel gameState={gameState} monsters={monsters} />
+      {isOctoberUiEnabled() && <TutorialSpotlight selector=".page-tutorial .primary" text="次はタスクへ。できたことを3つ記録すると誕生するよ！" />}
     </main>
   );
 }

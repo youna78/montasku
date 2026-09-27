@@ -1,0 +1,6 @@
+tmp/
+.npm-cache/
+android/
+ios/
+android-web/
+public/img/monster/store-screenshots-15.zip

@@ -32,6 +32,13 @@ export default function InventoryPage() {
   }, [message]);
 
   useEffect(() => {
+    const requestedTab = new URLSearchParams(window.location.search).get("tab");
+    if (requestedTab === "background" || requestedTab === "frame" || requestedTab === "deco" || requestedTab === "item") {
+      setTab(requestedTab);
+    }
+  }, []);
+
+  useEffect(() => {
     if (!gameState) return;
     if (gameState.endEventPending) {
       router.replace("/end-event");

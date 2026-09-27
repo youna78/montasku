@@ -1,5 +1,6 @@
 "use client";
 
+import { isOctoberUiEnabled } from "@/lib/game/octoberUi";
 import { useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -13,6 +14,7 @@ import { useGame } from "@/lib/game/useGame";
 
 export default function DexDetailPage() {
   const router = useRouter();
+  const octoberUi = isOctoberUiEnabled();
   const params = useParams<{ monsterId: string }>();
   const { monsters, gameState, isLoading } = useGame();
 
@@ -44,7 +46,7 @@ export default function DexDetailPage() {
 
   if (!Number.isFinite(monsterId)) {
     return (
-      <main className={`page-shell page-rpg page-dex ${getFrameThemeClass(gameState.selectedFrameId)}`}>
+      <main className={`page-shell page-rpg page-dex ${octoberUi ? "dex-detail-book" : ""} ${getFrameThemeClass(gameState.selectedFrameId)}`}>
         <div className="title-panel">図鑑詳細</div>
         <section className="card decorated-card dex-detail-card">
           <h2 className="screen-section-title">図鑑詳細</h2>
@@ -63,7 +65,7 @@ export default function DexDetailPage() {
 
   if (!gameState.discoveredMonsterIds.includes(monsterId)) {
     return (
-      <main className={`page-shell page-rpg page-dex ${getFrameThemeClass(gameState.selectedFrameId)}`}>
+      <main className={`page-shell page-rpg page-dex ${octoberUi ? "dex-detail-book" : ""} ${getFrameThemeClass(gameState.selectedFrameId)}`}>
         <div className="title-panel">図鑑詳細</div>
         <section className="card decorated-card dex-detail-card">
           <h2 className="screen-section-title">図鑑詳細</h2>
@@ -82,7 +84,7 @@ export default function DexDetailPage() {
 
   const monster = monsters.find((m) => m.monsterId === monsterId);
   return (
-    <main className={`page-shell page-rpg page-dex ${getFrameThemeClass(gameState.selectedFrameId)}`}>
+    <main className={`page-shell page-rpg page-dex ${octoberUi ? "dex-detail-book" : ""} ${getFrameThemeClass(gameState.selectedFrameId)}`}>
       <div className="title-panel">図鑑詳細</div>
       <section className="card decorated-card dex-detail-card">
         <h2 className="screen-section-title">モンスター詳細</h2>
@@ -94,6 +96,7 @@ export default function DexDetailPage() {
           </div>
         </div>
         {monster && isEventMonster(monster.monsterId) && <p className="event-monster-note">イベント限定モンスター</p>}
+        {octoberUi && <h2 className="dex-detail-name">{monster?.name}</h2>}
         <div className="status-panel compact-status-panel dex-detail-status">
           <div className="status-row">
             <span>名前</span>

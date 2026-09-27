@@ -10,7 +10,16 @@ import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getFirebaseAuth } from "@/lib/firebase/auth";
 import { getMonsterImage } from "@/lib/game/assets";
 import { getEventBySlug, getEventStatusLabel, getRemainingDaysLabel, isEventActive, isEventAnnouncementVisible } from "@/lib/game/events";
-import { getBackgroundImagePath, getFrameThemeClass, SHOP_EVENT_BUNDLES, SHOP_EVENT_DECORATIONS, SHOP_PAID_COIN_ITEMS } from "@/lib/game/shop";
+import {
+  getBackgroundImagePath,
+  getBoosterShopItem,
+  getFrameThemeClass,
+  SHOP_ATTRIBUTE_CHARMS,
+  SHOP_BOOSTER_ITEMS,
+  SHOP_EVENT_BUNDLES,
+  SHOP_EVENT_DECORATIONS,
+  SHOP_PAID_COIN_ITEMS
+} from "@/lib/game/shop";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 import { getNativePlatform, isNativeMobileApp } from "@/lib/platform/capacitor";
@@ -21,6 +30,13 @@ type PurchaseConfirmState = {
   message?: string;
   confirmLabel?: string;
   onConfirm: () => void | Promise<void>;
+};
+
+const CHARM_BUTTON_CLASS: Record<(typeof SHOP_ATTRIBUTE_CHARMS)[number]["attribute"], string> = {
+  power: "task-global-menu-button-danger",
+  heal: "task-global-menu-button-heal",
+  knowledge: "task-global-menu-button-knowledge",
+  create: "task-global-menu-button-create"
 };
 
 export default function EventShopDetailPage() {
@@ -36,6 +52,8 @@ export default function EventShopDetailPage() {
     purchaseEventReward,
     purchaseDecoration,
     purchasePaidBundle,
+    purchaseAttributeCharm,
+    purchaseBooster,
     claimEventFreeEgg,
     queueEventEgg,
     forceStartEventEgg,
@@ -50,6 +68,7 @@ export default function EventShopDetailPage() {
   const [isNativeApp, setIsNativeApp] = useState(false);
   const [nativePlatformLabel, setNativePlatformLabel] = useState("アプリ");
   const [isPurchasePending, setIsPurchasePending] = useState(false);
+  const [showItemHelp, setShowItemHelp] = useState(false);
 
   useEffect(() => {
     setIsNativeApp(isNativeMobileApp());
@@ -204,6 +223,30 @@ export default function EventShopDetailPage() {
     setMessage(`${item.title} をこうにゅうしました`);
   };
 
+  const onBuyCharm = (attribute: (typeof SHOP_ATTRIBUTE_CHARMS)[number]["attribute"]) => {
+    const item = SHOP_ATTRIBUTE_CHARMS.find((entry) => entry.attribute === attribute);
+    const result = purchaseAttributeCharm(attribute);
+    if (!item || !result) return;
+    if (!result.purchased) {
+      setMessage("フリーコインがたりません");
+      return;
+    }
+    setPurchaseModal({ title: item.title, lines: [item.title] });
+    setMessage(`${item.title} をこうにゅうしました`);
+  };
+
+  const onBuyBooster = (itemId: string) => {
+    const item = getBoosterShopItem(itemId);
+    const result = purchaseBooster(itemId);
+    if (!item || !result) return;
+    if (!result.purchased) {
+      setMessage("フリーコインがたりません");
+      return;
+    }
+    setPurchaseModal({ title: item.title, lines: [item.title] });
+    setMessage(`${item.title} をこうにゅうしました`);
+  };
+
   const onPurchaseBundle = (itemId: string) => {
     const result = purchasePaidBundle(itemId);
     const item = SHOP_EVENT_BUNDLES.find((entry) => entry.itemId === itemId);
@@ -336,6 +379,7 @@ export default function EventShopDetailPage() {
     }
   };
 
+  const currentMonster = monsters.find((monster) => monster.monsterId === gameState.currentMonsterId);
   const previewMonster = monsters.find((monster) => monster.monsterId === eventConfig.freeEggMonsterId);
   const eventEggName = previewMonster?.name ?? "イベントたまご";
   const isSpringEvent = eventConfig.eventId === "spring_easter_2026";
@@ -343,6 +387,7 @@ export default function EventShopDetailPage() {
   const starterCheckoutItem = isSpringEvent
     ? SHOP_PAID_COIN_ITEMS.find((item) => item.itemId === "starter_bundle_boost_01" && item.status === "confirmed") ?? null
     : null;
+  const freeBoosters = SHOP_BOOSTER_ITEMS.filter((item) => item.currencyType === "free_coin");
 
   return (
     <main
@@ -351,6 +396,24 @@ export default function EventShopDetailPage() {
     >
       <div className="title-panel">イベントショップ</div>
       {message && <div className="toast">{message}</div>}
+
+      <section className="card decorated-card event-shop-wallet-bar" aria-label="所持通貨">
+        <div className="event-shop-wallet-monster">
+          <img src={getMonsterImage(gameState.currentMonsterId)} alt={currentMonster?.name ?? "現在のモンスター"} />
+        </div>
+        <div>
+          <img src="/img/icon/sfc/sfc_free_coin_01.png" alt="" />
+          <span>無料コイン</span><strong>{gameState.freeCoins}</strong>
+        </div>
+        <div>
+          <img src="/img/icon/icon_paid_coin_01.png" alt="" />
+          <span>モンタコイン</span><strong>{gameState.paidCoinBalance}</strong>
+        </div>
+        <div className="event-shop-wallet-egg">
+          <img src={getMonsterImage(eventConfig.freeEggMonsterId)} alt="" />
+          <span>イベント卵</span><strong>{ownedEventEggCount}個所持</strong>
+        </div>
+      </section>
 
       <section className="card decorated-card event-shop-hero">
         <div className="event-shop-hero-head">
@@ -363,39 +426,7 @@ export default function EventShopDetailPage() {
           </div>
         ) : null}
         <h2>{eventConfig.name} ショップ</h2>
-        <p>{eventConfig.notice}</p>
-      </section>
-
-      <section className="card decorated-card quest-heading-card">
-        <p>イベント限定の背景やフレーム、デコ、イベントたまごを交換できます。イベントモンスターを育てるには、受け取ったたまごを「次のたまごに予約する」でセットしてください。</p>
-      </section>
-
-      <section className="card decorated-card event-progress-card">
-        <div className="event-progress-grid">
-          <div className="event-progress-item">
-            <span>所持フリーコイン</span>
-            <strong>{gameState.freeCoins}</strong>
-          </div>
-          <div className="event-progress-item">
-            <span>所持モンタコイン</span>
-            <strong>{gameState.paidCoinBalance}</strong>
-          </div>
-          <div className="event-progress-item">
-            <span>イベントたまご</span>
-            <strong>{ownedEventEggCount}個</strong>
-          </div>
-          <div className="event-progress-item">
-            <span>状態</span>
-            <strong>{isEventEggQueued ? "予約済み" : isEventEggActive ? "育成中" : getEventStatusLabel(eventConfig)}</strong>
-          </div>
-        </div>
-        <div className="event-progress-note">
-          {isEventEggQueued
-            ? `${eventEggName}を予約済みです。今のモンスターとお別れした次のサイクルで育成が始まります。`
-            : isEventEggActive
-              ? `${eventEggName}を育成中です。タスクを達成するとイベントモンスターへ進化します。`
-              : `${getRemainingDaysLabel(eventConfig)} / 開催中のみ交換できます。`}
-        </div>
+        <p>{eventConfig.notice} イベント限定の背景やフレーム、デコ、イベントたまごを交換できます。イベントモンスターを育てるには、受け取ったたまごを「次のたまごに予約する」でセットしてください。</p>
       </section>
 
       {purchaseModal ? (
@@ -417,35 +448,11 @@ export default function EventShopDetailPage() {
       ) : null}
 
       <section className="card decorated-card">
-        <div className="notification-card-head">
-          <span className="notification-badge notification-badge-event">イベントたまご</span>
-          <h2>{eventEggName}</h2>
-        </div>
-        <div className="event-egg-row">
-          <img src={getMonsterImage(previewMonster?.monsterId ?? eventConfig.freeEggMonsterId)} alt={eventEggName} className="event-egg-thumb" />
-          <div className="event-egg-meta">
-            <p>まずは無料で1個受け取れます。受け取ったあとに「次のたまごに予約する」を押すと、いまのモンスターとお別れした次の育成サイクルで{eventEggName}からイベントモンスターが出現します。</p>
-            <div className="task-global-menu">
-              <button className="quest-btn task-global-menu-button task-global-menu-button-primary" onClick={onClaimFreeEgg} disabled={!isActive || Boolean(eventState?.hasClaimedFreeEgg)}>
-                {eventState?.hasClaimedFreeEgg ? "受け取り済み" : "無料で受け取る"}
-              </button>
-              <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={onQueueEgg} disabled={isEventEggQueued || ownedEventEggCount <= 0 || !isActive}>
-                {isEventEggQueued ? "予約済み" : "次のたまごに予約する"}
-              </button>
-              <button className="quest-btn task-global-menu-button task-global-menu-button-accent" onClick={() => setShowStartNowConfirm(true)} disabled={ownedEventEggCount <= 0 || !isActive}>
-                いますぐ卵を育てる
-              </button>
-            </div>
-            {isEventEggQueued && <p className="shop-note shop-note-strong">予約済みです。今のモンスターとお別れした次のサイクルで、{eventEggName}から育成が始まります。</p>}
-            {isEventEggActive && <p className="shop-note shop-note-strong">{eventEggName}を育成中です。タスクを達成するとイベントモンスターへ進化します。</p>}
+        <div className="event-shop-section-head">
+          <div className="notification-card-head">
+            <span className="notification-badge notification-badge-info">フリーコイン交換</span>
+            <h2>イベント限定アイテム</h2>
           </div>
-        </div>
-      </section>
-
-      <section className="card decorated-card">
-        <div className="notification-card-head">
-          <span className="notification-badge notification-badge-info">フリーコイン交換</span>
-          <h2>イベント限定アイテム</h2>
         </div>
         <div className="shop-grid">
           {eventConfig.freeCoinShopItems.map((item) => {
@@ -485,6 +492,78 @@ export default function EventShopDetailPage() {
                   disabled={alreadyOwned || !isActive || insufficientCoins}
                 >
                   {alreadyOwned ? "所持中" : insufficientCoins ? "コイン不足" : "交換する"}
+                </button>
+              </section>
+            );
+          })}
+        </div>
+
+        <div className="event-shop-subheading">
+          <span className="notification-badge notification-badge-info">いつでも使える</span>
+          <h2>育成アイテム</h2>
+          <button
+            type="button"
+            className="event-shop-help-button"
+            aria-label="育成アイテムの使い方を見る"
+            title="育成アイテムの使い方"
+            onClick={() => setShowItemHelp(true)}
+          >
+            ?
+          </button>
+        </div>
+        <div className="shop-grid event-shop-growth-grid">
+          {SHOP_ATTRIBUTE_CHARMS.map((item) => {
+            const ownedCount = gameState.ownedCharmItemCounts[item.attribute] ?? 0;
+            const active = gameState.activeAttributeCharm?.attribute === item.attribute && (gameState.activeAttributeCharm?.variant ?? "free") === "free";
+            const insufficientCoins = gameState.freeCoins < item.price;
+            return (
+              <section className={`card decorated-card shop-grid-card charm-card-${item.attribute}`} key={item.itemId}>
+                <div className={`shop-grid-preview shop-charm-preview charm-preview-${item.attribute}`}>
+                  <img src={item.iconPath} alt={item.title} className="shop-charm-icon" />
+                  {active && <span className="equipped-badge">発動中</span>}
+                </div>
+                <div className="shop-grid-meta">
+                  <h2 className={`charm-title charm-title-${item.attribute}`}>{item.title}</h2>
+                  <p>{item.description}</p>
+                  <div className={`shop-grid-price charm-price charm-price-${item.attribute}`}>{item.price} フリーコイン / 所持 {ownedCount}</div>
+                </div>
+                <button
+                  className={`quest-btn shop-grid-button ${CHARM_BUTTON_CLASS[item.attribute]}`}
+                  onClick={() => requestPurchase(
+                    { title: item.title, priceLabel: `${item.price} フリーコイン`, message: "この育成アイテムを購入しますか？" },
+                    () => onBuyCharm(item.attribute)
+                  )}
+                  disabled={insufficientCoins}
+                >
+                  {insufficientCoins ? "コイン不足" : "購入する"}
+                </button>
+              </section>
+            );
+          })}
+          {freeBoosters.map((item) => {
+            const ownedCount = gameState.ownedBoosterItemCounts[item.itemId] ?? 0;
+            const active = gameState.activeExpBooster?.itemId === item.itemId;
+            const insufficientCoins = gameState.freeCoins < item.price;
+            return (
+              <section className="card decorated-card shop-grid-card" key={item.itemId}>
+                <div className="shop-grid-preview shop-charm-preview shop-grid-preview-coming-soon">
+                  <img src={item.iconPath} alt={item.title} className="shop-charm-icon" />
+                  {active && <span className="equipped-badge">発動中</span>}
+                </div>
+                <div className="shop-grid-meta">
+                  <h2>{item.title}</h2>
+                  <p>{item.description}</p>
+                  <div className="shop-grid-price">{item.price} フリーコイン / 所持 {ownedCount}</div>
+                </div>
+                <button
+                  className="quest-btn shop-grid-button task-global-menu-button-primary"
+                  onClick={() => requestPurchase(
+                    { title: item.title, priceLabel: `${item.price} フリーコイン`, message: "この育成アイテムを購入しますか？" },
+                    () => onBuyBooster(item.itemId)
+                  )}
+                  disabled={insufficientCoins}
+                >
+                  {insufficientCoins ? "コイン不足" : "購入する"}
                 </button>
               </section>
             );
@@ -550,6 +629,17 @@ export default function EventShopDetailPage() {
           <span className="notification-badge notification-badge-event">モンタコイン交換</span>
           <h2>特別ラインナップ</h2>
         </div>
+        <div className="event-shop-paid-intro">
+          <p className="shop-note shop-note-strong">モンタコインは購入してチャージする有料コインです。イベント限定の背景、フレーム、たまご、デコなどに使えます。</p>
+          <p className="shop-note">{isNativeApp
+            ? `${nativePlatformLabel}では、通常ショップの「モンタコイン」からアプリ内課金で購入できます。`
+            : "Web版では、通常ショップの「モンタコイン」からStripeで購入できます。"}</p>
+          <Link href="/shop?currency=paid&category=coin" className="event-shop-paid-cta">
+            <img src="/img/icon/icon_paid_coin_01.png" alt="" />
+            <span>モンタコインを購入する</span>
+            <span className="event-shop-paid-cta-arrow" aria-hidden="true">›</span>
+          </Link>
+        </div>
         <div className="shop-grid">
           {eventConfig.paidCoinShopItems.map((item) => {
             const alreadyOwned = item.rewardType === "background"
@@ -595,6 +685,32 @@ export default function EventShopDetailPage() {
               </section>
             );
           })}
+        </div>
+      </section>
+
+      <section className="card decorated-card event-shop-egg-card">
+        <div className="notification-card-head">
+          <span className="notification-badge notification-badge-event">イベントたまご</span>
+          <h2>{eventEggName}</h2>
+        </div>
+        <div className="event-egg-row">
+          <img src={getMonsterImage(previewMonster?.monsterId ?? eventConfig.freeEggMonsterId)} alt={eventEggName} className="event-egg-thumb" />
+          <div className="event-egg-meta">
+            <p>まずは無料で1個受け取れます。受け取ったあとに「次のたまごに予約する」を押すと、いまのモンスターとお別れした次の育成サイクルで{eventEggName}からイベントモンスターが出現します。</p>
+            <div className="task-global-menu">
+              <button className="quest-btn task-global-menu-button task-global-menu-button-primary" onClick={onClaimFreeEgg} disabled={!isActive || Boolean(eventState?.hasClaimedFreeEgg)}>
+                {eventState?.hasClaimedFreeEgg ? "受け取り済み" : "無料で受け取る"}
+              </button>
+              <button className="quest-btn task-global-menu-button task-global-menu-button-primary" onClick={onQueueEgg} disabled={isEventEggQueued || ownedEventEggCount <= 0 || !isActive}>
+                {isEventEggQueued ? "予約済み" : "次のたまごに予約する"}
+              </button>
+              <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={() => setShowStartNowConfirm(true)} disabled={ownedEventEggCount <= 0 || !isActive}>
+                いますぐ卵を育てる
+              </button>
+            </div>
+            {isEventEggQueued && <p className="shop-note shop-note-strong">予約済みです。今のモンスターとお別れした次のサイクルで、{eventEggName}から育成が始まります。</p>}
+            {isEventEggActive && <p className="shop-note shop-note-strong">{eventEggName}を育成中です。タスクを達成するとイベントモンスターへ進化します。</p>}
+          </div>
         </div>
       </section>
 
@@ -734,6 +850,31 @@ export default function EventShopDetailPage() {
                 やめる
               </button>
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {showItemHelp ? (
+        <div className="auth-email-modal-overlay event-shop-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="event-shop-item-help-title">
+          <div className="auth-email-modal-card event-shop-modal-card event-shop-help-modal">
+            <h2 id="event-shop-item-help-title" className="auth-email-modal-title">育成アイテムの選び方</h2>
+            <div className="event-shop-help-list">
+              <section>
+                <h3>モンスターを早く育てるには？</h3>
+                <p>EXPブーストを使うと、決められた時間だけタスクで獲得するEXPが20%増えます。</p>
+              </section>
+              <section>
+                <h3>能力をしぼって伸ばすには？</h3>
+                <p>お守りを使うと、次の3タスクで選んだ属性だけを伸ばせます。育てたい進化に合わせて選びましょう。</p>
+              </section>
+              <section>
+                <h3>いろんなモンスターを見たい場合</h3>
+                <p>イベント卵を受け取り「次のたまごに予約する」を押すと、今のモンスターとお別れした次の育成でイベントモンスターに出会えます。</p>
+              </section>
+            </div>
+            <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={() => setShowItemHelp(false)}>
+              とじる
+            </button>
           </div>
         </div>
       ) : null}

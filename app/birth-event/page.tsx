@@ -6,10 +6,12 @@ import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getMonsterImage } from "@/lib/game/assets";
 import { resolveEggEvolutionMonsterId } from "@/lib/game/evolution";
+import { isOctoberUiEnabled } from "@/lib/game/octoberUi";
 import { useGame } from "@/lib/game/useGame";
 
 export default function BirthEventPage() {
   const router = useRouter();
+  const octoberUi = isOctoberUiEnabled();
   const { monsters, gameState, isLoading, finishBirthEvent } = useGame();
   const [hatchPhase, setHatchPhase] = useState<"egg" | "crack" | "born">("egg");
 
@@ -56,6 +58,7 @@ export default function BirthEventPage() {
         : `${bornMonster?.name ?? "スライム"} が誕生した！`;
 
   const onContinue = () => {
+    if (octoberUi && (hatchPhase !== "born" || !gameState.birthEventPending)) return;
     finishBirthEvent();
     router.push("/home");
   };
@@ -69,15 +72,16 @@ export default function BirthEventPage() {
           <img src="/img/effect/fx_smoke_01.png" alt="smoke" className="hatch-smoke" />
           <img src={getMonsterImage(bornMonster?.monsterId)} alt={bornMonster?.name ?? "monster"} className="hatch-monster" />
         </div>
-        <p style={{ textAlign: "center" }}>{eventText}</p>
+        <p role="status" style={{ textAlign: "center" }}>{eventText}</p>
+        {octoberUi && hatchPhase === "born" && <p style={{ textAlign: "center" }}>タスクを達成すると、この子が育つよ。</p>}
         <div className="centered-button-wrap">
-          <button className="primary ui-image-button" onClick={onContinue}>
-            ホームへ
+          <button className="primary ui-image-button" onClick={onContinue} disabled={octoberUi && hatchPhase !== "born"}>
+            {octoberUi ? hatchPhase === "born" ? "一緒に育てる" : "もうすぐ生まれるよ…" : "ホームへ"}
           </button>
         </div>
       </section>
       <DevDebugPanel gameState={gameState} monsters={monsters} />
-      <BottomNav />
+      {!octoberUi && <BottomNav />}
     </main>
   );
 }

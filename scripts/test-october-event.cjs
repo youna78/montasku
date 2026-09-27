@@ -63,8 +63,8 @@ const start = state.forceStartEventEgg(player, id, monsters);
 assert.equal(start.started, true);
 assert.equal(start.nextState.currentMonsterId, 93);
 assert.equal(start.nextState.eventStates[id].ownedEggCount, 0);
-assert.equal(event.freeCoinShopItems.length, 2);
-assert.equal(event.paidCoinShopItems.length, 3);
+assert.equal(event.freeCoinShopItems.length, 1);
+assert.equal(event.paidCoinShopItems.length, 4);
 for (const item of [...event.freeCoinShopItems, ...event.paidCoinShopItems]) {
   const before = initial();
   const result = state.purchaseEventReward(before, id, item.itemId);
@@ -92,10 +92,10 @@ for (let day = 1; day <= 7; day++) {
   player = state.refreshGameStateForToday(player);
   assert.equal(player.freeCoins - beforeCoins, day === 1 ? 2 : 5); // Event +2, daily +3.
   assert.equal(player.eventStates[id].loginDates.length, day);
-  assert.equal(player.ownedFrameIds.includes('october_halloween_frame'), day === 7);
+  assert.equal(player.ownedFrameIds.includes('october_pumpkin_frame'), day === 7);
   assert.deepEqual(state.refreshGameStateForToday(player), player, 'Same-day login is idempotent');
 }
-assert.equal(player.ownedFrameIds.filter(x => x === 'october_halloween_frame').length, 1);
+assert.equal(player.ownedFrameIds.filter(x => x === 'october_pumpkin_frame').length, 1);
 const fileExists = file => assert.ok(fs.existsSync(path.join(root, 'public', file)), file);
 [event.heroImagePath, event.homeBannerImagePath, event.shopBannerImagePath, event.shopIconImagePath,
  ...event.freeCoinShopItems.map(i => i.imagePath), ...event.paidCoinShopItems.map(i => i.imagePath),

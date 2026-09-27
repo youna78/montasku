@@ -1,6 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CUSTOM_TASK_IDS, normalizeCustomTasks } from "@/lib/game/customTasks";
+import { usePathname, useRouter } from "next/navigation";
+import { isOctoberUiEnabled } from "@/lib/game/octoberUi";
 import { trackEvent } from "@/lib/analytics/gtag";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { loadLevelingMaster } from "@/lib/csv/levelingMaster";
@@ -172,6 +175,7 @@ type UseGameResult = {
   addTask: (taskId: number) => AddTaskResult | null;
   removeTask: (taskId: number) => RemoveTaskResult | null;
   moveTask: (taskId: number, direction: "up" | "down") => ReorderTaskResult | null;
+  saveCustomTask: (taskId: number, name: string) => boolean;
   purchaseBackground: (backgroundId: string, price: number) => PurchaseShopItemResult | null;
   equipBackground: (backgroundId: string) => EquipBackgroundResult | null;
   purchaseFrame: (frameId: string, price: number) => PurchaseShopItemResult | null;
@@ -205,13 +209,22 @@ type UseGameResult = {
 
 export function useGame(): UseGameResult {
   const { user, isLoading: isAuthLoading } = useAuth();
-  const [tasks, setTasks] = useState<TaskMaster[]>([]);
+  const [masterTasks, setTasks] = useState<TaskMaster[]>([]);
   const [monsters, setMonsters] = useState<MonsterMaster[]>([]);
   const [levelingRows, setLevelingRows] = useState<LevelingMaster[]>([]);
   const [gameState, setGameState] = useState<GameState | null>(null);
+  const tasks = useMemo(() => [...masterTasks, ...normalizeCustomTasks(gameState?.customTasks)], [masterTasks, gameState?.customTasks]);
   const [isLoading, setIsLoading] = useState(true);
   const gameStateRef = useRef<GameState | null>(null);
   const pendingSaveRef = useRef<Promise<void>>(Promise.resolve());
+  const router = useRouter();
+  const pathname = usePathname();
+  useEffect(() => {
+    if (!isLoading && isOctoberUiEnabled() && gameState?.birthEventPending && !gameState.endEventPending && pathname !== "/birth-event") {
+      router.replace("/birth-event");
+    }
+  }, [gameState?.birthEventPending, gameState?.endEventPending, isLoading, pathname, router]);
+
 
   const buildPurchaseHistoryRecord = useCallback(
     (params: {
@@ -486,6 +499,14 @@ export function useGame(): UseGameResult {
     },
     [commitState, monsters, tasks, levelingRows]
   );
+
+  const saveCustomTask = useCallback((taskId: number, name: string) => {
+    const current = gameStateRef.current;
+    if (!current || !isOctoberUiEnabled() || !CUSTOM_TASK_IDS.some(id => id === taskId) || !name.trim() || name.trim().length > 40) return false;
+    const customTasks = normalizeCustomTasks([...(current.customTasks ?? []).filter(task => task.taskId !== taskId), {taskId, name}]);
+    commitState({...current, customTasks});
+    return true;
+  }, [commitState]);
 
   const addTask = useCallback(
     (taskId: number): AddTaskResult | null => {
@@ -1111,6 +1132,7 @@ export function useGame(): UseGameResult {
     addTask,
     removeTask,
     moveTask,
+    saveCustomTask,
     purchaseBackground,
     equipBackground,
     purchaseFrame,

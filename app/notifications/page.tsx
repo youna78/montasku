@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
-import { HOME_ANNOUNCEMENTS } from "@/lib/game/announcements";
+import { getActiveHomeAnnouncements } from "@/lib/game/announcements";
 import { getEventStatusLabel, getRemainingDaysLabel, getVisibleHomeEvents } from "@/lib/game/events";
 import { getGeneralNotificationIds, markNotificationIdsRead } from "@/lib/game/notificationReads";
 import { getBackgroundImagePath, getFrameThemeClass } from "@/lib/game/shop";
@@ -14,7 +14,7 @@ import { useGame } from "@/lib/game/useGame";
 export default function NotificationsPage() {
   const router = useRouter();
   const { monsters, gameState, isLoading } = useGame();
-  const activeAnnouncements = HOME_ANNOUNCEMENTS.filter((announcement) => announcement.active);
+  const activeAnnouncements = getActiveHomeAnnouncements();
   const visibleEvents = getVisibleHomeEvents();
   const generalNotificationIds = getGeneralNotificationIds(activeAnnouncements, visibleEvents);
   const generalNotificationIdsKey = generalNotificationIds.join("|");
@@ -79,11 +79,21 @@ export default function NotificationsPage() {
             <h2>{announcement.title}</h2>
           </div>
           <p>{announcement.body}</p>
+          {announcement.details && announcement.details.length > 0 && (
+            <ul className="notification-detail-list">
+              {announcement.details.map((detail) => <li key={detail}>{detail}</li>)}
+            </ul>
+          )}
           {announcement.href && announcement.ctaLabel && (
             <div className="notification-card-actions">
               <Link href={announcement.href} className="quest-btn task-global-menu-button task-global-menu-button-secondary">
                 {announcement.ctaLabel}
               </Link>
+              {announcement.secondaryHref && announcement.secondaryCtaLabel && (
+                <Link href={announcement.secondaryHref} className="quest-btn task-global-menu-button task-global-menu-button-primary">
+                  {announcement.secondaryCtaLabel}
+                </Link>
+              )}
             </div>
           )}
         </section>

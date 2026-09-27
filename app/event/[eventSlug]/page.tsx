@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { isOctoberUiEnabled } from "@/lib/game/octoberUi";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getMonsterImage } from "@/lib/game/assets";
@@ -11,8 +12,27 @@ import { getFramePreviewImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
 
+function getConsecutiveLoginDays(loginDates: string[]): number {
+  const dates = [...new Set(loginDates)]
+    .filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date))
+    .sort();
+  if (dates.length < 2) return 0;
+
+  let streak = 1;
+  for (let index = dates.length - 1; index > 0; index -= 1) {
+    const current = Date.parse(`${dates[index]}T00:00:00Z`);
+    const previous = Date.parse(`${dates[index - 1]}T00:00:00Z`);
+    if (current - previous !== 24 * 60 * 60 * 1000) break;
+    streak += 1;
+  }
+  return streak >= 2 ? streak : 0;
+}
+
+const OCTOBER_EVOLUTION_REVEAL_IDS = [99, 100, 102, 101, 103, 104, 105, 106] as const;
+
 export default function EventDetailPage() {
   const router = useRouter();
+  const octoberUi = isOctoberUiEnabled();
   const params = useParams<{ eventSlug: string }>();
   const eventSlug = Array.isArray(params?.eventSlug) ? params.eventSlug[0] : params?.eventSlug;
   const eventConfig = eventSlug ? getEventBySlug(eventSlug) : null;
@@ -26,6 +46,7 @@ export default function EventDetailPage() {
   } = useGame();
   const [message, setMessage] = useState("");
   const [showStartNowConfirm, setShowStartNowConfirm] = useState(false);
+  const [showEvolutionChart, setShowEvolutionChart] = useState(false);
 
   useEffect(() => {
     if (!message) return;
@@ -68,6 +89,7 @@ export default function EventDetailPage() {
   }
 
   const eventState = gameState.eventStates[eventConfig.eventId];
+  const consecutiveLoginDays = getConsecutiveLoginDays(eventState?.loginDates ?? []);
   const isVisible = isEventAnnouncementVisible(eventConfig);
   const isActive = isEventActive(eventConfig);
   const ownedEventEggCount = eventState?.ownedEggCount ?? 0;
@@ -123,6 +145,9 @@ export default function EventDetailPage() {
   const eventEggName = monsters.find((monster) => monster.monsterId === eventConfig.freeEggMonsterId)?.name ?? "イベントたまご";
   const featuredMonsterNames = eventMonsters.map((monster) => monster.name);
   const eventMonsterLabel = featuredMonsterNames.length > 0 ? featuredMonsterNames.join(" と ") : "イベントモンスター";
+  const revealedEvolutionMonsterIds = OCTOBER_EVOLUTION_REVEAL_IDS.filter((monsterId) =>
+    gameState.discoveredMonsterIds.includes(monsterId)
+  );
 
   const onClaimFreeEgg = () => {
     const result = claimEventFreeEgg(eventConfig.eventId);
@@ -166,7 +191,7 @@ export default function EventDetailPage() {
       <div className="title-panel">イベント</div>
       {message && <div className="toast">{message}</div>}
 
-      <section className="card decorated-card event-hero-card">
+      <section className={`card decorated-card event-hero-card ${octoberUi ? "event-hero-card-guided" : ""}`}>
         <div className="event-hero-image-wrap">
           <img src={eventConfig.heroImagePath} alt={eventConfig.name} className="event-hero-image" />
         </div>
@@ -179,9 +204,61 @@ export default function EventDetailPage() {
           <p>{eventConfig.description}</p>
           <p className="shop-note">{eventConfig.notice}</p>
         </div>
+        {octoberUi && <>
+          <div className="event-guided-next" role="status">
+            {loginRewardImagePath && <img src={loginRewardImagePath} alt="" className="event-guided-reward-image" />}
+            <div className="event-guided-next-copy">
+              <p>{eventState?.hasCompletedLoginMission
+                ? `${eventConfig.mission.loginRewardTitle}を獲得しました！ 持ち物で装着しよう。`
+                : isActive ? `あと${Math.max(0, eventConfig.mission.loginDaysRequired - (eventState?.loginDates.length ?? 0))}日ログインで${eventConfig.mission.loginRewardTitle}！ また明日遊びに来よう。`
+                : "開催期間中にログインすると、報酬に近づきます。"}</p>
+              <button
+                type="button"
+                className="event-guided-detail-link"
+                onClick={() => document.getElementById("event-mission-reward")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              >
+                詳しく見る
+              </button>
+            </div>
+          </div>
+          {eventState?.hasCompletedLoginMission && <Link href="/inventory?tab=frame" className="quest-btn task-global-menu-button-primary">報酬を持ち物で見る</Link>}
+          <div className="event-guided-egg">
+            <img src={getMonsterImage(eventConfig.freeEggMonsterId)} alt="" />
+            <div><h3>無料のたまごで参加しよう</h3><p>ログイン報酬とは別に、開催中は条件なしで1個受け取れます。卵は今すぐ育てるか、現在のモンスターが去った後に育てるか選べます。</p></div>
+          </div>
+          <div className="event-guided-action" role="status">
+            {!eventState?.hasClaimedFreeEgg && isActive ? <><p>まずは{eventEggName}を受け取ろう。</p><button className="quest-btn task-global-menu-button-primary" onClick={onClaimFreeEgg}>無料でたまごを受け取る</button></>
+              : isEventEggQueued ? <><p>予約完了！ 今のモンスターとお別れしたあと、{eventEggName}の育成が始まります。</p><Link href="/tasks" className="quest-btn task-global-menu-button-primary">今のモンスターを育てる</Link></>
+              : isEventEggActive ? <><p>{eventEggName}を育成中です。タスクを達成しよう！</p><Link href="/tasks" className="quest-btn task-global-menu-button-primary">タスクを見る</Link></>
+              : ownedEventEggCount > 0 ? <><p>次の育成に予約しよう。今のモンスターはそのまま育てられます。</p><button className="quest-btn task-global-menu-button-primary" onClick={onQueueEgg}>次のたまごに予約する</button></>
+              : <p>{eventState?.hasClaimedFreeEgg ? "無料たまごは受け取り済みです。" : "無料たまごは開催期間中に受け取れます。"}</p>}
+            {ownedEventEggCount > 0 && !isEventEggActive && (
+              <button className="quest-btn task-global-menu-button-secondary event-start-now-button" onClick={() => setShowStartNowConfirm(true)}>
+                今すぐ{eventEggName}を育てる
+              </button>
+            )}
+          </div>
+          <p className="event-expiry-note">※イベント期間が終了すると、イベントモンスターは去ってしまいますのでご注意ください。</p>
+        </>}
       </section>
 
-      <section className="card decorated-card event-mission-reward-card">
+      {eventConfig.eventId === "october_halloween_2026" ? (
+        <Link href={`/shop/events/${eventConfig.slug}`} className="event-shop-banner-link" aria-label="ハロウィンイベントショップへ">
+          <img src="/img/illustration/banner_october_hallowinshop_01.png" alt="開催中 ハロウィンショップ イベントショップへ" />
+        </Link>
+      ) : (
+        <Link href={`/shop/events/${eventConfig.slug}`} className="card decorated-card event-shop-link-card">
+          <img src={eventConfig.shopIconImagePath ?? eventConfig.shopBannerImagePath?.replace("_shop_01.png", "_shop_icon_01.png") ?? "/img/icon/icon_shop_01.png"} alt="" className="event-shop-link-card-icon" />
+          <div className="event-shop-link-card-copy">
+            <span className="notification-badge notification-badge-event">イベントショップ</span>
+            <strong>限定アイテムを交換する</strong>
+            <p>背景、フレーム、イベントたまごはこちら</p>
+          </div>
+          <span className="event-shop-link-arrow" aria-hidden="true">▶</span>
+        </Link>
+      )}
+
+      <section id="event-mission-reward" className="card decorated-card event-mission-reward-card">
         <div className="notification-card-head">
           <span className="notification-badge notification-badge-event">完走報酬</span>
           <h2>{eventConfig.mission.loginRewardTitle ?? "イベント限定報酬"}</h2>
@@ -197,7 +274,13 @@ export default function EventDetailPage() {
             </p>
             <p className="shop-note">
               {eventState?.hasCompletedLoginMission ? "すでに達成して受け取り済みです。" : "ログイン日数はイベント期間中に自動でカウントされます。"}
+              {consecutiveLoginDays > 0 ? ` ${consecutiveLoginDays}日連続ログイン中です。` : ""}
             </p>
+            {eventState?.hasCompletedLoginMission && (
+              <Link href="/inventory?tab=frame" className="quest-btn task-global-menu-button-primary event-reward-inventory-link">
+                持ち物を見る
+              </Link>
+            )}
           </div>
         </div>
       </section>
@@ -229,12 +312,12 @@ export default function EventDetailPage() {
         </div>
         <div className="event-progress-note">
           {eventState?.hasCompletedLoginMission
-            ? `7日ログイン達成済みです。${eventConfig.mission.loginRewardTitle ?? "ログイン報酬"} を受け取りました。`
+            ? `${eventConfig.mission.loginDaysRequired}日ログイン達成済みです。${eventConfig.mission.loginRewardTitle ?? "ログイン報酬"} を受け取りました。`
             : `期間中に${eventConfig.mission.loginDaysRequired}日ログインすると、イベントの完走条件を達成できます。`}
         </div>
       </section>
 
-      <section className="card decorated-card">
+      {!octoberUi && <section className="card decorated-card">
         <div className="notification-card-head">
           <span className="notification-badge notification-badge-event">無料参加</span>
           <h2>{eventEggName}</h2>
@@ -258,12 +341,19 @@ export default function EventDetailPage() {
             {isEventEggActive && <p className="shop-note shop-note-strong">{eventEggName}を育成中です。タスクを達成するとイベントモンスターへ進化します。</p>}
           </div>
         </div>
-      </section>
+      </section>}
 
       <section className="card decorated-card">
-        <div className="notification-card-head">
-          <span className="notification-badge notification-badge-info">報酬一覧</span>
-          <h2>登場モンスター</h2>
+        <div className="event-monster-section-head">
+          <div className="notification-card-head">
+            <span className="notification-badge notification-badge-info">報酬一覧</span>
+            <h2>登場モンスター</h2>
+          </div>
+          {eventConfig.eventId === "october_halloween_2026" && (
+            <button type="button" className="quest-btn event-evolution-chart-button" onClick={() => setShowEvolutionChart(true)}>
+              進化表を見る
+            </button>
+          )}
         </div>
         <p className="event-progress-note">{eventMonsterLabel} が出現中！タスクを達成してイベントモンスターを育てよう！</p>
         <div className="event-monster-grid">
@@ -276,16 +366,6 @@ export default function EventDetailPage() {
           ))}
         </div>
       </section>
-
-      <Link href={`/shop/events/${eventConfig.slug}`} className="card decorated-card event-shop-link-card">
-        <img src={eventConfig.shopIconImagePath ?? eventConfig.shopBannerImagePath?.replace("_shop_01.png", "_shop_icon_01.png") ?? "/img/icon/icon_shop_01.png"} alt="" className="event-shop-link-card-icon" />
-        <div className="event-shop-link-card-copy">
-          <span className="notification-badge notification-badge-event">イベントショップ</span>
-          <strong>限定アイテムを交換する</strong>
-          <p>背景、フレーム、イベントたまごはこちら</p>
-        </div>
-        <span className="event-shop-link-arrow" aria-hidden="true">▶</span>
-      </Link>
 
       {rewardSummary.length > 0 && (
         <section className="card decorated-card notification-card">
@@ -340,6 +420,41 @@ export default function EventDetailPage() {
                 やめる
               </button>
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {showEvolutionChart ? (
+        <div className="auth-email-modal-overlay event-evolution-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="event-evolution-chart-title">
+          <div className="auth-email-modal-card event-confirm-modal-card event-evolution-modal-card">
+            <button
+              type="button"
+              className="event-evolution-modal-close"
+              aria-label="進化表を閉じる"
+              title="閉じる"
+              onClick={() => setShowEvolutionChart(false)}
+            >
+              ×
+            </button>
+            <h2 id="event-evolution-chart-title" className="auth-email-modal-title">モンタスクハロウィン進化表</h2>
+            <p className="event-evolution-chart-note">
+              childまでは公開中です。adult以降は、出会ったモンスターだけ姿が明らかになります。
+            </p>
+            <div className="event-evolution-chart-image" aria-label={`adult以降 ${revealedEvolutionMonsterIds.length}体発見済み`}>
+              <img src="/img/monster_frame/october_evolution_chart_secret_v2.png" alt="adult以降がシークレットのハロウィン進化表" />
+              {revealedEvolutionMonsterIds.map((monsterId) => (
+                <img
+                  key={monsterId}
+                  src="/img/monster_frame/october_evolution_chart_full_v2.png"
+                  alt=""
+                  className={`event-evolution-reveal event-evolution-reveal-${monsterId}`}
+                />
+              ))}
+            </div>
+            <p className="event-evolution-discovery-count">adult以降：{revealedEvolutionMonsterIds.length} / {OCTOBER_EVOLUTION_REVEAL_IDS.length}体 発見</p>
+            <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={() => setShowEvolutionChart(false)}>
+              とじる
+            </button>
           </div>
         </div>
       ) : null}

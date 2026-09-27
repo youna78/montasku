@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { DexCollection } from "@/components/common/DexCollection";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getMonsterImage, getRarityBadge } from "@/lib/game/assets";
+import { isOctoberUiEnabled } from "@/lib/game/octoberUi";
 import { isEventMonster } from "@/lib/game/events";
 import { getFrameThemeClass } from "@/lib/game/shop";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
@@ -13,6 +15,7 @@ import { useGame } from "@/lib/game/useGame";
 
 export default function DexPage() {
   const router = useRouter();
+  const octoberUi = isOctoberUiEnabled();
   const { monsters, gameState, isLoading } = useGame();
 
   useEffect(() => {
@@ -38,7 +41,9 @@ export default function DexPage() {
     return <main>Loading...</main>;
   }
 
-  const discoveredCount = gameState.discoveredMonsterIds.length;
+  const discovered = new Set(gameState.discoveredMonsterIds);
+  const discoveredCount = monsters.filter(monster => discovered.has(monster.monsterId)).length;
+
 
   return (
     <main className={`page-shell page-rpg page-dex ${getFrameThemeClass(gameState.selectedFrameId)}`}>
@@ -49,11 +54,12 @@ export default function DexPage() {
           <strong>モンスター図鑑</strong>
           <span>出会ったモンスターの記録を見返せます。</span>
           <div className="task-progress-strip">
-            <span>発見 {discoveredCount}/{monsters.length}</span>
-            <span>イベント限定も記録</span>
+            <span>{octoberUi ? `出会った仲間 ${discoveredCount}体` : `発見 ${discoveredCount}/${monsters.length}`}</span>
+            <span>{octoberUi ? "育てるたびに、出会いが増える！" : "イベント限定も記録"}</span>
           </div>
         </div>
       </section>
+      {octoberUi ? <DexCollection monsters={monsters} discoveredIds={gameState.discoveredMonsterIds} /> : <>
       <section className="card decorated-card dex-board-card">
         <h2 className="screen-section-title">発見した仲間</h2>
         {monsters.map((monster) => {
@@ -85,6 +91,7 @@ export default function DexPage() {
           );
         })}
       </section>
+      </>}
       <DevDebugPanel gameState={gameState} monsters={monsters} />
       <BottomNav />
     </main>

@@ -428,10 +428,10 @@ export const OCTOBER_HALLOWEEN_EVENT: GameEventConfig = {
   endsAt: "2026-10-31T23:59:59+09:00",
   announcementStartsAt: "2026-09-29T00:00:00+09:00",
   targetUsers: "all",
-  heroImagePath: "/img/background/bg_october_halloween_night_01.png",
-  homeBannerImagePath: "/img/background/bg_october_halloween_fair_01.png",
-  shopBannerImagePath: "/img/background/bg_october_halloween_night_01.png",
-  shopIconImagePath: "/img/monster/monster_renewal_94_pumpkin_petit_01.png",
+  heroImagePath: "/img/illustration/icatch_octover_hallowin_01.png",
+  homeBannerImagePath: "/img/illustration/banner_october_hallowin_01.png",
+  shopBannerImagePath: "/img/illustration/icatch_october_shop_icon_01.png",
+  shopIconImagePath: "/img/illustration/icatch_october_hallowin_home_01.png",
   bannerLabel: "イベント開催中",
   description: "10月限定のハロウィンモンスター登場！タスクを達成して育ててみよう",
   notice: "期間限定です。イベントショップは開催中のみ利用できます。",
@@ -452,20 +452,20 @@ export const OCTOBER_HALLOWEEN_EVENT: GameEventConfig = {
       rarity: "rare",
       availability: "active_only"
     },
-    {
-      itemId: "october_pumpkin_frame_free",
-      title: "パンプキンフレーム",
-      description: "ジャックオーランタンやお菓子をあしらったイベント限定フレームです。",
-      rewardType: "frame",
-      currencyType: "free_coin",
-      price: 500,
-      imagePath: "/img/deco_frame/frame_october_pumpkin_01.png",
-      grantValue: "october_pumpkin_frame",
-      rarity: "rare",
-      availability: "active_only"
-    }
   ],
   paidCoinShopItems: [
+    {
+      itemId: "october_halloween_frame_paid",
+      title: "ハロウィンフレーム",
+      description: "月やおばけ、キャンドルをあしらったイベント限定フレームです。",
+      rewardType: "frame",
+      currencyType: "paid_coin",
+      price: 500,
+      imagePath: "/img/deco_frame/frame_october_halloween_01.png",
+      grantValue: "october_halloween_frame",
+      rarity: "rare",
+      availability: "active_only"
+    },
     {
       itemId: "october_halloween_egg_paid",
       title: "ハロウィン卵",
@@ -506,8 +506,8 @@ export const OCTOBER_HALLOWEEN_EVENT: GameEventConfig = {
   mission: {
     loginDaysRequired: 7,
     dailyLoginBonusFreeCoins: 2,
-    loginRewardFrameId: "october_halloween_frame",
-    loginRewardTitle: "ハロウィンフレーム"
+    loginRewardFrameId: "october_pumpkin_frame",
+    loginRewardTitle: "パンプキンフレーム"
   }
 };
 

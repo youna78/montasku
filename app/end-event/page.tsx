@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
-import { getLetterItemImage, getMonsterImage } from "@/lib/game/assets";
+import { getLetterItemImage, getMonsterImage, LETTER_ITEM_IMAGES } from "@/lib/game/assets";
 import { useGame } from "@/lib/game/useGame";
 
 export default function EndEventPage() {
@@ -36,17 +36,19 @@ export default function EndEventPage() {
       ? `${currentMonster?.name ?? "モンスター"} はここを去ったようだ。\nあれ、何かあるみたい。`
       : `てがみを てにいれた。\n${currentMonster?.name ?? "モンスター"} は タマゴを おいていったようだ。`;
 
-  const onContinue = async () => {
+  const finishAndNavigate = async (destination: "/home" | "/letters") => {
     if (isFinishing) return;
+    setIsFinishing(true);
+    await finishEndEvent();
+    router.replace(destination);
+  };
 
+  const onContinue = async () => {
     if (phase === "farewell") {
       setPhase("letter");
       return;
     }
-
-    setIsFinishing(true);
-    await finishEndEvent();
-    router.replace("/home");
+    await finishAndNavigate("/home");
   };
 
   return (
@@ -55,16 +57,21 @@ export default function EndEventPage() {
       <section className="card decorated-card">
         <div className={`end-scene phase-${phase}`}>
           <img src="/img/effect/fx_smoke_01.png" alt="smoke" className="end-smoke" />
-          <img src={getLetterItemImage()} alt="letter" className="end-letter" />
+          <img src={getLetterItemImage(LETTER_ITEM_IMAGES[0])} alt="letter" className="end-letter" />
           <img src={getMonsterImage(1)} alt="new egg" className="end-egg" />
         </div>
         <div className="rpg-dialogue-box">
           <p className="rpg-dialogue-text">{dialogue}</p>
         </div>
-        <div className="centered-button-wrap">
+        <div className="centered-button-wrap end-event-actions">
           <button className="primary ui-image-button" onClick={onContinue} disabled={isFinishing}>
             {isFinishing ? "保存中..." : phase === "farewell" ? "ネクスト" : "新しいタマゴへ"}
           </button>
+          {phase === "letter" && (
+            <button className="quest-btn quest-btn-secondary end-event-letter-button" onClick={() => finishAndNavigate("/letters")} disabled={isFinishing}>
+              手紙を見る
+            </button>
+          )}
         </div>
       </section>
       <DevDebugPanel gameState={gameState} monsters={monsters} />

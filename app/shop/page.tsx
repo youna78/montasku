@@ -137,6 +137,7 @@ export default function ShopPage() {
   const [nativeStoreProducts, setNativeStoreProducts] = useState<NativeStoreProductMap>({});
   const [nativeStoreProductError, setNativeStoreProductError] = useState("");
   const [isPurchasePending, setIsPurchasePending] = useState(false);
+  const [showCoinHelp, setShowCoinHelp] = useState(false);
 
   useEffect(() => {
     setIsNativeApp(isNativeMobileApp());
@@ -1287,10 +1288,48 @@ export default function ShopPage() {
     <main className={`page-shell page-rpg page-shop ${getFrameThemeClass(gameState.selectedFrameId)}`} style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}>
       <div className="title-panel">ショップ</div>
       <section className="card decorated-card quest-heading-card">
-        <p>フリーコインやモンタコインで、見た目やアイテムをそろえられます。</p>
+        <div className="shop-intro-copy">
+          <p>フリーコインやモンタコインで、見た目やアイテムをそろえられます。</p>
+          <button
+            type="button"
+            className="event-shop-help-button shop-coin-help-button"
+            aria-label="コインの説明を見る"
+            onClick={() => setShowCoinHelp(true)}
+          >
+            ?
+          </button>
+        </div>
       </section>
 
       {message && <div className="toast">{message}</div>}
+
+      {showCoinHelp && (
+        <div className="auth-email-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="shop-coin-help-title">
+          <div className="card decorated-card auth-email-modal-card event-shop-help-modal shop-coin-help-modal">
+            <h2 id="shop-coin-help-title" className="auth-email-modal-title">コインについて</h2>
+            <div className="event-shop-help-list">
+              <section>
+                <h3>フリーコイン</h3>
+                <p>タスクやログインなどで無料でもらえるコインです。通常アイテムや育成アイテムの交換に使えます。</p>
+              </section>
+              <section>
+                <h3>モンタコイン</h3>
+                <p>購入してチャージする有料コインです。特別な背景、フレーム、アイテム、セット商品などに使えます。</p>
+              </section>
+            </div>
+            <Link
+              href="/shop?currency=paid&category=coin"
+              className="ui-link-button settings-menu-button settings-menu-button-primary shop-coin-help-cta"
+              onClick={() => setShowCoinHelp(false)}
+            >
+              モンタコインを購入する
+            </Link>
+            <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={() => setShowCoinHelp(false)}>
+              とじる
+            </button>
+          </div>
+        </div>
+      )}
 
       {(isPurchasePending || checkoutItemId !== null) && (
         <div className="auth-email-modal-overlay purchase-processing-overlay" role="status" aria-live="polite">
@@ -1382,7 +1421,11 @@ export default function ShopPage() {
         </div>
       </section>
 
-      {activeEvent && (
+      {activeEvent?.slug === "october-halloween" ? (
+        <Link href={`/shop/events/${activeEvent.slug}`} className="event-shop-banner-link shop-event-banner-link" aria-label="ハロウィンイベントショップへ">
+          <img src="/img/illustration/banner_october_hallowinshop_01.png" alt="開催中 ハロウィンショップ イベントショップへ" />
+        </Link>
+      ) : activeEvent ? (
         <Link href={`/shop/events/${activeEvent.slug}`} className="card decorated-card event-shop-link-card">
           <img src={activeEvent.shopIconImagePath ?? activeEvent.shopBannerImagePath?.replace("_shop_01.png", "_shop_icon_01.png") ?? "/img/icon/icon_shop_01.png"} alt="" className="event-shop-link-card-icon" />
           <div className="event-shop-link-card-copy">
@@ -1392,7 +1435,7 @@ export default function ShopPage() {
           </div>
           <span className="event-shop-link-arrow" aria-hidden="true">▶</span>
         </Link>
-      )}
+      ) : null}
 
       <section className="card decorated-card">
         <div className="shop-tab-row">

@@ -164,7 +164,12 @@ export default function DailyReviewPage() {
                     できなかった
                   </button>
                 </div>
-                {resolved && <div className="review-status-text">選択中・もう一度押すと戻せます</div>}
+                <div
+                  className={`review-status-text ${resolved ? "review-status-text-visible" : ""}`}
+                  aria-hidden={!resolved}
+                >
+                  選択中・もう一度押すと戻せます
+                </div>
               </li>
             );
           })}

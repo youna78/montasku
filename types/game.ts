@@ -82,6 +82,7 @@ export type SavedUserEventState = {
 };
 
 export type GameState = {
+  achievementRecords?: import("@/lib/game/records").AchievementRecord[];
   stateUpdatedAt?: string;
   currentMonsterId: number;
   currentMonsterLevel: number;
@@ -108,6 +109,7 @@ export type GameState = {
   attributeTotals: AttributeTotals;
   completedTaskIdsToday: number[];
   activeTasks: ActiveTask[];
+  customTasks?: import("@/types/master").TaskMaster[];
   discoveredMonsterIds: number[];
   acquiredLetters: LetterRecord[];
   lastPlayedDate: string;

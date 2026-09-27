@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<title>October monster motion preview</title>
+<style>
+  body { margin: 20px; font-family: system-ui, sans-serif; background: #eef3f8; color: #17212b; }
+  h1 { font-size: 22px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .card { background: white; border: 1px solid #b9c5d1; padding: 10px; border-radius: 6px; }
+  img { width: 100%; aspect-ratio: 1; object-fit: contain; image-rendering: pixelated; background: #dce8f3; }
+  p { margin: 7px 0 0; font-weight: 650; font-size: 13px; overflow-wrap: anywhere; }
+</style>
+<h1>October event monster motion</h1>
+<div class="grid" id="grid"></div>
+<script>
+const monsters = {
+  93: ['halloween_egg', 'sway'], 94: ['pumpkin_petit', 'walk'], 95: ['candy_ghost', 'walk'],
+  96: ['apprentice_witch_fairy', 'walk'], 97: ['black_cloak_mini_beast', 'walk'], 98: ['pumpkin_dragon', 'walk'],
+  99: ['candle_witch', 'walk'], 100: ['shadow_fang', 'walk'], 101: ['lantern_wyvern', 'walk'],
+  102: ['mummy_man', 'walk'], 103: ['halloween_queen', 'walk'], 104: ['midnight_behemoth', 'walk'],
+  105: ['hyakki_pumpkin_lord', 'walk'], 106: ['sandstorm_mummy_king', 'walk']
+};
+const grid = document.querySelector('#grid');
+for (const [id, [slug, travel]] of Object.entries(monsters)) {
+  for (const motion of [travel, 'happy']) {
+    const stem = `monster_renewal_${id}_${slug}_${motion}_4f`;
+    const card = document.createElement('div'); card.className = 'card';
+    card.innerHTML = `<img src="gifs/${stem}.gif"><p>ID${id} ${slug} / ${motion}</p>`;
+    grid.append(card);
+  }
+}
+</script>
+</html>

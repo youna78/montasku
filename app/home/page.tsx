@@ -3,17 +3,20 @@
 import type { CSSProperties } from "react";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { OctoberHome } from "@/components/home/OctoberHome";
+import { BirthTransition } from "@/components/common/BirthTransition";
+import { isOctoberUiEnabled } from "@/lib/game/octoberUi";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { EvolutionOverlay } from "@/components/common/EvolutionOverlay";
 import { GameLoadingScreen } from "@/components/common/GameLoadingScreen";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { trackEvent } from "@/lib/analytics/gtag";
-import { HOME_ANNOUNCEMENTS } from "@/lib/game/announcements";
+import { getActiveHomeAnnouncements, type HomeAnnouncement } from "@/lib/game/announcements";
 import { ATTRIBUTE_ICON_BY_KEY, getMonsterImage, getMonsterMotionAsset } from "@/lib/game/assets";
 import { getEventStatusLabel, getRemainingDaysLabel, getVisibleHomeEvents, isEventActive } from "@/lib/game/events";
 import { getBackgroundImagePath, getDecorationShopItem, getFramePreviewImagePath, getFrameThemeClass } from "@/lib/game/shop";
-import { getGeneralNotificationIds, getNotificationReadIds } from "@/lib/game/notificationReads";
+import { getGeneralNotificationIds, getNotificationReadIds, markNotificationIdsRead } from "@/lib/game/notificationReads";
 import { playSfx } from "@/lib/game/sfx";
 import { progressToNextLevel, shouldRouteToDailyReview } from "@/lib/game/state";
 import { resolveLevelFromExp } from "@/lib/game/leveling";
@@ -53,15 +56,18 @@ function toPercent(value: number, total: number): number {
 
 export default function HomePage() {
   const router = useRouter();
+  const octoberUi = isOctoberUiEnabled();
   const { tasks, monsters, levelingRows, gameState, isLoading, completeTask, markEventIntroPopupSeen } = useGame();
   const [feedback, setFeedback] = useState("");
   const [feedbackKey, setFeedbackKey] = useState(0);
   const [monsterCelebration, setMonsterCelebration] = useState<MonsterCelebrationState | null>(null);
   const [evolutionScene, setEvolutionScene] = useState<EvolutionScene | null>(null);
   const [showEventIntro, setShowEventIntro] = useState(false);
+  const [popupAnnouncement, setPopupAnnouncement] = useState<HomeAnnouncement | null>(null);
   const [dismissedEventIntroId, setDismissedEventIntroId] = useState<string | null>(null);
   const shownEventIntroIdsRef = useRef<Set<string>>(new Set());
   const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
+  const [hasLoadedNotificationReads, setHasLoadedNotificationReads] = useState(false);
 
   useEffect(() => {
     if (!feedback) return;
@@ -76,7 +82,10 @@ export default function HomePage() {
   }, [monsterCelebration]);
 
   useEffect(() => {
-    const refreshReadNotificationIds = () => setReadNotificationIds(getNotificationReadIds());
+    const refreshReadNotificationIds = () => {
+      setReadNotificationIds(getNotificationReadIds());
+      setHasLoadedNotificationReads(true);
+    };
     refreshReadNotificationIds();
     window.addEventListener("focus", refreshReadNotificationIds);
     window.addEventListener("pageshow", refreshReadNotificationIds);
@@ -108,6 +117,7 @@ export default function HomePage() {
   }, [gameState, isLoading, router]);
 
   const visibleEvents = getVisibleHomeEvents();
+  const activeAnnouncements = getActiveHomeAnnouncements();
   const activeEvent = visibleEvents[0] ?? null;
   const activeEventState = activeEvent && gameState ? gameState.eventStates[activeEvent.eventId] : null;
   const activeEventHomeBannerImagePath = activeEvent?.homeBannerImagePath ?? activeEvent?.heroImagePath;
@@ -124,20 +134,43 @@ export default function HomePage() {
       !gameState.hasSeenTutorial
     ) {
       setShowEventIntro(false);
+      setPopupAnnouncement(null);
       return;
     }
+    if (!hasLoadedNotificationReads) return;
+    if (popupAnnouncement || showEventIntro) return;
+
+    const nextPopupAnnouncement = activeAnnouncements.find((announcement) => (
+      announcement.showPopup && !readNotificationIds.includes(`announcement:${announcement.announcementId}`)
+    ));
+    if (nextPopupAnnouncement) {
+      setPopupAnnouncement(nextPopupAnnouncement);
+      return;
+    }
+
     if (!activeEvent) return;
     if (!isEventActive(activeEvent)) return;
     if (activeEventState?.hasSeenIntroPopup) return;
     if (dismissedEventIntroId === activeEvent.eventId) return;
     if (shownEventIntroIdsRef.current.has(activeEvent.eventId)) return;
     shownEventIntroIdsRef.current.add(activeEvent.eventId);
-    markEventIntroPopupSeen(activeEvent.eventId);
     setShowEventIntro(true);
-  }, [activeEvent, activeEventState?.hasSeenIntroPopup, dismissedEventIntroId, gameState, markEventIntroPopupSeen]);
+  }, [activeAnnouncements, activeEvent, activeEventState?.hasSeenIntroPopup, dismissedEventIntroId, gameState, hasLoadedNotificationReads, popupAnnouncement, readNotificationIds, showEventIntro]);
+
+  const dismissPopupAnnouncement = () => {
+    if (!popupAnnouncement) return;
+    const notificationId = `announcement:${popupAnnouncement.announcementId}`;
+    markNotificationIdsRead([notificationId]);
+    setReadNotificationIds((current) => Array.from(new Set([...current, notificationId])));
+    setPopupAnnouncement(null);
+  };
 
   const dismissEventIntro = (openEventPage: boolean) => {
     if (!activeEvent) return;
+    const notificationId = `event:${activeEvent.eventId}`;
+    markNotificationIdsRead([notificationId]);
+    setReadNotificationIds((current) => Array.from(new Set([...current, notificationId])));
+    markEventIntroPopupSeen(activeEvent.eventId);
     setDismissedEventIntroId(activeEvent.eventId);
     setShowEventIntro(false);
     window.setTimeout(() => {
@@ -154,8 +187,11 @@ export default function HomePage() {
     return <GameLoadingScreen monsterImagePath={loadingMonster ? getMonsterImage(loadingMonster.monsterId) : null} />;
   }
 
+  if (octoberUi && gameState.birthEventPending && !gameState.endEventPending) {
+    return <BirthTransition />;
+  }
+
   const currentMonster = monsters.find((m) => m.monsterId === gameState.currentMonsterId);
-  const activeAnnouncements = HOME_ANNOUNCEMENTS.filter((announcement) => announcement.active);
   const generalNotificationIds = getGeneralNotificationIds(activeAnnouncements, visibleEvents);
   const unreadGeneralNotificationCount = generalNotificationIds.filter((notificationId) => !readNotificationIds.includes(notificationId)).length;
   const notificationCount = unreadGeneralNotificationCount + (gameState.pendingDailyReview ? 1 : 0);
@@ -244,8 +280,8 @@ export default function HomePage() {
     if (result.evolved) fragments.push("進化");
     if (result.nextState.endEventPending) fragments.push("お別れ");
     showFeedback(fragments.join(" / "));
-    if (result.levelUp) {
-      triggerMonsterCelebration(3);
+    if (octoberUi || result.levelUp) {
+      triggerMonsterCelebration(result.levelUp ? 3 : 2);
     }
 
     if (result.nextState.endEventPending) {
@@ -256,6 +292,10 @@ export default function HomePage() {
     }
 
     if (result.nextState.birthEventPending) {
+      if (octoberUi) {
+        router.replace("/birth-event");
+        return;
+      }
       window.setTimeout(() => {
         router.push("/birth-event");
       }, 220);
@@ -274,30 +314,8 @@ export default function HomePage() {
     }
   };
 
-  return (
-    <main className={`page-shell page-home ${getFrameThemeClass(gameState.selectedFrameId)}`}>
-      <div className="title-panel">ホーム</div>
-      {feedback && <div key={feedbackKey} className="reward-popup reward-popup-top home-reward-popup">{feedback}</div>}
-
-      {activeEvent && activeEventHomeBannerImagePath && (
-        <Link href={`/event/${activeEvent.slug}`} className="card decorated-card event-banner-card">
-          <div className="event-banner-image-wrap">
-            <img src={activeEventHomeBannerImagePath} alt={activeEvent.name} className="event-banner-image" />
-          </div>
-          <div className="event-banner-meta">
-            <div className="event-banner-head">
-              <span className="notification-badge notification-badge-event">{getEventStatusLabel(activeEvent)}</span>
-              <span className="event-banner-remaining">{getRemainingDaysLabel(activeEvent)}</span>
-            </div>
-            <strong>{activeEvent.name}</strong>
-            <p>{activeEvent.description}</p>
-          </div>
-        </Link>
-      )}
-
-      <section className="card decorated-card">
-        <div className="home-stage-layout">
-          <div
+  const monsterStage = (
+<div
             className={`monster-stage ${monsterStageBackgroundClass}`}
             style={{ backgroundImage: `url("${getBackgroundImagePath(gameState.selectedBackgroundId)}")` }}
           >
@@ -351,34 +369,9 @@ export default function HomePage() {
               )}
             </div>
           </div>
-          <div className="home-pet-action">
-            <button type="button" className="quest-btn home-pet-button" onClick={onPetMonster}>
-              撫でる
-            </button>
-          </div>
-          <div className="home-stage-actions">
-            <Link href="/notifications" className="home-notification-button">
-              <span className="home-notification-icon">
-                <img src="/img/icon/sfc/sfc_notification_01.png" alt="" className="home-notification-icon-image" />
-              </span>
-              <span className="home-notification-label">おしらせ</span>
-              {notificationCount > 0 && <span className="home-notification-badge">{notificationCount}</span>}
-            </Link>
-            <Link href="/shop" className="home-notification-button home-shop-shortcut">
-              <span className="home-notification-icon">
-                <img src="/img/icon/sfc/sfc_shop_01.png" alt="" className="home-notification-icon-image" />
-              </span>
-              <span className="home-notification-label">ショップ</span>
-            </Link>
-            <Link href="/inventory" className="home-notification-button home-inventory-shortcut">
-              <span className="home-notification-icon">
-                <img src="/img/icon/sfc/sfc_inventory_01.png" alt="" className="home-notification-icon-image" />
-              </span>
-              <span className="home-notification-label">持ち物</span>
-            </Link>
-          </div>
-        </div>
-        <div className="status-panel home-status-panel">
+  );
+  const statusDetails = (
+<div className="status-panel home-status-panel">
           <div className="home-panel-heading">ステータス</div>
           <div className="status-row">
             <span>現在のモンスター</span>
@@ -442,9 +435,9 @@ export default function HomePage() {
             <strong>{gameState.streakDays}日</strong>
           </div>
         </div>
-      </section>
-
-      <section className="card decorated-card">
+  );
+  const attributeDetails = (
+<section className="card decorated-card">
         <h2>属性バー</h2>
         {bars.map((bar) => (
           <div className="attr-item" key={bar.key}>
@@ -461,6 +454,70 @@ export default function HomePage() {
           </div>
         ))}
       </section>
+  );
+
+  return (
+    <main className={`page-shell page-home ${octoberUi ? "page-home-october" : ""} ${getFrameThemeClass(gameState.selectedFrameId)}`}>
+      <div className="title-panel">ホーム</div>
+      {feedback && <div key={feedbackKey} className="reward-popup reward-popup-top home-reward-popup">{feedback}</div>}
+
+      {octoberUi ? <OctoberHome
+        state={gameState} monsterName={currentMonster?.name ?? "タマゴ"} progress={progress}
+        remainingTasks={remainingTasks} activeTaskCount={activeTaskIdsInOrder.length}
+        notificationCount={notificationCount} event={activeEvent} stage={monsterStage}
+        attributes={attributeDetails}
+        onPet={onPetMonster} onComplete={onCompleteFromHome}
+      /> : <>
+      {!octoberUi && activeEvent && activeEventHomeBannerImagePath && (
+        <Link href={`/event/${activeEvent.slug}`} className="card decorated-card event-banner-card">
+          <div className="event-banner-image-wrap">
+            <img src={activeEventHomeBannerImagePath} alt={activeEvent.name} className="event-banner-image" />
+          </div>
+          <div className="event-banner-meta">
+            <div className="event-banner-head">
+              <span className="notification-badge notification-badge-event">{getEventStatusLabel(activeEvent)}</span>
+              <span className="event-banner-remaining">{getRemainingDaysLabel(activeEvent)}</span>
+            </div>
+            <strong>{activeEvent.name}</strong>
+            <p>{activeEvent.description}</p>
+          </div>
+        </Link>
+      )}
+
+      <section className="card decorated-card">
+        <div className="home-stage-layout">
+          {monsterStage}
+          <div className="home-pet-action">
+            <button type="button" className="quest-btn home-pet-button" onClick={onPetMonster}>
+              撫でる
+            </button>
+          </div>
+          <div className="home-stage-actions">
+            <Link href="/notifications" className="home-notification-button">
+              <span className="home-notification-icon">
+                <img src="/img/icon/sfc/sfc_notification_01.png" alt="" className="home-notification-icon-image" />
+              </span>
+              <span className="home-notification-label">おしらせ</span>
+              {notificationCount > 0 && <span className="home-notification-badge">{notificationCount}</span>}
+            </Link>
+            <Link href="/shop" className="home-notification-button home-shop-shortcut">
+              <span className="home-notification-icon">
+                <img src="/img/icon/sfc/sfc_shop_01.png" alt="" className="home-notification-icon-image" />
+              </span>
+              <span className="home-notification-label">ショップ</span>
+            </Link>
+            <Link href="/inventory" className="home-notification-button home-inventory-shortcut">
+              <span className="home-notification-icon">
+                <img src="/img/icon/sfc/sfc_inventory_01.png" alt="" className="home-notification-icon-image" />
+              </span>
+              <span className="home-notification-label">持ち物</span>
+            </Link>
+          </div>
+        </div>
+        {statusDetails}
+      </section>
+
+      {attributeDetails}
 
       <section className="card decorated-card">
         <h2>未達成タスク (最大3件)</h2>
@@ -493,7 +550,30 @@ export default function HomePage() {
         )}
       </section>
 
+      </>}
+
       <DevDebugPanel gameState={gameState} monsters={monsters} />
+
+      {popupAnnouncement && (
+        <div className="auth-prompt-overlay home-announcement-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="home-announcement-title">
+          <div className="card decorated-card auth-prompt-card home-announcement-modal-card">
+            <span className="notification-badge notification-badge-info">アップデート</span>
+            <h2 id="home-announcement-title" className="auth-card-title">{popupAnnouncement.title}</h2>
+            <p className="auth-card-copy">{popupAnnouncement.body}</p>
+            {popupAnnouncement.details && (
+              <ul className="home-announcement-detail-list">
+                {popupAnnouncement.details.map((detail) => <li key={detail}>{detail}</li>)}
+              </ul>
+            )}
+            <button
+              className="quest-btn settings-menu-button settings-menu-button-primary"
+              onClick={dismissPopupAnnouncement}
+            >
+              確認して次へ
+            </button>
+          </div>
+        </div>
+      )}
 
       {showEventIntro && activeEvent && (
         <div className="auth-prompt-overlay" role="dialog" aria-modal="true" aria-labelledby="event-intro-title">

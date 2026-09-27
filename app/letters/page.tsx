@@ -73,7 +73,10 @@ export default function LettersPage() {
         )}
       </section>
       <section className="card decorated-card">
-        <div className="settings-links centered-actions">
+        <div className="settings-links centered-actions letters-page-actions">
+          <Link href="/records" className="ui-link-button quest-btn quest-btn-primary">
+            成長の記録
+          </Link>
           <Link href="/settings" className="ui-link-button quest-btn quest-btn-secondary">
             設定へ戻る
           </Link>
