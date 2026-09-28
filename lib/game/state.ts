@@ -2086,6 +2086,17 @@ export function startTutorialFlow(state: GameState): GameState {
   };
 }
 
+export function skipTutorial(state: GameState): GameState {
+  if (state.hasSeenTutorial) {
+    return state;
+  }
+  return {
+    ...state,
+    hasSeenTutorial: true,
+    isInTutorialFlow: false
+  };
+}
+
 export function shouldRouteToDailyReview(state: GameState): boolean {
   return Boolean(state.pendingDailyReview && !state.pendingDailyReview.skippedAt && state.hasSeenTutorial && !state.isInTutorialFlow);
 }

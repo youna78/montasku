@@ -3,13 +3,12 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
+import { getMonsterImage } from "@/lib/game/assets";
 import { useGame } from "@/lib/game/useGame";
-import { TutorialSpotlight } from "@/components/common/TutorialSpotlight";
-import { isOctoberUiEnabled } from "@/lib/game/octoberUi";
 
 export default function TutorialPage() {
   const router = useRouter();
-  const { monsters, gameState, isLoading, startTutorialFlow } = useGame();
+  const { monsters, gameState, isLoading, startTutorialFlow, skipTutorial } = useGame();
 
   useEffect(() => {
     if (!gameState) return;
@@ -39,20 +38,40 @@ export default function TutorialPage() {
         <div className="title-panel small">チュートリアル</div>
         <p>タスクを達成して、モンスターを育てるアプリです。</p>
         <p>まずは3つタスクを達成してタマゴを孵化させましょう。</p>
-        <div className="centered-button-wrap">
-          <button
-            className="primary ui-image-button"
-            onClick={() => {
-              startTutorialFlow();
-              router.push("/tutorial-egg");
-            }}
-          >
-            はじめる
-          </button>
-        </div>
       </section>
       <DevDebugPanel gameState={gameState} monsters={monsters} />
-      {isOctoberUiEnabled() && <TutorialSpotlight selector=".page-tutorial .primary" text="「はじめる」を押して、タマゴに会いにいこう！" />}
+      <div className="auth-email-modal-overlay tutorial-choice-overlay" role="dialog" aria-modal="true" aria-labelledby="tutorial-choice-title">
+        <div className="card decorated-card auth-email-modal-card tutorial-choice-card">
+          <h2 id="tutorial-choice-title" className="auth-email-modal-title">
+            チュートリアルを始めますか？
+          </h2>
+          <img className="tutorial-choice-egg" src={getMonsterImage(1)} alt="タマゴ" />
+          <p className="tutorial-choice-copy">
+            はじめて遊ぶ方には、タマゴの育て方をご案内します。
+            Web版などで遊んだことがある方は、スキップしてすぐに始められます。
+          </p>
+          <div className="tutorial-choice-actions">
+            <button
+              className="quest-btn quest-btn-primary"
+              onClick={() => {
+                startTutorialFlow();
+                router.push("/tutorial-egg");
+              }}
+            >
+              チュートリアルを始める
+            </button>
+            <button
+              className="quest-btn quest-btn-secondary"
+              onClick={() => {
+                skipTutorial();
+                router.push("/home");
+              }}
+            >
+              スキップしてホームへ
+            </button>
+          </div>
+        </div>
+      </div>
     </main>
   );
 }

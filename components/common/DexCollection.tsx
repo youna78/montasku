@@ -31,7 +31,7 @@ export function DexCollection({ monsters, discoveredIds }: { monsters: MonsterMa
           <div className={`dex-character-grid ${seasonal ? "dex-character-grid-seasonal" : ""}`}>
             {visible.map(monster => {
               const found = discoveredIds.includes(monster.monsterId);
-              const content = <><small className="dex-character-number">#{monster.monsterId}</small><img src={found ? getMonsterImage(monster.monsterId) : "/img/ui/ui_shadow_fallback_01.png"} alt={found ? monster.name : "未発見"} /><strong>{found ? monster.name : "？？？"}</strong><span>{found ? "タップで詳細 ›" : "未発見"}</span></>;
+              const content = <><small className="dex-character-number">#{monster.monsterId}</small><img src={found ? getMonsterImage(monster.monsterId) : "/img/icon/ui_shadow_fallback_01.png"} alt={found ? monster.name : "未発見"} /><strong>{found ? monster.name : "？？？"}</strong><span>{found ? "タップで詳細 ›" : "未発見"}</span></>;
               return found ? <Link key={monster.monsterId} className="dex-character-card" href={`/dex/${monster.monsterId}`}>{content}</Link> : <div key={monster.monsterId} className="dex-character-card dex-character-locked">{content}</div>;
             })}
           </div>

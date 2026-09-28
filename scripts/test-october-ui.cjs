@@ -21,6 +21,20 @@ const monsters = parseCsv(fs.readFileSync('public/data/monsters_master.csv', 'ut
  unlockCondition:r.unlock_condition, evolutionFrom:r.evolution_from, evolutionTo:r.evolution_to
 }));
 const levelingRows = getFallbackLevelingMaster();
+const freshPlayer = state.buildInitialState([]);
+assert.equal(state.getInitialRoute(freshPlayer), '/tutorial');
+const skippedPlayer = state.skipTutorial(freshPlayer);
+assert.equal(skippedPlayer.hasSeenTutorial, true);
+assert.equal(skippedPlayer.isInTutorialFlow, false);
+assert.equal(skippedPlayer.hasCompletedCurrentBirth, false);
+assert.equal(skippedPlayer.onboardingCompletedTaskCount, 0);
+assert.equal(state.getInitialRoute(skippedPlayer), '/home');
+let skippedProgress = skippedPlayer;
+for (let i=1;i<=3;i++) {
+ const task={taskId:i,baseExp:2,power:0,heal:1,knowledge:0,create:0};
+ skippedProgress=state.completeTask({state:skippedProgress,task,monsters,levelingRows}).nextState;
+}
+assert.equal(skippedProgress.birthEventPending, true);
 let player = state.startTutorialFlow(state.buildInitialState([]));
 for (let i=1;i<=3;i++) {
  const task={taskId:i,baseExp:2,power:0,heal:1,knowledge:0,create:0};

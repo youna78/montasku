@@ -2567,6 +2567,44 @@ body:has(.page-tasks) {
   background-position: center;
 }
 
+.tutorial-choice-overlay {
+  z-index: 121;
+}
+
+.tutorial-choice-card {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.tutorial-choice-card .auth-email-modal-title,
+.tutorial-choice-copy {
+  margin: 0;
+}
+
+.tutorial-choice-egg {
+  width: 104px;
+  height: 104px;
+  object-fit: contain;
+}
+
+.tutorial-choice-copy {
+  max-width: 390px;
+  line-height: 1.8;
+}
+
+.tutorial-choice-actions {
+  display: grid;
+  gap: 10px;
+  width: min(100%, 360px);
+}
+
+.tutorial-choice-actions .quest-btn {
+  width: 100%;
+  min-height: 48px;
+}
+
 .page-birth {
   background-image: url("/img/background/bg_birth_event_01.png");
   background-size: cover;

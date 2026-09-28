@@ -353,11 +353,11 @@ export function getStageBadge(stage?: string): string | null {
 }
 
 export function getMonsterImage(monsterId?: number): string {
-  if (!monsterId) return "/img/ui/ui_shadow_fallback_01.png";
+  if (!monsterId) return "/img/icon/ui_shadow_fallback_01.png";
   if (isMonsterRenewalActive()) {
-    return MONSTER_RENEWAL_IMAGE_BY_ID[monsterId] ?? MONSTER_IMAGE_BY_ID[monsterId] ?? "/img/ui/ui_shadow_fallback_01.png";
+    return MONSTER_RENEWAL_IMAGE_BY_ID[monsterId] ?? MONSTER_IMAGE_BY_ID[monsterId] ?? "/img/icon/ui_shadow_fallback_01.png";
   }
-  return MONSTER_IMAGE_BY_ID[monsterId] ?? "/img/ui/ui_shadow_fallback_01.png";
+  return MONSTER_IMAGE_BY_ID[monsterId] ?? "/img/icon/ui_shadow_fallback_01.png";
 }
 
 export function getMonsterMotionAsset(monsterId: number | undefined, kind: MonsterMotionKind): MonsterMotionAsset | null {

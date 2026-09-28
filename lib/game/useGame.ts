@@ -55,6 +55,7 @@ import {
   refreshGameStateForToday as runRefreshGameStateForToday,
   saveGameState,
   skipDailyReview as runSkipDailyReview,
+  skipTutorial as runSkipTutorial,
   startTutorialFlow as runStartTutorialFlow,
   toggleDecoration as runToggleDecoration,
   unequipDecoration as runUnequipDecoration,
@@ -197,6 +198,7 @@ type UseGameResult = {
   skipDailyReview: () => Promise<void>;
   finishDailyReview: () => Promise<void>;
   startTutorialFlow: () => void;
+  skipTutorial: () => void;
   finishBirthEvent: () => void;
   finishEndEvent: () => Promise<void>;
   claimEventFreeEgg: (eventId: string) => EventEggClaimResult | null;
@@ -1122,6 +1124,13 @@ export function useGame(): UseGameResult {
     trackEvent("tutorial_begin");
   }, [commitState]);
 
+  const skipTutorial = useCallback(() => {
+    const current = gameStateRef.current;
+    if (!current) return;
+    commitState(runSkipTutorial(current));
+    trackEvent("tutorial_skip");
+  }, [commitState]);
+
   return {
     tasks,
     monsters,
@@ -1154,6 +1163,7 @@ export function useGame(): UseGameResult {
     skipDailyReview,
     finishDailyReview,
     startTutorialFlow,
+    skipTutorial,
     finishBirthEvent,
     finishEndEvent,
     claimEventFreeEgg,

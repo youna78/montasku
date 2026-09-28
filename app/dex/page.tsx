@@ -69,7 +69,7 @@ export default function DexPage() {
             <div key={monster.monsterId} className={`dex-row dex-row-rpg ${unlocked ? "" : "dex-row-locked"}`}>
               <span className="dex-number">#{monster.monsterId}</span>
               <img
-                src={unlocked ? getMonsterImage(monster.monsterId) : "/img/ui/ui_shadow_fallback_01.png"}
+                src={unlocked ? getMonsterImage(monster.monsterId) : "/img/icon/ui_shadow_fallback_01.png"}
                 alt={unlocked ? monster.name : "unknown"}
                 className="dex-monster-thumb"
               />
