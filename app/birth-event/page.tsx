@@ -68,7 +68,7 @@ export default function BirthEventPage() {
       <div className="title-panel">誕生イベント</div>
       <section className="card decorated-card">
         <div className={`hatch-scene phase-${hatchPhase}`}>
-          <img src="/img/ui/ui_hatch_symbol_01.png" alt="egg" className="hatch-egg" />
+          <img src="/img/icon/ui_hatch_symbol_01.png" alt="egg" className="hatch-egg" />
           <img src="/img/effect/fx_smoke_01.png" alt="smoke" className="hatch-smoke" />
           <img src={getMonsterImage(bornMonster?.monsterId)} alt={bornMonster?.name ?? "monster"} className="hatch-monster" />
         </div>

@@ -344,16 +344,9 @@ export default function EventDetailPage() {
       </section>}
 
       <section className="card decorated-card">
-        <div className="event-monster-section-head">
-          <div className="notification-card-head">
-            <span className="notification-badge notification-badge-info">報酬一覧</span>
-            <h2>登場モンスター</h2>
-          </div>
-          {eventConfig.eventId === "october_halloween_2026" && (
-            <button type="button" className="quest-btn event-evolution-chart-button" onClick={() => setShowEvolutionChart(true)}>
-              進化表を見る
-            </button>
-          )}
+        <div className="notification-card-head">
+          <span className="notification-badge notification-badge-info">報酬一覧</span>
+          <h2>登場モンスター</h2>
         </div>
         <p className="event-progress-note">{eventMonsterLabel} が出現中！タスクを達成してイベントモンスターを育てよう！</p>
         <div className="event-monster-grid">
@@ -365,6 +358,13 @@ export default function EventDetailPage() {
             </div>
           ))}
         </div>
+        {eventConfig.eventId === "october_halloween_2026" && (
+          <div className="event-evolution-chart-actions">
+            <button type="button" className="quest-btn event-evolution-chart-button" onClick={() => setShowEvolutionChart(true)}>
+              進化表を見る
+            </button>
+          </div>
+        )}
       </section>
 
       {rewardSummary.length > 0 && (
@@ -434,7 +434,7 @@ export default function EventDetailPage() {
               title="閉じる"
               onClick={() => setShowEvolutionChart(false)}
             >
-              ×
+              <img src="/img/icon/batu-128.png" alt="" />
             </button>
             <h2 id="event-evolution-chart-title" className="auth-email-modal-title">モンタスクハロウィン進化表</h2>
             <p className="event-evolution-chart-note">
