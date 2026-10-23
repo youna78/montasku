@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { DevPaidCoinPanel } from "@/components/debug/DevPaidCoinPanel";
 import { BottomNav } from "@/components/common/BottomNav";
 import { GAME_EVENTS, getEventStatusLabel, getRemainingDaysLabel, getVisibleHomeEvents } from "@/lib/game/events";
+import { useGame } from "@/lib/game/useGame";
 import { clearVirtualGameNow, getGameNow, getVirtualGameNow, setVirtualGameNow } from "@/lib/game/virtualTime";
 
 const PRESETS = [
@@ -15,7 +17,12 @@ const PRESETS = [
   { label: "10月開始", value: "2026-10-01T00:00:00+09:00" },
   { label: "10月7日目", value: "2026-10-07T12:00:00+09:00" },
   { label: "10月最終日", value: "2026-10-31T23:59:59+09:00" },
-  { label: "10月終了後", value: "2026-11-01T00:00:00+09:00" }
+  { label: "10月終了後", value: "2026-11-01T00:00:00+09:00" },
+  { label: "11月告知開始", value: "2026-10-29T00:00:00+09:00" },
+  { label: "11月開始", value: "2026-11-01T00:00:00+09:00" },
+  { label: "11月7日目", value: "2026-11-07T12:00:00+09:00" },
+  { label: "11月最終日", value: "2026-11-30T23:59:59+09:00" },
+  { label: "11月終了後", value: "2026-12-01T00:00:00+09:00" }
 ];
 
 function toDateTimeLocalValue(value: string): string {
@@ -34,6 +41,7 @@ function toJapanIso(value: string): string {
 }
 
 export function DevCalendarClient() {
+  const { gameState, isLoading, grantDebugPaidCoins } = useGame();
   const [inputValue, setInputValue] = useState("2026-06-01T00:00");
   const [virtualNow, setVirtualNow] = useState<string | null>(null);
   const [renderKey, setRenderKey] = useState(0);
@@ -104,15 +112,21 @@ export function DevCalendarClient() {
         </div>
       </section>
 
+      <DevPaidCoinPanel
+        balance={gameState?.paidCoinBalance ?? null}
+        isLoading={isLoading}
+        onGrant={grantDebugPaidCoins}
+      />
+
       <section className="card decorated-card">
         <div className="notification-card-head">
           <span className="notification-badge notification-badge-event">プリセット</span>
-          <h2>9月・10月イベント確認</h2>
+          <h2>9月〜11月イベント確認</h2>
         </div>
         <div className="task-global-menu">
           {PRESETS.map((preset) => (
             <button
-              key={preset.value}
+              key={preset.label}
               className="quest-btn task-global-menu-button task-global-menu-button-secondary"
               onClick={() => applyValue(preset.value)}
             >
@@ -142,6 +156,9 @@ export function DevCalendarClient() {
 
       <section className="card decorated-card">
         <div className="settings-menu-grid centered-actions">
+          <Link href="/dev/november" className="ui-link-button settings-menu-button settings-menu-button-secondary">
+            11月モンスターのサイズ・歩行見本を確認
+          </Link>
           <Link href="/home" className="ui-link-button settings-menu-button settings-menu-button-primary">
             ホームで確認
           </Link>
@@ -150,6 +167,12 @@ export function DevCalendarClient() {
           </Link>
           <Link href="/shop/events/october-halloween" className="ui-link-button settings-menu-button settings-menu-button-neutral">
             10月ショップを見る
+          </Link>
+          <Link href="/event/november-koyo-onsen" className="ui-link-button settings-menu-button settings-menu-button-secondary">
+            11月イベントを見る
+          </Link>
+          <Link href="/shop/events/november-koyo-onsen" className="ui-link-button settings-menu-button settings-menu-button-neutral">
+            11月ショップを見る
           </Link>
           <Link href="/event/September_Fullmoon" className="ui-link-button settings-menu-button settings-menu-button-secondary">
             9月イベントを見る

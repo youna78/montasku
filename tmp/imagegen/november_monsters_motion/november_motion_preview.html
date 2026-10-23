@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>11月イベントモンスター 動作一覧</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; }
+    body { margin: 0; padding: 28px; color: #25201d; background: #edf3f5; }
+    header { display: flex; align-items: baseline; gap: 14px; margin-bottom: 20px; }
+    h1 { margin: 0; font-size: 28px; }
+    header p { margin: 0; color: #657078; font-size: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .card { padding: 12px; border: 1px solid #b8c4c7; border-radius: 8px; background: #fff; }
+    .checker { display: grid; place-items: center; aspect-ratio: 1; overflow: hidden; background-color: #f8faf9; background-image: linear-gradient(45deg, #dfe6e4 25%, transparent 25%), linear-gradient(-45deg, #dfe6e4 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #dfe6e4 75%), linear-gradient(-45deg, transparent 75%, #dfe6e4 75%); background-position: 0 0, 0 12px, 12px -12px, -12px 0; background-size: 24px 24px; }
+    img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+    h2 { margin: 10px 0 2px; font-size: 16px; }
+    .motion { color: #8b4e2f; }
+    .file { margin: 0; color: #717b80; font-size: 11px; overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <header><h1>11月イベントモンスター 動作一覧</h1><p>4フレーム・ループ再生</p></header>
+  <main class="grid" id="grid"></main>
+  <script>
+    const monsters = [
+      [107, '湯けむり紅葉卵', 'november_egg', ['sway', 'happy']],
+      [108, 'もみじポン', 'momiji_pon', ['walk', 'happy']],
+      [109, '湯けむりプチ', 'yukemuri_petit', ['walk', 'happy']],
+      [110, 'おけネコ', 'oke_neko', ['walk', 'happy']],
+      [111, '紅葉バスガイドミニフェアリー', 'momiji_guide_fairy', ['walk', 'happy']],
+      [112, '旅するミニビースト', 'travel_mini_beast', ['walk', 'happy']],
+      [113, '湯けむり猫又', 'yukemuri_nekomata', ['walk', 'happy']],
+      [114, '紅葉ノ白鹿', 'momiji_white_deer', ['walk', 'happy']],
+      [115, '秋風タヌキ武者', 'akikaze_tanuki_musha', ['walk', 'happy']],
+      [116, '温泉ドラゴン', 'onsen_dragon', ['walk', 'happy']],
+      [117, '湯守ノ猫神', 'yumori_neko_gami', ['walk', 'happy']],
+      [118, '紅葉ノ神鹿', 'momiji_shinroku', ['walk', 'happy']],
+      [119, '秋嵐ノ化狸王', 'akiarashi_bakedanuki_oh', ['walk', 'happy']],
+      [120, '湯煙ノ龍神', 'yukemuri_ryujin', ['walk', 'happy']],
+    ];
+    const grid = document.querySelector('#grid');
+    for (const [id, name, slug, motions] of monsters) {
+      for (const motion of motions) {
+        const file = `monster_renewal_${id}_${slug}_${motion}_4f.gif`;
+        grid.insertAdjacentHTML('beforeend', `<article class="card"><div class="checker"><img src="gifs/${file}" alt="${name} ${motion}"></div><h2>ID${id} ${name} <span class="motion">/ ${motion}</span></h2><p class="file">${file}</p></article>`);
+      }
+    }
+  </script>
+</body>
+</html>

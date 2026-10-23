@@ -6,6 +6,7 @@ export const JULY_SUMMERTIME_EVENT_ID = "july_summertime_2026";
 export const AUGUST_NATSUMATSURI_EVENT_ID = "august_natsumatsuri_2026";
 export const SEPTEMBER_FULLMOON_EVENT_ID = "September_Fullmoon_2026";
 export const OCTOBER_HALLOWEEN_EVENT_ID = "october_halloween_2026";
+export const NOVEMBER_KOYO_ONSEN_EVENT_ID = "november_koyo_onsen_2026";
 
 export const SPRING_EASTER_EVENT: GameEventConfig = {
   eventId: SPRING_EASTER_EVENT_ID,
@@ -431,6 +432,7 @@ export const OCTOBER_HALLOWEEN_EVENT: GameEventConfig = {
   heroImagePath: "/img/illustration/icatch_octover_hallowin_01.png",
   homeBannerImagePath: "/img/illustration/banner_october_hallowin_01.png",
   shopBannerImagePath: "/img/illustration/icatch_october_shop_icon_01.png",
+  shopPromoBannerImagePath: "/img/illustration/banner_october_hallowinshop_01.png",
   shopIconImagePath: "/img/illustration/icatch_october_hallowin_home_01.png",
   bannerLabel: "イベント開催中",
   description: "10月限定のハロウィンモンスター登場！タスクを達成して育ててみよう",
@@ -511,13 +513,108 @@ export const OCTOBER_HALLOWEEN_EVENT: GameEventConfig = {
   }
 };
 
+export const NOVEMBER_KOYO_ONSEN_EVENT: GameEventConfig = {
+  eventId: NOVEMBER_KOYO_ONSEN_EVENT_ID,
+  slug: "november-koyo-onsen",
+  name: "紅葉バスツアーと湯けむり温泉",
+  startsAt: "2026-11-01T00:00:00+09:00",
+  endsAt: "2026-11-30T23:59:59+09:00",
+  announcementStartsAt: "2026-10-29T00:00:00+09:00",
+  targetUsers: "all",
+  heroImagePath: "/img/illustration/icatch_november_koyo_onsen_text_01.png",
+  homeBannerImagePath: "/img/illustration/banner_november_koyo_onsen_home_01.png",
+  homeBannerAspectRatio: 3,
+  shopBannerImagePath: "/img/illustration/banner_november_limited_shop_header_01.png",
+  // Show the gold frame only; the 2172×724 source includes white top/bottom margins.
+  shopBannerAspectRatio: 2172 / 538,
+  shopPromoBannerImagePath: "/img/illustration/banner_november_koyo_onsenshop_text_01.png",
+  bannerLabel: "イベント開催中",
+  description: "11月限定の紅葉・温泉モンスター登場！秋のバスツアーを楽しみながら、タスクを達成して育ててみよう",
+  notice: "期間限定です。イベントショップは開催中のみ利用できます。",
+  freeEggMonsterId: 107,
+  freeEggClaimCount: 1,
+  featuredMonsterIds: [110, 111, 112],
+  rewardPreviewMonsterIds: [107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120],
+  freeCoinShopItems: [
+    {
+      itemId: "november_kyoto_koyo_bg_free",
+      title: "京都の紅葉",
+      description: "赤や橙の紅葉、石畳と和風の橋が広がる11月イベント背景です。",
+      rewardType: "background",
+      currencyType: "free_coin",
+      price: 500,
+      imagePath: "/img/background/bg_november_kyoto_koyo_01.png",
+      grantValue: "november_kyoto_koyo",
+      rarity: "rare",
+      availability: "active_only"
+    }
+  ],
+  paidCoinShopItems: [
+    {
+      itemId: "november_onsen_frame_paid",
+      title: "桶フレーム",
+      description: "風呂桶や牛乳瓶など、温泉グッズをあしらった11月イベント限定フレームです。",
+      rewardType: "frame",
+      currencyType: "paid_coin",
+      price: 300,
+      imagePath: "/img/deco_frame/frame_november_onsen_01.png",
+      grantValue: "november_onsen_frame",
+      rarity: "rare",
+      availability: "active_only"
+    },
+    {
+      itemId: "november_koyo_onsen_egg_paid",
+      title: "湯けむり紅葉卵",
+      description: "紅葉バスツアーと湯けむり温泉の限定モンスターに出会えるイベント卵です。",
+      rewardType: "event_egg",
+      currencyType: "paid_coin",
+      price: 300,
+      imagePath: "/img/monster/monster_renewal_107_november_egg_01.png",
+      grantValue: "107",
+      rarity: "rare",
+      availability: "active_only"
+    },
+    {
+      itemId: "november_onsen_bg_paid",
+      title: "湯けむり温泉",
+      description: "木の湯舟と湯けむり、紅葉に包まれた11月イベント背景です。",
+      rewardType: "background",
+      currencyType: "paid_coin",
+      price: 500,
+      imagePath: "/img/background/bg_november_onsen_01.png",
+      grantValue: "november_onsen",
+      rarity: "rare",
+      availability: "active_only"
+    },
+    {
+      itemId: "november_duck_parade",
+      title: "アヒルさんパレード",
+      description: "ミニアヒルが1列になってホームを横切る、11月イベント限定の動くデコです。",
+      rewardType: "decoration",
+      currencyType: "paid_coin",
+      price: 300,
+      imagePath: "/img/decoration/deco_november_duck_parade_01.png",
+      grantValue: "november_duck_parade",
+      rarity: "rare",
+      availability: "active_only"
+    }
+  ],
+  mission: {
+    loginDaysRequired: 7,
+    dailyLoginBonusFreeCoins: 2,
+    loginRewardFrameId: "november_maple_frame",
+    loginRewardTitle: "もみじフレーム"
+  }
+};
+
 export const GAME_EVENTS: GameEventConfig[] = [
   SPRING_EASTER_EVENT,
   JUNE_SHRINE_EVENT,
   JULY_SUMMERTIME_EVENT,
   AUGUST_NATSUMATSURI_EVENT,
   SEPTEMBER_FULLMOON_EVENT,
-  OCTOBER_HALLOWEEN_EVENT
+  OCTOBER_HALLOWEEN_EVENT,
+  NOVEMBER_KOYO_ONSEN_EVENT
 ];
 
 export function createInitialUserEventState(eventId: string): UserEventState {

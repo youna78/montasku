@@ -416,15 +416,17 @@ export default function EventShopDetailPage() {
       </section>
 
       <section className="card decorated-card event-shop-hero">
-        <div className="event-shop-hero-head">
-          <span className="notification-badge notification-badge-event">{getEventStatusLabel(eventConfig)}</span>
-          <span className="event-banner-remaining">{getRemainingDaysLabel(eventConfig)}</span>
-        </div>
-        {eventConfig.shopBannerImagePath ? (
-          <div className="event-shop-banner-image-wrap">
-            <img src={eventConfig.shopBannerImagePath} alt={`${eventConfig.name} ショップ`} className="event-shop-banner-image" />
+        <div className="event-shop-hero-banner">
+          <div className={`event-shop-hero-head${eventConfig.shopBannerImagePath ? " event-shop-hero-head-overlay" : ""}`}>
+            <span className="notification-badge notification-badge-event">{getEventStatusLabel(eventConfig)}</span>
+            <span className="event-banner-remaining">{getRemainingDaysLabel(eventConfig)}</span>
           </div>
-        ) : null}
+          {eventConfig.shopBannerImagePath ? (
+            <div className="event-shop-banner-image-wrap" style={eventConfig.shopBannerAspectRatio ? { aspectRatio: eventConfig.shopBannerAspectRatio } : undefined}>
+              <img src={eventConfig.shopBannerImagePath} alt={`${eventConfig.name} ショップ`} className="event-shop-banner-image" />
+            </div>
+          ) : null}
+        </div>
         <h2>{eventConfig.name} ショップ</h2>
         <p>{eventConfig.notice} イベント限定の背景やフレーム、デコ、イベントたまごを交換できます。イベントモンスターを育てるには、受け取ったたまごを「次のたまごに予約する」でセットしてください。</p>
       </section>

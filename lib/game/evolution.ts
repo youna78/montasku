@@ -1,6 +1,7 @@
 import type { MonsterMaster } from "@/types/master";
 import type { AttributeTotals, GameState } from "@/types/game";
 import { OCTOBER_EVOLUTION_BRANCHES, type EvolutionBranch } from "./events/octoberEvolution";
+import { NOVEMBER_EVOLUTION_BRANCHES } from "./events/novemberEvolution";
 
 export type EvolutionContext = {
   gameState: GameState;
@@ -26,6 +27,10 @@ function splitCandidates(value?: string): string[] {
 
 function findMonsterByName(monsters: MonsterMaster[], name: string): MonsterMaster | undefined {
   return monsters.find((monster) => monster.name === name);
+}
+
+function getEventEvolutionBranches(monsterId: number): readonly EvolutionBranch[] | undefined {
+  return OCTOBER_EVOLUTION_BRANCHES[monsterId] ?? NOVEMBER_EVOLUTION_BRANCHES[monsterId];
 }
 
 function resolveCandidateMonsterId(
@@ -97,7 +102,7 @@ export function resolveEggEvolutionMonsterId(currentMonster: MonsterMaster, tota
   if (currentMonster.stage !== "egg") return null;
   return resolveCandidateMonsterId(
     splitCandidates(currentMonster.evolutionTo), dominantAttribute(totals), monsters,
-    OCTOBER_EVOLUTION_BRANCHES[currentMonster.monsterId]
+    getEventEvolutionBranches(currentMonster.monsterId)
   );
 }
 
@@ -113,6 +118,6 @@ export function evaluateEvolution({ gameState, monsters, random }: EvolutionCont
 
   return resolveCandidateMonsterId(
     splitCandidates(current.evolutionTo), dominantAttribute(gameState.attributeTotals), monsters,
-    OCTOBER_EVOLUTION_BRANCHES[current.monsterId], random
+    getEventEvolutionBranches(current.monsterId), random
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { GrowthHelp } from "@/components/common/GrowthHelp";
+import { LoginStreak } from "@/components/home/LoginStreak";
 import type { ReactNode } from "react";
 import type { GameState } from "@/types/game";
 import type { TaskMaster } from "@/types/master";
@@ -42,6 +43,7 @@ export function OctoberHome({ state, monsterName, progress, remainingTasks, acti
       <div className="home-overview-today">今日の達成 <strong>{completed}/{activeTaskCount}</strong></div>
       <div className="home-overview-actions">
         <Link href="/records" className="home-records-link"><span aria-hidden="true">📊</span> 達成グラフ</Link>
+        <LoginStreak days={state.streakDays} />
         <GrowthHelp />
       </div>
     </section>
@@ -53,7 +55,7 @@ export function OctoberHome({ state, monsterName, progress, remainingTasks, acti
       <button type="button" onClick={onPet}><span className="home-menu-symbol home-menu-heart" aria-hidden="true">♥</span><span>なでる</span></button>
     </nav>
 
-    {event ? <Link id="home-event-guide" href={`/event/${event.slug}`} className="home-event-banner" aria-label={`${event.name}のイベントを見る`}>
+    {event ? <Link id="home-event-guide" href={`/event/${event.slug}`} className="home-event-banner" style={event.homeBannerAspectRatio ? { aspectRatio: event.homeBannerAspectRatio } : undefined} aria-label={`${event.name}のイベントを見る`}>
       <img src={event.homeBannerImagePath || event.heroImagePath} alt="" />
       <span className="home-event-banner-status">{getEventStatusLabel(event)} · {getRemainingDaysLabel(event)}</span>
       <span className="home-event-banner-progress">ログイン {Math.min(loginDays,event.mission.loginDaysRequired)}/{event.mission.loginDaysRequired}日</span>

@@ -1,4 +1,5 @@
 import { getGameNow } from "@/lib/game/virtualTime";
+import { getNovemberGroundWalk, getNovemberGroundWalkImagePath } from "@/lib/game/events/novemberGroundWalks";
 
 const MONSTER_IMAGE_BY_ID: Record<number, string> = {
   1: "/img/monster/monster_egg_01.png",
@@ -106,7 +107,21 @@ const MONSTER_IMAGE_BY_ID: Record<number, string> = {
   103: "/img/monster/monster_renewal_103_halloween_queen_01.png",
   104: "/img/monster/monster_renewal_104_midnight_behemoth_01.png",
   105: "/img/monster/monster_renewal_106_sandstorm_mummy_king_01.png",
-  106: "/img/monster/monster_renewal_105_hyakki_pumpkin_lord_01.png"
+  106: "/img/monster/monster_renewal_105_hyakki_pumpkin_lord_01.png",
+  107: "/img/monster/monster_renewal_107_november_egg_01.png",
+  108: "/img/monster/monster_renewal_108_momiji_pon_01.png",
+  109: "/img/monster/monster_renewal_109_yukemuri_petit_01.png",
+  110: "/img/monster/monster_renewal_110_oke_neko_01.png",
+  111: "/img/monster/monster_renewal_111_momiji_guide_fairy_01.png",
+  112: "/img/monster/monster_renewal_112_travel_mini_beast_01.png",
+  113: "/img/monster/monster_renewal_113_yukemuri_nekomata_01.png",
+  114: "/img/monster/monster_renewal_114_momiji_white_deer_01.png",
+  115: "/img/monster/monster_renewal_115_akikaze_tanuki_musha_01.png",
+  116: "/img/monster/monster_renewal_116_onsen_dragon_01.png",
+  117: "/img/monster/monster_renewal_117_yumori_neko_gami_01.png",
+  118: "/img/monster/monster_renewal_118_momiji_shinroku_01.png",
+  119: "/img/monster/monster_renewal_119_akiarashi_bakedanuki_oh_01.png",
+  120: "/img/monster/monster_renewal_120_yukemuri_ryujin_01.png"
 };
 
 const MONSTER_RENEWAL_STARTS_AT = "2026-06-01T00:00:00+09:00";
@@ -158,6 +173,7 @@ export type MonsterMotionAsset = {
   rows: 2;
   durationMs: number;
   displaySize?: number;
+  offsetY?: number;
 };
 
 const FOUR_FRAME_MOTION = {
@@ -300,7 +316,21 @@ const MONSTER_RENEWAL_MOTION_BY_ID: Record<number, Partial<Record<MonsterMotionK
   103: { walk: createRenewalMotion("monster_renewal_103_halloween_queen", "walk"), happy: createRenewalMotion("monster_renewal_103_halloween_queen", "happy") },
   104: { walk: createRenewalMotion("monster_renewal_104_midnight_behemoth", "walk"), happy: createRenewalMotion("monster_renewal_104_midnight_behemoth", "happy") },
   105: { walk: createRenewalMotion("monster_renewal_106_sandstorm_mummy_king", "walk"), happy: createRenewalMotion("monster_renewal_106_sandstorm_mummy_king", "happy") },
-  106: { walk: createRenewalMotion("monster_renewal_105_hyakki_pumpkin_lord", "walk"), happy: createRenewalMotion("monster_renewal_105_hyakki_pumpkin_lord", "happy") }
+  106: { walk: createRenewalMotion("monster_renewal_105_hyakki_pumpkin_lord", "walk"), happy: createRenewalMotion("monster_renewal_105_hyakki_pumpkin_lord", "happy") },
+  107: { sway: { ...FOUR_FRAME_MOTION, imagePath: "/img/monster/monster_renewal_107_november_egg_sway_4f.png", displaySize: 190 }, happy: createRenewalMotion("monster_renewal_107_november_egg", "happy", 190) },
+  108: { walk: { ...FOUR_FRAME_MOTION, imagePath: "/img/monster/monster_renewal_108_momiji_pon_walk_v3_4f.png" }, happy: createRenewalMotion("monster_renewal_108_momiji_pon", "happy") },
+  109: { walk: createRenewalMotion("monster_renewal_109_yukemuri_petit", "walk"), happy: createRenewalMotion("monster_renewal_109_yukemuri_petit", "happy") },
+  110: { walk: createRenewalMotion("monster_renewal_110_oke_neko", "walk"), happy: createRenewalMotion("monster_renewal_110_oke_neko", "happy") },
+  111: { walk: createRenewalMotion("monster_renewal_111_momiji_guide_fairy", "walk"), happy: createRenewalMotion("monster_renewal_111_momiji_guide_fairy", "happy") },
+  112: { walk: { ...FOUR_FRAME_MOTION, imagePath: "/img/monster/monster_renewal_112_travel_mini_beast_walk_v3_4f.png" }, happy: createRenewalMotion("monster_renewal_112_travel_mini_beast", "happy") },
+  113: { walk: createRenewalMotion("monster_renewal_113_yukemuri_nekomata", "walk"), happy: createRenewalMotion("monster_renewal_113_yukemuri_nekomata", "happy") },
+  114: { walk: createRenewalMotion("monster_renewal_114_momiji_white_deer", "walk"), happy: createRenewalMotion("monster_renewal_114_momiji_white_deer", "happy") },
+  115: { walk: createRenewalMotion("monster_renewal_115_akikaze_tanuki_musha", "walk"), happy: createRenewalMotion("monster_renewal_115_akikaze_tanuki_musha", "happy") },
+  116: { walk: createRenewalMotion("monster_renewal_116_onsen_dragon", "walk"), happy: createRenewalMotion("monster_renewal_116_onsen_dragon", "happy") },
+  117: { walk: createRenewalMotion("monster_renewal_117_yumori_neko_gami", "walk"), happy: createRenewalMotion("monster_renewal_117_yumori_neko_gami", "happy") },
+  118: { walk: createRenewalMotion("monster_renewal_118_momiji_shinroku", "walk"), happy: createRenewalMotion("monster_renewal_118_momiji_shinroku", "happy") },
+  119: { walk: createRenewalMotion("monster_renewal_119_akiarashi_bakedanuki_oh", "walk"), happy: createRenewalMotion("monster_renewal_119_akiarashi_bakedanuki_oh", "happy") },
+  120: { walk: createRenewalMotion("monster_renewal_120_yukemuri_ryujin", "walk"), happy: createRenewalMotion("monster_renewal_120_yukemuri_ryujin", "happy") }
 };
 
 function isMonsterRenewalActive(now: Date = getGameNow()): boolean {
@@ -360,9 +390,27 @@ export function getMonsterImage(monsterId?: number): string {
   return MONSTER_IMAGE_BY_ID[monsterId] ?? "/img/icon/ui_shadow_fallback_01.png";
 }
 
+// Measured from the visible alpha bounds against normal Egg/Baby/Child sheets.
+// Happy poses use their own scale and anchor, just like the normal monsters.
+// Ground walk sheets use normalized padding; happy sheets retain their own layout.
+const NOVEMBER_MOTION_LAYOUT: Record<number, { size: number; y: number; happySize: number; happyY: number }> = {
+  107: { size: 93, y: -3, happySize: 93, happyY: -3 },
+  108: { size: 170, y: -12, happySize: 104, happyY: -5 },
+  109: { size: 74, y: 32, happySize: 106, happyY: -6 },
+  110: { size: 142, y: 0, happySize: 82, happyY: 12 },
+  111: { size: 68, y: 15, happySize: 92, happyY: -7 },
+  112: { size: 142, y: 0, happySize: 86, happyY: 8 }
+};
+
 export function getMonsterMotionAsset(monsterId: number | undefined, kind: MonsterMotionKind): MonsterMotionAsset | null {
   if (!monsterId || !isMonsterRenewalActive()) return null;
-  return MONSTER_RENEWAL_MOTION_BY_ID[monsterId]?.[kind] ?? null;
+  const asset = MONSTER_RENEWAL_MOTION_BY_ID[monsterId]?.[kind];
+  if (!asset) return null;
+  const layout = NOVEMBER_MOTION_LAYOUT[monsterId];
+  const groundWalk = kind === "walk" ? getNovemberGroundWalk(monsterId) : undefined;
+  if (groundWalk) return { ...asset, imagePath: getNovemberGroundWalkImagePath(groundWalk.slug), displaySize: layout?.size ?? 142, offsetY: layout?.y ?? 0 };
+  if (!layout) return asset;
+  return { ...asset, displaySize: kind === "happy" ? layout.happySize : layout.size, offsetY: kind === "happy" ? layout.happyY : layout.y };
 }
 
 export function getLetterItemImage(imagePath?: string): string {

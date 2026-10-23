@@ -232,6 +232,7 @@ export default function HomePage() {
         backgroundImage: `url("${monsterMotionAsset.imagePath}")`,
         animationDuration: `${monsterMotionAsset.durationMs}ms`,
         animationIterationCount: monsterMotionKind === "happy" ? celebrationLoops : "infinite",
+        transform: monsterMotionAsset.offsetY ? `translateY(${monsterMotionAsset.offsetY}px)` : undefined,
         "--monster-sprite-size": `${monsterMotionAsset.displaySize ?? 142}px`
       }
     : undefined;
@@ -241,7 +242,7 @@ export default function HomePage() {
     monsterMotionKind === "happy" &&
     typeof currentMonster?.monsterId === "number" &&
     currentMonster.monsterId >= 65 &&
-    currentMonster.monsterId <= 106;
+    currentMonster.monsterId <= 120;
   const activeDecorations = gameState.selectedDecorationIds
     .map((itemId) => getDecorationShopItem(itemId))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
@@ -337,6 +338,10 @@ export default function HomePage() {
                       aria-label={decoration.title}
                       className="home-decoration-galaxyrailway-sprite"
                     />
+                  </div>
+                ) : decoration.itemId === "november_duck_parade" ? (
+                  <div className="home-decoration-duck-parade-runner">
+                    <div role="img" aria-label={decoration.title} className="home-decoration-duck-parade-sprite" />
                   </div>
                 ) : decoration.itemId === "october_ghost_parade" ? (
                   <div className="home-decoration-ghost-parade-runner">

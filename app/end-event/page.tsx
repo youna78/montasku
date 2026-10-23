@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
-import { getLetterItemImage, getMonsterImage, LETTER_ITEM_IMAGES } from "@/lib/game/assets";
+import { FarewellScene } from "@/components/common/FarewellScene";
+import { getNovemberFarewellTemplate } from "@/lib/game/events/novemberLetters";
 import { useGame } from "@/lib/game/useGame";
 
 export default function EndEventPage() {
@@ -34,7 +35,7 @@ export default function EndEventPage() {
   const dialogue =
     phase === "farewell"
       ? `${currentMonster?.name ?? "モンスター"} はここを去ったようだ。\nあれ、何かあるみたい。`
-      : `てがみを てにいれた。\n${currentMonster?.name ?? "モンスター"} は タマゴを おいていったようだ。`;
+      : `てがみを てにいれた。\n${currentMonster?.name ?? "モンスター"} との おもいでが つまっている。`;
 
   const finishAndNavigate = async (destination: "/home" | "/letters") => {
     if (isFinishing) return;
@@ -55,17 +56,13 @@ export default function EndEventPage() {
     <main className="page-shell page-home">
       <div className="title-panel">お別れイベント</div>
       <section className="card decorated-card">
-        <div className={`end-scene phase-${phase}`}>
-          <img src="/img/effect/fx_smoke_01.png" alt="smoke" className="end-smoke" />
-          <img src={getLetterItemImage(LETTER_ITEM_IMAGES[0])} alt="letter" className="end-letter" />
-          <img src={getMonsterImage(1)} alt="new egg" className="end-egg" />
-        </div>
+        <FarewellScene phase={phase} imagePath={getNovemberFarewellTemplate(gameState)?.imagePath} />
         <div className="rpg-dialogue-box">
           <p className="rpg-dialogue-text">{dialogue}</p>
         </div>
         <div className="centered-button-wrap end-event-actions">
           <button className="primary ui-image-button" onClick={onContinue} disabled={isFinishing}>
-            {isFinishing ? "保存中..." : phase === "farewell" ? "ネクスト" : "新しいタマゴへ"}
+            {isFinishing ? "保存中..." : phase === "farewell" ? "ネクスト" : "ホームへ"}
           </button>
           {phase === "letter" && (
             <button className="quest-btn quest-btn-secondary end-event-letter-button" onClick={() => finishAndNavigate("/letters")} disabled={isFinishing}>

@@ -134,6 +134,31 @@ export async function spendCloudPaidCoins(
   };
 }
 
+export async function grantCloudDebugPaidCoins(amount: number): Promise<number> {
+  const user = getFirebaseAuth().currentUser;
+  if (!user) throw new Error("Authentication is required to grant debug paid coins.");
+
+  const idToken = await user.getIdToken();
+  const response = await fetch("/api/dev/wallet/grant", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ amount })
+  });
+  const payload = (await response.json()) as {
+    paidCoinBalance?: number;
+    error?: string;
+  };
+
+  if (!response.ok || typeof payload.paidCoinBalance !== "number") {
+    throw new Error(payload.error || "Failed to grant debug paid coins.");
+  }
+
+  return Math.max(0, payload.paidCoinBalance);
+}
+
 export async function purchaseCloudPaidCharm(
   itemId: string,
   purchaseId: string,

@@ -18,6 +18,7 @@ import type { LevelingMaster, MonsterMaster, TaskMaster } from "@/types/master";
 import { LETTER_ITEM_IMAGES } from "./assets";
 import { GAME_EVENTS, JUNE_SHRINE_EVENT, SPRING_EASTER_EVENT, getEventById, isEventActive, normalizeUserEventState } from "./events";
 import { getGameNow } from "./virtualTime";
+import { getNovemberFarewellTemplate } from "./events/novemberLetters";
 import { evaluateEvolution, resolveBirthMonsterId, resolveEggEvolutionMonsterId } from "./evolution";
 import { getAttributeCharmItem, getBoosterShopItem, getDecorationShopItem, getPaidBackgroundShopItem, getPaidBundleShopItem, getPaidFrameShopItem } from "./shop";
 import {
@@ -532,7 +533,7 @@ function pickRandomLetterTemplate(): { title: string; body: string; imagePath: s
 
 function buildFarewellLetter(state: GameState, monster: MonsterMaster | undefined): LetterRecord {
   const fromMonsterName = monster?.name ?? "モンスター";
-  const template = pickRandomLetterTemplate();
+  const template = getNovemberFarewellTemplate(state) ?? pickRandomLetterTemplate();
   return {
     letterId: `${fromMonsterName}-${state.lastPlayedDate}-${state.currentMonsterExp}`,
     title: template.title,
@@ -546,11 +547,12 @@ function buildFarewellLetter(state: GameState, monster: MonsterMaster | undefine
 
 function buildSeasonalFarewellLetter(state: GameState, monster: MonsterMaster | undefined): LetterRecord {
   const fromMonsterName = monster?.name ?? "イベントモンスター";
+  const novemberTemplate = getNovemberFarewellTemplate(state);
   return {
     letterId: `seasonal-farewell-${monster?.monsterId ?? state.currentMonsterId}-${fromMonsterName}-${state.lastPlayedDate}`,
-    title: "つぎのきせつへ",
-    body: `${fromMonsterName} は たくさんの おもいでを むねに、つぎの旅へ 出かけました。\nこれからも きみのタスクを そっと おうえんしています。`,
-    imagePath: LETTER_ITEM_IMAGES[0],
+    title: novemberTemplate?.title ?? "つぎのきせつへ",
+    body: novemberTemplate?.body ?? `${fromMonsterName} は たくさんの おもいでを むねに、つぎの旅へ 出かけました。\nこれからも きみのタスクを そっと おうえんしています。`,
+    imagePath: novemberTemplate?.imagePath ?? LETTER_ITEM_IMAGES[0],
     fromMonsterId: monster?.monsterId ?? state.currentMonsterId,
     fromMonsterName,
     obtainedDate: state.lastPlayedDate
@@ -794,6 +796,7 @@ function normalizeState(
     eventStates,
     lastLoginBonusDate: typeof parsed.lastLoginBonusDate === "string" ? parsed.lastLoginBonusDate : initial.lastLoginBonusDate,
     lastLoginBonusCoins: typeof parsed.lastLoginBonusCoins === "number" ? Math.max(0, parsed.lastLoginBonusCoins) : initial.lastLoginBonusCoins,
+    streakDays: typeof parsed.streakDays === "number" && Number.isSafeInteger(parsed.streakDays) ? Math.max(1, parsed.streakDays) : 1,
     attributeTotals: {
       ...initial.attributeTotals,
       ...(parsed.attributeTotals ?? {})
@@ -1994,6 +1997,9 @@ export function forceStartEventEgg(state: GameState, eventId: string, monsters: 
       endEventPending: false,
       isInTutorialFlow: false,
       onboardingCompletedTaskCount: 0,
+      // A review snapshot belongs to the monster being replaced. Restoring it
+      // after starting this egg would silently bring the previous monster back.
+      pendingDailyReview: null,
       discoveredMonsterIds: uniqueNumbers([...state.discoveredMonsterIds, eventConfig.freeEggMonsterId]),
       acquiredLetters: [...state.acquiredLetters, nextLetter]
     },

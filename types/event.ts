@@ -31,7 +31,10 @@ export type GameEventConfig = {
   targetUsers: "all";
   heroImagePath: string;
   homeBannerImagePath?: string;
+  homeBannerAspectRatio?: number;
   shopBannerImagePath?: string;
+  shopBannerAspectRatio?: number;
+  shopPromoBannerImagePath?: string;
   shopIconImagePath?: string;
   bannerLabel: string;
   description: string;

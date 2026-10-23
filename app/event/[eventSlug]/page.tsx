@@ -8,6 +8,7 @@ import { BottomNav } from "@/components/common/BottomNav";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getMonsterImage } from "@/lib/game/assets";
 import { getEventBySlug, getEventStatusLabel, getRemainingDaysLabel, isEventActive, isEventAnnouncementVisible } from "@/lib/game/events";
+import { NOVEMBER_EVOLUTION_BRANCHES } from "@/lib/game/events/novemberEvolution";
 import { getFramePreviewImagePath, getFrameThemeClass } from "@/lib/game/shop";
 import { shouldRouteToDailyReview } from "@/lib/game/state";
 import { useGame } from "@/lib/game/useGame";
@@ -28,7 +29,34 @@ function getConsecutiveLoginDays(loginDates: string[]): number {
   return streak >= 2 ? streak : 0;
 }
 
-const OCTOBER_EVOLUTION_REVEAL_IDS = [99, 100, 102, 101, 103, 104, 105, 106] as const;
+const OCTOBER_EVOLUTION_REVEAL_IDS: readonly number[] = [99, 100, 102, 101, 103, 104, 105, 106];
+const NOVEMBER_EVOLUTION_REVEAL_IDS: readonly number[] = [113, 114, 115, 116, 117, 118, 119, 120];
+const NOVEMBER_EVOLUTION_LAYOUT = [
+  { monsterId: 107, x: 50, y: 13 },
+  { monsterId: 109, x: 33, y: 28 },
+  { monsterId: 108, x: 67, y: 28 },
+  { monsterId: 111, x: 18, y: 44 },
+  { monsterId: 112, x: 50, y: 44 },
+  { monsterId: 110, x: 82, y: 44 },
+  { monsterId: 114, x: 12, y: 63 },
+  { monsterId: 113, x: 37, y: 63 },
+  { monsterId: 115, x: 63, y: 63 },
+  { monsterId: 116, x: 88, y: 63 },
+  { monsterId: 118, x: 12, y: 83 },
+  { monsterId: 117, x: 37, y: 83 },
+  { monsterId: 119, x: 63, y: 83 },
+  { monsterId: 120, x: 88, y: 83 }
+] as const;
+const NOVEMBER_EVOLUTION_POSITIONS = new Map<number, (typeof NOVEMBER_EVOLUTION_LAYOUT)[number]>(
+  NOVEMBER_EVOLUTION_LAYOUT.map((node) => [node.monsterId, node])
+);
+const NOVEMBER_EVOLUTION_ROUTES = Object.entries(NOVEMBER_EVOLUTION_BRANCHES).flatMap(([sourceId, branches]) =>
+  branches.map((branch, branchIndex) => ({
+    sourceId: Number(sourceId),
+    targetId: branch.monsterId,
+    type: branchIndex === 0 ? "HK" : "PC"
+  }))
+);
 
 export default function EventDetailPage() {
   const router = useRouter();
@@ -145,9 +173,17 @@ export default function EventDetailPage() {
   const eventEggName = monsters.find((monster) => monster.monsterId === eventConfig.freeEggMonsterId)?.name ?? "イベントたまご";
   const featuredMonsterNames = eventMonsters.map((monster) => monster.name);
   const eventMonsterLabel = featuredMonsterNames.length > 0 ? featuredMonsterNames.join(" と ") : "イベントモンスター";
-  const revealedEvolutionMonsterIds = OCTOBER_EVOLUTION_REVEAL_IDS.filter((monsterId) =>
+  const evolutionRevealIds = eventConfig.eventId === "october_halloween_2026"
+    ? OCTOBER_EVOLUTION_REVEAL_IDS
+    : eventConfig.eventId === "november_koyo_onsen_2026"
+      ? NOVEMBER_EVOLUTION_REVEAL_IDS
+      : [];
+  const revealedEvolutionMonsterIds = evolutionRevealIds.filter((monsterId) =>
     gameState.discoveredMonsterIds.includes(monsterId)
   );
+  const hasEvolutionChart = evolutionRevealIds.length > 0;
+  const isEvolutionMonsterRevealed = (monsterId: number) =>
+    !evolutionRevealIds.includes(monsterId) || gameState.discoveredMonsterIds.includes(monsterId);
 
   const onClaimFreeEgg = () => {
     const result = claimEventFreeEgg(eventConfig.eventId);
@@ -242,9 +278,9 @@ export default function EventDetailPage() {
         </>}
       </section>
 
-      {eventConfig.eventId === "october_halloween_2026" ? (
-        <Link href={`/shop/events/${eventConfig.slug}`} className="event-shop-banner-link" aria-label="ハロウィンイベントショップへ">
-          <img src="/img/illustration/banner_october_hallowinshop_01.png" alt="開催中 ハロウィンショップ イベントショップへ" />
+      {eventConfig.shopPromoBannerImagePath ? (
+        <Link href={`/shop/events/${eventConfig.slug}`} className="event-shop-banner-link" aria-label={`${eventConfig.name}イベントショップへ`}>
+          <img src={eventConfig.shopPromoBannerImagePath} alt={`${eventConfig.name} イベントショップへ`} />
         </Link>
       ) : (
         <Link href={`/shop/events/${eventConfig.slug}`} className="card decorated-card event-shop-link-card">
@@ -358,7 +394,7 @@ export default function EventDetailPage() {
             </div>
           ))}
         </div>
-        {eventConfig.eventId === "october_halloween_2026" && (
+        {hasEvolutionChart && (
           <div className="event-evolution-chart-actions">
             <button type="button" className="quest-btn event-evolution-chart-button" onClick={() => setShowEvolutionChart(true)}>
               進化表を見る
@@ -436,22 +472,66 @@ export default function EventDetailPage() {
             >
               <img src="/img/icon/batu-128.png" alt="" />
             </button>
-            <h2 id="event-evolution-chart-title" className="auth-email-modal-title">モンタスクハロウィン進化表</h2>
+            <h2 id="event-evolution-chart-title" className="auth-email-modal-title">{eventConfig.name}進化表</h2>
             <p className="event-evolution-chart-note">
               childまでは公開中です。adult以降は、出会ったモンスターだけ姿が明らかになります。
             </p>
-            <div className="event-evolution-chart-image" aria-label={`adult以降 ${revealedEvolutionMonsterIds.length}体発見済み`}>
-              <img src="/img/monster_frame/october_evolution_chart_secret_v2.png" alt="adult以降がシークレットのハロウィン進化表" />
-              {revealedEvolutionMonsterIds.map((monsterId) => (
-                <img
-                  key={monsterId}
-                  src="/img/monster_frame/october_evolution_chart_full_v2.png"
-                  alt=""
-                  className={`event-evolution-reveal event-evolution-reveal-${monsterId}`}
-                />
-              ))}
-            </div>
-            <p className="event-evolution-discovery-count">adult以降：{revealedEvolutionMonsterIds.length} / {OCTOBER_EVOLUTION_REVEAL_IDS.length}体 発見</p>
+            {eventConfig.eventId === "october_halloween_2026" ? (
+              <div className="event-evolution-chart-image" aria-label={`adult以降 ${revealedEvolutionMonsterIds.length}体発見済み`}>
+                <img src="/img/monster_frame/october_evolution_chart_secret_v2.png" alt="adult以降がシークレットのハロウィン進化表" />
+                {revealedEvolutionMonsterIds.map((monsterId) => (
+                  <img
+                    key={monsterId}
+                    src="/img/monster_frame/october_evolution_chart_full_v2.png"
+                    alt=""
+                    className={`event-evolution-reveal event-evolution-reveal-${monsterId}`}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="event-evolution-tree" aria-label={`adult以降 ${revealedEvolutionMonsterIds.length}体発見済み`}>
+                <div className="event-evolution-tree-legend">
+                  <span><i className="event-evolution-key event-evolution-key-hk" />HK：Heal / Knowledge</span>
+                  <span><i className="event-evolution-key event-evolution-key-pc" />PC：Power / Create</span>
+                </div>
+                <svg className="event-evolution-tree-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                  {NOVEMBER_EVOLUTION_ROUTES.map((route) => {
+                    const source = NOVEMBER_EVOLUTION_POSITIONS.get(route.sourceId);
+                    const target = NOVEMBER_EVOLUTION_POSITIONS.get(route.targetId);
+                    if (!source || !target) return null;
+                    return (
+                      <g key={`${route.sourceId}-${route.targetId}-${route.type}`}>
+                        <line
+                          x1={source.x}
+                          y1={source.y}
+                          x2={target.x}
+                          y2={target.y}
+                          className={`event-evolution-tree-line event-evolution-tree-line-${route.type.toLowerCase()}`}
+                        />
+                      </g>
+                    );
+                  })}
+                </svg>
+                {NOVEMBER_EVOLUTION_LAYOUT.map((node) => {
+                  const monster = monsters.find((candidate) => candidate.monsterId === node.monsterId);
+                  if (!monster) return null;
+                  const isRevealed = isEvolutionMonsterRevealed(monster.monsterId);
+                  return (
+                    <div
+                      key={monster.monsterId}
+                      className={`event-evolution-tree-node ${isRevealed ? "" : "event-evolution-tree-node-locked"}`}
+                      style={{ left: `${node.x}%`, top: `${node.y}%` }}
+                    >
+                      <div className="event-evolution-tree-portrait">
+                        {isRevealed ? <img src={getMonsterImage(monster.monsterId)} alt="" /> : <span aria-hidden="true">?</span>}
+                      </div>
+                      <strong>{isRevealed ? monster.name : "???"}</strong>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <p className="event-evolution-discovery-count">adult以降：{revealedEvolutionMonsterIds.length} / {evolutionRevealIds.length}体 発見</p>
             <button className="quest-btn task-global-menu-button task-global-menu-button-secondary" onClick={() => setShowEvolutionChart(false)}>
               とじる
             </button>

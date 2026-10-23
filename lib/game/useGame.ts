@@ -15,6 +15,7 @@ import { getEventById } from "@/lib/game/events";
 import { getMonsterImage, getMonsterMotionAsset } from "@/lib/game/assets";
 import {
   appendCloudPurchaseHistory,
+  grantCloudDebugPaidCoins,
   loadCloudInventoryProfile,
   loadCloudWalletSummary,
   mergeCommerceIntoGameState,
@@ -93,6 +94,21 @@ type GameMasters = {
 
 let gameMastersPromise: Promise<GameMasters> | null = null;
 let hydratedUserUidThisSession: string | null = null;
+// Keep saves ordered across route unmounts, including initialization saves.
+let pendingCloudSave: Promise<void> = Promise.resolve();
+
+function queueCloudGameSave(uid: string, state: GameState, options?: { migratedFromLocal?: boolean }): Promise<void> {
+  pendingCloudSave = pendingCloudSave.then(async () => {
+    await Promise.all([
+      saveCloudGameState(uid, state, options),
+      saveCloudCommerceState(uid, state),
+      saveCloudEventStates(uid, state.eventStates)
+    ].map((save) => save.catch((error) => {
+      console.error("[useGame] failed to save cloud state", error);
+    })));
+  });
+  return pendingCloudSave;
+}
 
 function getStateUpdatedAtMs(state: Partial<GameState> | null | undefined): number {
   if (!state?.stateUpdatedAt) return 0;
@@ -206,6 +222,7 @@ type UseGameResult = {
   forceStartEventEgg: (eventId: string) => ForceStartEventEggResult | null;
   purchaseEventReward: (eventId: string, itemId: string) => Promise<PurchaseEventRewardResult | null>;
   markEventIntroPopupSeen: (eventId: string) => void;
+  grantDebugPaidCoins: (amount: number) => Promise<number | null>;
   waitForPendingSave: () => Promise<void>;
 };
 
@@ -218,7 +235,7 @@ export function useGame(): UseGameResult {
   const tasks = useMemo(() => [...masterTasks, ...normalizeCustomTasks(gameState?.customTasks)], [masterTasks, gameState?.customTasks]);
   const [isLoading, setIsLoading] = useState(true);
   const gameStateRef = useRef<GameState | null>(null);
-  const pendingSaveRef = useRef<Promise<void>>(Promise.resolve());
+  const stateRevisionRef = useRef(0);
   const router = useRouter();
   const pathname = usePathname();
   useEffect(() => {
@@ -268,6 +285,8 @@ export function useGame(): UseGameResult {
     let cancelled = false;
 
     async function init() {
+      const initialRevision = stateRevisionRef.current;
+      const isStale = () => cancelled || stateRevisionRef.current !== initialRevision;
       setIsLoading(true);
       let localState: GameState | null = null;
       try {
@@ -276,17 +295,18 @@ export function useGame(): UseGameResult {
           levelingRows: loadedLeveling,
           monsters: loadedMonsters
         } = await loadGameMasters();
+        if (isStale()) return;
         localState = loadGameState(loadedTasks, loadedLeveling);
         let loadedState = localState;
         let shouldMarkMigrated = false;
         const canRenderLocalState = !user || hydratedUserUidThisSession === user.uid;
 
-        if (cancelled) return;
+        if (isStale()) return;
         setTasks(loadedTasks);
         setLevelingRows(loadedLeveling);
         setMonsters(loadedMonsters);
         await preloadMonsterAssets(localState.currentMonsterId);
-        if (cancelled) return;
+        if (isStale()) return;
         if (canRenderLocalState) {
           setGameState(localState);
           gameStateRef.current = localState;
@@ -294,12 +314,15 @@ export function useGame(): UseGameResult {
         }
 
         if (user) {
+          await pendingCloudSave;
+          if (isStale()) return;
           const [cloudState, cloudWallet, cloudInventory, cloudEventStates] = await Promise.all([
             loadCloudGameState(user.uid),
             loadCloudWalletSummary(user.uid),
             loadCloudInventoryProfile(user.uid),
             loadCloudEventStates(user.uid)
           ]);
+          if (isStale()) return;
           if (cloudState) {
             const mergedCloudEventStates = {
               ...(cloudState.eventStates ?? {}),
@@ -341,7 +364,7 @@ export function useGame(): UseGameResult {
           levelingRows: loadedLeveling
         });
         await preloadMonsterAssets(reconciledState.currentMonsterId);
-        if (cancelled) return;
+        if (isStale()) return;
 
         setGameState(reconciledState);
         gameStateRef.current = reconciledState;
@@ -349,23 +372,12 @@ export function useGame(): UseGameResult {
         if (user) hydratedUserUidThisSession = user.uid;
 
         if (user) {
-          void saveCloudGameState(
-            user.uid,
-            reconciledState,
-            shouldMarkMigrated ? { migratedFromLocal: true } : undefined
-          ).catch((error) => {
-            console.error("[useGame] failed to save initialized cloud state", error);
-          });
-          void saveCloudCommerceState(user.uid, reconciledState).catch((error) => {
-            console.error("[useGame] failed to save initialized commerce state", error);
-          });
-          void saveCloudEventStates(user.uid, reconciledState.eventStates).catch((error) => {
-            console.error("[useGame] failed to save initialized event state", error);
-          });
+          void queueCloudGameSave(user.uid, reconciledState, shouldMarkMigrated ? { migratedFromLocal: true } : undefined);
         }
       } catch (taskError) {
         console.error("[useGame] failed to initialize game", taskError);
-        if (localState && !cancelled) {
+        if (isStale()) return;
+        if (localState) {
           setGameState(localState);
           gameStateRef.current = localState;
           saveGameState(localState);
@@ -415,29 +427,17 @@ export function useGame(): UseGameResult {
       ...next,
       stateUpdatedAt: new Date().toISOString()
     };
+    stateRevisionRef.current += 1;
     gameStateRef.current = updatedState;
     setGameState(updatedState);
     saveGameState(updatedState);
     if (user) {
-      pendingSaveRef.current = pendingSaveRef.current.then(async () => {
-        await Promise.all([
-          saveCloudGameState(user.uid, updatedState).catch((error) => {
-            console.error("[useGame] failed to save cloud game state", error);
-          }),
-          saveCloudCommerceState(user.uid, updatedState).catch((error) => {
-            console.error("[useGame] failed to save cloud commerce state", error);
-          }),
-          saveCloudEventStates(user.uid, updatedState.eventStates).catch((error) => {
-            console.error("[useGame] failed to save cloud event state", error);
-          })
-        ]);
-      });
-      await pendingSaveRef.current;
+      await queueCloudGameSave(user.uid, updatedState);
     }
   }, [user]);
 
   const waitForPendingSave = useCallback(async () => {
-    await pendingSaveRef.current;
+    await pendingCloudSave;
   }, []);
 
   useEffect(() => {
@@ -1117,6 +1117,33 @@ export function useGame(): UseGameResult {
     });
   }, [commitState]);
 
+  const grantDebugPaidCoins = useCallback(async (amount: number): Promise<number | null> => {
+    const current = gameStateRef.current;
+    const isDebugRoute = pathname === "/dev/calendar" || pathname === "/shop";
+    const isLocalHost =
+      typeof window !== "undefined" &&
+      (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+    const isDebugEnvironment = process.env.NODE_ENV === "development" || isLocalHost;
+    const normalizedAmount = amount;
+
+    if (!current || !isDebugRoute || !isDebugEnvironment || !Number.isSafeInteger(normalizedAmount) || normalizedAmount < 1 || normalizedAmount > 10_000) {
+      return null;
+    }
+
+    let nextBalance = current.paidCoinBalance + normalizedAmount;
+    if (user) {
+      try {
+        nextBalance = await grantCloudDebugPaidCoins(normalizedAmount);
+      } catch (error) {
+        console.error("[useGame] failed to grant debug paid coins", error);
+        return null;
+      }
+    }
+
+    await commitState({ ...(gameStateRef.current ?? current), paidCoinBalance: nextBalance });
+    return nextBalance;
+  }, [commitState, pathname, user]);
+
   const startTutorialFlow = useCallback(() => {
     const current = gameStateRef.current;
     if (!current) return;
@@ -1171,6 +1198,7 @@ export function useGame(): UseGameResult {
     forceStartEventEgg,
     purchaseEventReward,
     markEventIntroPopupSeen,
+    grantDebugPaidCoins,
     waitForPendingSave
   };
 }

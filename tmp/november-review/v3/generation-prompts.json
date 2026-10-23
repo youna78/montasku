@@ -1,0 +1,48 @@
+{
+  "mode": "built-in image_gen",
+  "assets": [
+    {
+      "key": "momiji_walk_v3",
+      "refs": [
+        "/Users/apple/Projects/taskgame/public/img/monster/monster_renewal_108_momiji_pon_01.png",
+        "/Users/apple/Projects/taskgame/public/img/monster/monster_renewal_07_petit_dragon_walk_4f.png"
+      ],
+      "transparent": true,
+      "prompt": "Use case: precise-object-edit. Create a production WALK animation proposal for Momiji Pon, the exact orange baby tanuki holding a red maple leaf from Image1. Image2 is the game's NORMAL MONSTER WALK SHEET: follow its small-foot shuffling motion, three-quarter side view and compact sprite proportions, not the sitting pose in Image1. Deliver ONE transparent FOUR-FRAME sheet with 2 columns and 2 rows, read top-left, top-right, bottom-left, bottom-right. Equal cells, one full character centered in each, common size and planted-feet baseline. Same character, same three-quarter left-facing direction throughout, same head, face, eye color, orange/cream fur, ringed tail and red maple leaf. STAND UP ON TWO LEGS, body held over feet, paws NEVER pointed toward camera like sitting. Concrete 4 poses: 1) LEFT foot stretched toward screen-left on ground, RIGHT foot behind; 2) left leg supporting while right knee swings past it, body lowered slightly; 3) RIGHT foot stretched toward screen-left and LEFT foot behind; 4) right leg supporting while LEFT knee swings past. Frame3 must visibly show the OTHER leg forward than frame1, and frame4 must not repeat frame2. Clear separate left/right leg silhouettes and foot contacts, 2–3 pixels worth of natural weight shift at game size. Keep torso shape and head mostly stable; small leaf/arm counter-swing. More like normal petit dragon's grounded trot than a waving mascot. Entire cycle generated together. Crisp low-resolution pixel clusters, no painterly gradients, no hearts, no scenery, no labels, no borders, genuine transparent alpha. Leave ample clear margin around every sprite including tail and leaf. 1024x1024 square sheet."
+    },
+    {
+      "key": "beast_walk_v3",
+      "refs": [
+        "/Users/apple/Projects/taskgame/public/img/monster/monster_renewal_112_travel_mini_beast_01.png",
+        "/Users/apple/Projects/taskgame/public/img/monster/monster_renewal_08_petit_beast_walk_4f.png"
+      ],
+      "transparent": true,
+      "prompt": "Use case: precise-object-edit. Make a FOUR-FRAME WALK SHEET for the travel mini beast in Image1 by using Image2, the NORMAL mini beast WALK SHEET, as the movement and pose reference. Deliver ONE transparent 2x2 sheet, four equal square cells, chronological order top-left, top-right, bottom-left, bottom-right. Same character and same three-quarter LEFT-facing direction in all four frames. Preserve the brown cap, red scarf, golden fluffy fur, dark eyes, small travel satchel on visible side and cream tail tip. The character should WALK ON ALL FOUR PAWS with the SAME grounded gait and low horizontal body as the normal mini beast, not sit upright and bob. Show unmistakable alternating diagonal paw contacts: 1) near front paw reaches forward and far rear paw pushes back, 2) passing/weight-bearing with both pairs under the body, 3) far front paw reaches forward while near front paw swings back and near rear paw pushes, 4) opposite passing phase. Avoid duplicate poses: all four paw silhouettes differ. Keep head and body volume stable while legs change, subtle scarf and tail secondary motion. Feet meet a shared ground baseline, no whole-body rotation or random hopping. Character stays in place at the same center and scale inside each cell. Art should be as simple and readable as the normal game sprite with crisp pixel clusters. Full sprites with generous transparent margins, no cropping, no labels, no hearts, no background, genuine alpha transparency. One whole animation pass, not separate unrelated characters. 1024x1024 square sheet."
+    },
+    {
+      "key": "letter_november_maple_01",
+      "refs": [
+        "/Users/apple/Projects/taskgame/public/img/letter/letter_item_01.png"
+      ],
+      "transparent": false,
+      "prompt": "Use case: precise-object-edit. Create the NOVEMBER MAPLE version of the existing game's letter-item artwork supplied as reference. Preserve the square 1024x1024 composition, cream textured parchment angled on a mossy cobblestone path, warm handmade pixel-art texture, dark brown rough paper outline, soft ambient light, big fabric bow tied at upper-left and small decorative seal at lower-right. Make it look like an existing item from this same series, not a poster or UI. Change the bow to warm maple-red and muted orange gingham, place two small red/orange pressed maple leaves beside the upper-left bow and a golden maple-shaped seal at lower-right. A few autumn leaves on the stone ground, understated and cozy. Center handwriting must read exactly 「ありがとう」 followed by the same little paw-print motif as the original. Preserve the generous paper area; no long paragraph, no event title, no dates, no extra text or characters. Palette: parchment cream, autumn red, amber, moss green. One single polished collectible letter image; full background opaque."
+    },
+    {
+      "key": "letter_november_onsen_01",
+      "refs": [
+        "/Users/apple/Projects/taskgame/public/img/letter/letter_item_02.png"
+      ],
+      "transparent": false,
+      "prompt": "Use case: precise-object-edit. Create the NOVEMBER HOT-SPRING version of this existing game's letter-item artwork. Same square 1024x1024 composition, tilted cream parchment lying on mossy cobblestones, stitched pixel-art paper outline and fine warm blocky texture, fabric bow upper-left, small seal lower-right, warm nostalgic game-item style. Keep it recognizably in the existing letter series. Change the bow to dusty teal-blue with ivory dots and a tiny rolled towel tucked beside the knot. Lower-right small seal becomes a little golden wooden hot-spring bucket with two delicate steam curls, no modern logo. A subtle hint of warm mist along the distant top edge of the stone background, keep the foreground and lettering clear. Center handwriting EXACTLY 「ひとやすみ」 with one small paw-print mark. No other words, no long body text, no dates, no title banner, no characters, no interface. Same scale and perspective as reference. Opaque full background, cozy watercolor-like pixel art matching the original."
+    },
+    {
+      "key": "letter_november_trip_01",
+      "refs": [
+        "/Users/apple/Projects/taskgame/public/img/letter/letter_item_03.png",
+        "/Users/apple/Projects/taskgame/public/img/letter/letter_item_02.png"
+      ],
+      "transparent": false,
+      "prompt": "Use case: precise-object-edit. Create a NOVEMBER TRAVEL MEMORY letter-item image matching the supplied existing game's letter series. One 1024x1024 square, slightly tilted cream textured parchment on a mossy autumn cobblestone path, dark pixel-art paper edging, same soft warm illustrated pixel-art treatment. Upper-left bow should be olive-green and warm ivory check fabric, with a small pressed maple leaf attached; lower-right one small brass-colored bus-shaped charm and two tiny paw prints. The bus charm should be simple collectible decoration, no text or logo. A very small fallen maple leaf on the background cobblestones. Center handwritten Japanese EXACTLY 「またね」, large and legible, brown-red ink. Leave the rest of the parchment quiet and spacious. No long letter body, no additional slogans, no event title or dates, no characters. Keep overall composition, paper size, cozy palette, material detail and series identity from references. Opaque full background."
+    }
+  ]
+}

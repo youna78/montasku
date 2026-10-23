@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { trackEvent } from "@/lib/analytics/gtag";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { BottomNav } from "@/components/common/BottomNav";
+import { DevPaidCoinPanel } from "@/components/debug/DevPaidCoinPanel";
 import { DevDebugPanel } from "@/components/debug/DevDebugPanel";
 import { getFirebaseAuth } from "@/lib/firebase/auth";
 import { getVisibleHomeEvents, isEventActive } from "@/lib/game/events";
@@ -119,6 +120,7 @@ export default function ShopPage() {
     purchasePaidBackground,
     purchasePaidFrame,
     purchasePaidBundle,
+    grantDebugPaidCoins,
     waitForPendingSave
   } = useGame();
 
@@ -1301,6 +1303,8 @@ export default function ShopPage() {
         </div>
       </section>
 
+      <DevPaidCoinPanel balance={gameState.paidCoinBalance} isLoading={isLoading} onGrant={grantDebugPaidCoins} />
+
       {message && <div className="toast">{message}</div>}
 
       {showCoinHelp && (
@@ -1421,9 +1425,9 @@ export default function ShopPage() {
         </div>
       </section>
 
-      {activeEvent?.slug === "october-halloween" ? (
-        <Link href={`/shop/events/${activeEvent.slug}`} className="event-shop-banner-link shop-event-banner-link" aria-label="ハロウィンイベントショップへ">
-          <img src="/img/illustration/banner_october_hallowinshop_01.png" alt="開催中 ハロウィンショップ イベントショップへ" />
+      {activeEvent?.shopPromoBannerImagePath ? (
+        <Link href={`/shop/events/${activeEvent.slug}`} className="event-shop-banner-link shop-event-banner-link" aria-label={`${activeEvent.name}イベントショップへ`}>
+          <img src={activeEvent.shopPromoBannerImagePath} alt={`${activeEvent.name} イベントショップへ`} />
         </Link>
       ) : activeEvent ? (
         <Link href={`/shop/events/${activeEvent.slug}`} className="card decorated-card event-shop-link-card">

@@ -24,3 +24,18 @@ assert.equal(summary.week[4].value,1);
 assert.equal(summary.difference,0);
 assert.equal(normalizeRecords([null,{},...state.achievementRecords,...state.achievementRecords]).length,1);
 console.log('Records: completion, duplicate prevention, review undo, month/week aggregation and unknown rewards passed.');
+const { isNovemberRecordsEnabled } = require('../lib/game/recordsUi.ts');
+assert.equal(isNovemberRecordsEnabled(new Date('2026-10-31T23:59:59+09:00')), false);
+assert.equal(isNovemberRecordsEnabled(new Date('2026-11-01T00:00:00+09:00')), true);
+assert.equal(isNovemberRecordsEnabled(new Date('2027-01-01T00:00:00+09:00')), true);
+const sunday = summarizeRecords({...state, achievementRecords: [
+  {date:'2026-10-25',taskId:1,name:'前週',exp:20,coins:4},
+  {date:'2026-10-26',taskId:1,name:'月曜',exp:null,coins:null},
+  {date:'2026-11-01',taskId:1,name:'日曜',exp:3,coins:2}
+]}, '2026-11-01');
+assert.deepEqual(sunday.week.map(day => day.value), [1,0,0,0,0,0,1]);
+assert.equal(sunday.week.reduce((sum, day) => sum + day.value,0),2);
+assert.equal(sunday.exp,23);
+assert.equal(sunday.coins,6);
+assert.deepEqual(summarizeRecords({...state, achievementRecords:[]},'2026-11-01').week.map(day => day.value),[0,0,0,0,0,0,0]);
+console.log('November records: Japan midnight switch, cross-month week and empty/unknown rewards passed.');

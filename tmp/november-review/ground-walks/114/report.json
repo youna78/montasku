@@ -1,0 +1,15 @@
+{
+  "output": "public/img/monster/monster_renewal_114_momiji_white_deer_walk_v3_4f.png",
+  "sheet": [
+    512,
+    512
+  ],
+  "frames": 4,
+  "uniqueFrames": 4,
+  "contentSize": 224,
+  "baseline": 240,
+  "alphaRange": [
+    0,
+    255
+  ]
+}

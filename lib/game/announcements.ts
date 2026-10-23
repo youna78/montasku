@@ -11,6 +11,7 @@ export type HomeAnnouncement = {
   secondaryHref?: string;
   secondaryCtaLabel?: string;
   startsAt?: string;
+  endsAt?: string;
   showPopup?: boolean;
   active: boolean;
 };
@@ -33,12 +34,23 @@ export const HOME_ANNOUNCEMENTS: HomeAnnouncement[] = [
     startsAt: "2026-10-01T00:00:00+09:00",
     showPopup: true,
     active: true
+  },
+  {
+    announcementId: "november_event_preview_2026_10",
+    title: "11月イベント準備中",
+    body: "次のイベントは「紅葉バスツアーと湯けむり温泉」！京都の紅葉とあったかい温泉、おけネコを準備しています。",
+    level: "event",
+    startsAt: "2026-10-29T00:00:00+09:00",
+    endsAt: "2026-10-31T23:59:59+09:00",
+    active: true
   }
 ];
 
 export function getActiveHomeAnnouncements(now: Date = getGameNow()): HomeAnnouncement[] {
   const current = now.getTime();
   return HOME_ANNOUNCEMENTS.filter((announcement) => (
-    announcement.active && (!announcement.startsAt || current >= new Date(announcement.startsAt).getTime())
+    announcement.active &&
+      (!announcement.startsAt || current >= new Date(announcement.startsAt).getTime()) &&
+      (!announcement.endsAt || current <= new Date(announcement.endsAt).getTime())
   ));
 }

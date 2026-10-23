@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>11月モンスター アニメーション</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #111820; color: #f8fafc; font-family: system-ui, sans-serif; }
+    header { padding: 22px 28px 18px; border-bottom: 1px solid #334155; position: sticky; top: 0; background: #111820ee; backdrop-filter: blur(8px); z-index: 2; }
+    h1 { margin: 0 0 5px; font-size: 24px; letter-spacing: 0; }
+    p { margin: 0; color: #cbd5e1; }
+    main { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1px; background: #334155; }
+    article { background: #18222d; min-width: 0; }
+    .stage { aspect-ratio: 1; display: grid; place-items: center; overflow: hidden; background-color: #dfe6ec; background-image: linear-gradient(45deg,#cbd5df 25%,transparent 25%),linear-gradient(-45deg,#cbd5df 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#cbd5df 75%),linear-gradient(-45deg,transparent 75%,#cbd5df 75%); background-size: 32px 32px; background-position: 0 0,0 16px,16px -16px,-16px 0; }
+    img { width: 100%; height: 100%; image-rendering: pixelated; object-fit: contain; }
+    h2 { margin: 0; padding: 12px 14px 14px; font-size: 16px; letter-spacing: 0; }
+  </style>
+</head>
+<body>
+  <header><h1>11月モンスター アニメーション</h1><p>4コマ: 左上 → 右上 → 左下 → 右下 / 440ms</p></header>
+  <main id="grid"></main>
+  <script>
+    const monsters = [
+      [108, 'momiji_pon', 'もみじポン'], [109, 'yukemuri_petit', '湯けむりプチ'],
+      [110, 'oke_neko', 'おけネコ'], [111, 'momiji_guide_fairy', '紅葉バスガイドミニフェアリー'],
+      [112, 'travel_mini_beast', '旅するミニビースト'], [113, 'yukemuri_nekomata', '湯けむり猫又'],
+      [114, 'momiji_white_deer', '紅葉ノ白鹿'], [115, 'akikaze_tanuki_musha', '秋風タヌキ武者'],
+      [116, 'onsen_dragon', '温泉ドラゴン'], [117, 'yumori_neko_gami', '湯守ノ猫神'],
+      [118, 'momiji_shinroku', '紅葉ノ神鹿'], [119, 'akiarashi_bakedanuki_oh', '秋嵐ノ化狸王'],
+      [120, 'yukemuri_ryujin', '湯煙ノ龍神']
+    ];
+    const grid = document.querySelector('#grid');
+    monsters.forEach(([id, slug, name]) => {
+      const action = [109, 116, 120].includes(id) ? 'float' : 'walk_left';
+      const motion = action === 'float' ? '浮遊' : '左向き歩行';
+      const article = document.createElement('article');
+      article.innerHTML = `<div class="stage"><img src="left_gifs/monster_renewal_${id}_${slug}_${action}_4f.gif?v=440" alt="${name} ${motion}"></div><h2>ID${id} ${name} · ${motion}</h2>`;
+      grid.append(article);
+    });
+  </script>
+</body>
+</html>

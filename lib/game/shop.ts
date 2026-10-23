@@ -357,6 +357,22 @@ export const SHOP_BACKGROUNDS: ShopBackgroundItem[] = [
     price: 0,
     imagePath: "/img/background/bg_october_halloween_night_01.png",
     availability: "event_limited"
+  },
+  {
+    itemId: "november_kyoto_koyo",
+    title: "京都の紅葉",
+    description: "赤や橙の紅葉、石畳と和風の橋が広がる11月イベント背景です。",
+    price: 0,
+    imagePath: "/img/background/bg_november_kyoto_koyo_01.png",
+    availability: "event_limited"
+  },
+  {
+    itemId: "november_onsen",
+    title: "湯けむり温泉",
+    description: "木の湯舟と湯けむり、紅葉に包まれた11月イベント背景です。",
+    price: 0,
+    imagePath: "/img/background/bg_november_onsen_01.png",
+    availability: "event_limited"
   }
 ].map((item) => applyBackgroundMaster(item as ShopBackgroundItem));
 
@@ -492,6 +508,24 @@ export const SHOP_FRAMES: ShopFrameItem[] = [
     imagePath: "/img/deco_frame/frame_october_halloween_01.png",
     availability: "event_limited",
     previewClassName: "frame-preview-october-halloween-frame"
+  },
+  {
+    itemId: "november_maple_frame",
+    title: "もみじフレーム",
+    description: "7日ログインで受け取れる紅葉モチーフの11月イベント限定フレームです。",
+    price: 0,
+    imagePath: "/img/deco_frame/frame_november_maple_01.png",
+    availability: "event_limited",
+    previewClassName: "frame-preview-november-maple"
+  },
+  {
+    itemId: "november_onsen_frame",
+    title: "桶フレーム",
+    description: "風呂桶や牛乳瓶など、温泉グッズをあしらった11月イベント限定フレームです。",
+    price: 0,
+    imagePath: "/img/deco_frame/frame_november_onsen_01.png",
+    availability: "event_limited",
+    previewClassName: "frame-preview-november-onsen"
   }
 ].map((item) => applyFrameMaster(item as ShopFrameItem));
 
@@ -800,6 +834,15 @@ export const SHOP_DECORATIONS: ShopDecorationItem[] = [
     currencyType: "paid_coin",
     imagePath: "/img/decoration/deco_september_galaxy_railway_01.png",
     availability: "event_limited"
+  },
+  {
+    itemId: "november_duck_parade",
+    title: "アヒルさんパレード",
+    description: "ミニアヒルたちが1列になってホームを横切る、11月イベント限定の動くデコです。",
+    price: 300,
+    imagePath: "/img/decoration/deco_november_duck_parade_01.png",
+    availability: "event_limited",
+    currencyType: "paid_coin"
   },
   {
     itemId: "october_ghost_parade",

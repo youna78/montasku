@@ -77,3 +77,17 @@ monster_id,name,attribute,stage,rarity,unlock_lv,unlock_condition,evolution_from
 104,冥夜のベヒモス,special,final,ultra_rare,70,power|create|heal|knowledge,シャドウファング|ミイラ男|キャンドルウィッチ,,深い夜の闇をまとった獣王。恐ろしく見えるが、静かに世界を見守る賢き守護者。,TRUE,ground
 105,砂塵ノミイラキング,special,final,ultra_rare,70,power|create|heal|knowledge,シャドウファング|ミイラ男|ランタンワイバーン,,古代の砂漠王の力を宿したミイラの王。包帯に刻まれた紋様から神秘の力があふれ出す。,TRUE,ground
 106,百鬼ノパンプキンロード,special,final,ultra_rare,70,power|create,ランタンワイバーン,,百鬼夜行を率いる伝説のパンプキンドラゴン。笑い声ひとつで祭りの熱気が最高潮に達する。,TRUE,flying
+107,湯けむり紅葉卵,special,egg,rare,0,november_event_start,,ゆけむりプチ|もみじポン,紅葉の葉と白い湯けむりをまとった、11月の旅だけで見つかる特別なたまご。,TRUE,ground
+108,もみじポン,special,baby,rare,5,power|create,湯けむり紅葉卵,旅するミニビースト|おけネコ,大きな紅葉を宝物のように抱える小さなたぬき。風が吹くと葉っぱと一緒にころころ転がる。,TRUE,ground
+109,ゆけむりプチ,special,baby,rare,5,heal|knowledge,湯けむり紅葉卵,バスガイドミニフェアリー|旅するミニビースト,温泉の湯気から生まれた温泉まんじゅうの精霊。あたたかい場所を見つけると、ふわふわ嬉しそうに漂う。,TRUE,floating
+110,おけネコ,special,child,rare,20,power|create,もみじポン,秋風タヌキ武者|温泉リュウ,頭に小さな湯桶をのせ、手ぬぐいを巻いた温泉好きのネコ。紅葉狩りのあとは、のんびりお湯につかる。,TRUE,ground
+111,バスガイドミニフェアリー,special,child,rare,20,heal|knowledge,ゆけむりプチ,紅葉ノ白鹿|湯けむりネコ又,秋色の制服と小さな案内旗で旅を導く妖精。紅葉の見頃と、とっておきの温泉にとても詳しい。,TRUE,flying
+112,旅するミニビースト,special,child,rare,20,heal|knowledge|power|create,ゆけむりプチ|もみじポン,湯けむりネコ又|秋風タヌキ武者,小さな旅行鞄とマフラーを身につけた旅好きのビースト。新しい景色を見るたびに尻尾を振って喜ぶ。,TRUE,ground
+113,湯けむりネコ又,special,adult,rare,40,heal|knowledge|power|create,バスガイドミニフェアリー|旅するミニビースト,湯守ノ猫神|秋嵐ノ化狸王,二本の尾に湯けむりをまとった温泉郷のネコ又。疲れた旅人を静かな湯へ案内してくれる。,TRUE,ground
+114,紅葉ノ白鹿,special,adult,rare,40,heal|knowledge,バスガイドミニフェアリー,紅葉ノ神鹿|湯守ノ猫神,紅葉を宿した角を持つ白鹿。秋深い山道に現れ、迷った旅人を静かに正しい道へ導く。,TRUE,ground
+115,秋風タヌキ武者,special,adult,rare,40,heal|knowledge|power|create,おけネコ|旅するミニビースト,湯守ノ猫神|秋嵐ノ化狸王,落ち葉の陣羽織をまとった陽気なたぬき武者。秋風に乗って素早く駆け、旅の一行を守る。,TRUE,ground
+116,温泉リュウ,special,adult,rare,40,power|create,おけネコ,秋嵐ノ化狸王|湯煙ノ龍神,岩風呂の奥で眠る小さな和龍。湯気を雲のようにまとい、温泉の熱を力に変えて空を舞う。,TRUE,flying
+117,湯守ノ猫神,special,final,ultra_rare,70,heal|knowledge|power|create,湯けむりネコ又|紅葉ノ白鹿|秋風タヌキ武者,,古くから温泉郷を見守る猫の神さま。湯桶を神器のように携え、その湯は心と体の疲れを癒やすという。,TRUE,ground
+118,紅葉ノ神鹿,special,final,ultra_rare,70,heal|knowledge,紅葉ノ白鹿,,山一面の紅葉を映した巨大な角を持つ神鹿。歩いたあとには黄金色の落ち葉が静かに舞う。,TRUE,ground
+119,秋嵐ノ化狸王,special,final,ultra_rare,70,heal|knowledge|power|create,湯けむりネコ又|秋風タヌキ武者|温泉リュウ,,紅葉の嵐を巻き起こす化狸の王。豪快ないたずら好きだが、旅人が困っていると密かに助けてくれる。,TRUE,ground
+120,湯煙ノ龍神,special,final,ultra_rare,70,power|create,温泉リュウ,,山々の温泉を生み出したと伝わる龍神。白い湯煙を雲に変え、紅葉の谷を悠然と飛ぶ。,TRUE,flying

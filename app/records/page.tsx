@@ -8,6 +8,8 @@ import { isOctoberUiEnabled } from "@/lib/game/octoberUi";
 import { BottomNav } from "@/components/common/BottomNav";
 import { getMonsterImage } from "@/lib/game/assets";
 import { getInitialRoute } from "@/lib/game/state";
+import { isNovemberRecordsEnabled } from "@/lib/game/recordsUi";
+import { AdventureRecords } from "@/components/records/AdventureRecords";
 function Bars({ values, gold = false }: { values: {label: string; value: number}[]; gold?: boolean }) {
   const max = Math.max(1, ...values.map(row => row.value));
   return <div className={`record-chart ${gold ? "record-chart-gold" : ""}`} role="img" aria-label={values.map(row => `${row.label}: ${row.value}件`).join("、")}>
@@ -21,6 +23,7 @@ export default function RecordsPage() {
   useEffect(() => { if (!enabled) { router.replace("/home"); return; } if (gameState) { const route = getInitialRoute(gameState); if (route !== "/home") router.replace(route); } }, [enabled, gameState, router]);
   if (isLoading || !gameState || !enabled) return <main>Loading...</main>;
   const data = summarizeRecords(gameState, gameState.lastPlayedDate);
+  if (isNovemberRecordsEnabled()) return <AdventureRecords data={data} streakDays={gameState.streakDays} discoveredCount={monsters.filter(m => m.stage !== "egg" && gameState.discoveredMonsterIds.includes(m.monsterId)).length} letterCount={gameState.acquiredLetters.length} />;
   const known = data.records.filter(row => row.exp !== null).length;
   const monthValues = data.monthly.map(([label,value]) => ({label: `${label.slice(0,4)}/${Number(label.slice(5))}`,value}));
   return <main className="page-shell page-rpg page-records">
