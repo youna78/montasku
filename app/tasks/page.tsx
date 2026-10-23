@@ -32,7 +32,7 @@ const TASK_FREE_COINS = 2;
 export default function TasksPage() {
   const router = useRouter();
   const octoberUi = isOctoberUiEnabled();
-  const { tasks, monsters, levelingRows, gameState, isLoading, completeTask, addTask, removeTask, moveTask, saveCustomTask } = useGame();
+  const { tasks, monsters, levelingRows, gameState, isLoading, completeTask, addTask, removeTask, moveTask, moveTaskTo, saveCustomTask } = useGame();
   const [growthReward, setGrowthReward] = useState<TaskGrowthReward | null>(null);
   const [feedback, setFeedback] = useState<string>("");
   const [feedbackKey, setFeedbackKey] = useState(0);
@@ -70,7 +70,7 @@ export default function TasksPage() {
   }
 
   if (octoberUi && gameState.birthEventPending && !gameState.endEventPending) {
-    return <BirthTransition />;
+    return <BirthTransition currentMonsterId={gameState.currentMonsterId} monsters={monsters} />;
   }
 
   const activeTasks = gameState.activeTasks
@@ -200,7 +200,7 @@ export default function TasksPage() {
 
       {feedback && (octoberUi && growthReward ? <TaskGrowthFeedback key={feedbackKey} reward={growthReward} /> : <div key={feedbackKey} className="reward-popup reward-popup-top home-reward-popup">{feedback}</div>)}
 
-      {octoberUi && !isTutorialMode ? <EditableTaskBoard tasks={tasks} activeTasks={activeTasks} completedIds={gameState.completedTaskIdsToday} onComplete={onComplete} onAdd={addTask} onRemove={removeTask} onMove={moveTask} onSaveCustom={saveCustomTask} /> : <section className="card decorated-card task-board-card">
+      {octoberUi && !isTutorialMode ? <EditableTaskBoard tasks={tasks} activeTasks={activeTasks} completedIds={gameState.completedTaskIdsToday} onComplete={onComplete} onAdd={addTask} onRemove={removeTask} onMove={moveTask} onMoveTo={moveTaskTo} onSaveCustom={saveCustomTask} /> : <section className="card decorated-card task-board-card">
         <h2 className="screen-section-title">クエスト一覧</h2>
         <ul className="quest-list">
           {activeTasks.map((task) => {

@@ -2665,6 +2665,29 @@ body:has(.page-tasks) {
 }
 
 .page-birth {
+  position: relative;
+  isolation: isolate;
+  background: none;
+  min-height: 100vh;
+  min-height: 100lvh;
+}
+
+/* Debug content can introduce a scrollbar after loading; reserve its width. */
+html:has(.page-birth) { scrollbar-gutter: stable; }
+
+/* Keep one viewport-sized backdrop through loading, hatching and debug content.
+   lvh also avoids zooming when Safari's address bar expands or collapses. */
+.page-birth::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100lvh;
+  z-index: -1;
+  pointer-events: none;
+  background-color: #647349;
   background-image: url("/img/background/bg_birth_event_01.png");
   background-size: cover;
   background-position: center;
@@ -7027,11 +7050,8 @@ body:has(.page-event-shop) {
 .home-next-action p { margin: 8px 0; }
 .home-next-action progress { width: 100%; accent-color: #458846; }
 .home-main-task-link { display: flex; align-items: center; justify-content: center; min-height: 52px; width: 100%; text-decoration: none; box-sizing: border-box; }
-.birth-transition { min-height: 80dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-.birth-transition .hatch-egg { position: static; width: 120px; height: 120px; object-fit: contain; animation: birth-ready-wiggle .5s ease-in-out infinite alternate; }
-.birth-transition h1 { font-size: 22px; }
-@keyframes birth-ready-wiggle { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
-@media (prefers-reduced-motion: reduce) { .birth-transition .hatch-egg { animation: none; } }
+.birth-event-status { text-align:center; min-height:2.9em; }
+.birth-event-guide { text-align:center; min-height:2.9em; }
 
 /* October home: compact controls around a large, decorated habitat. */
 .page-home-october { max-width: 540px; padding: 10px 10px 96px; }
@@ -7295,6 +7315,17 @@ body:has(.page-home-october) { overflow-x: clip; overflow-y: visible; }
 .task-edit-controls { display:flex; flex-shrink:0; align-items:center; gap:6px; }
 .task-edit-controls button { min-width:40px; min-height:40px; border:1px solid #987037; border-radius:5px; background:#fff2cf; color:#49331d; font-size:20px; }
 .task-edit-controls .task-remove-cross { background:#a83a3a; color:#fff; }
+/* Handle-only sorting starts November 1; keep the October touch behavior scoped above. */
+.task-handle-reorder .task-row-editable { touch-action:pan-y; cursor:auto; }
+.task-handle-reorder .task-edit-controls { gap:14px; }
+.task-handle-reorder .task-drag-handle { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; width:56px; min-width:56px; min-height:64px; padding:4px; touch-action:none; background:#e7efd5; border:2px solid #537747; box-shadow:0 2px 0 #a7b58a; cursor:grab; }
+.task-handle-reorder .task-drag-handle img { width:32px; height:32px; }
+.task-handle-reorder .task-drag-handle span { font-size:11px; line-height:1.3; font-weight:bold; color:#28543b; }
+.task-handle-reorder .task-drag-handle:focus-visible { outline:3px solid #28543b; outline-offset:3px; }
+.task-handle-reorder .task-remove-cross { min-width:44px; min-height:44px; }
+.task-handle-reorder.task-is-dragging .task-row-rpg:not(.task-row-dragging) { opacity:.75; filter:none; }
+.task-handle-reorder .task-row-dragging { outline:3px dashed #28543b; }
+html.task-drag-scroll, .task-drag-scroll body { overflow-anchor:none; scroll-behavior:auto !important; }
 .task-add-dialog { width:min(500px,calc(100% - 24px)); max-height:calc(100dvh - 40px); overflow:auto; border:3px solid #93632d; border-radius:10px; background:#fff4d5; color:#49331d; padding:16px; }
 .task-add-dialog::backdrop { background:#142019aa; }
 .task-add-dialog p { font-size:12px; }

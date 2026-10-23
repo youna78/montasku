@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import { createPortal } from "react-dom";
 import type { TaskCategory, TaskMaster } from "@/types/master";
 import { CUSTOM_TASK_IDS } from "@/lib/game/customTasks";
+import { isHandleTaskReorderEnabled } from "@/lib/game/taskEditingUi";
 
 const TASK_CATEGORY_ORDER: TaskCategory[] = ["生活", "健康", "成長", "メンタル", "創作"];
 const TASK_CATEGORY_ICONS: Record<TaskCategory, string> = {
@@ -22,6 +23,7 @@ type Props = {
   onAdd: (id: number) => { added: boolean } | null;
   onRemove: (id: number) => { removed: boolean } | null;
   onMove: (id: number, direction: "up" | "down") => unknown;
+  onMoveTo: (id: number, index: number) => unknown;
   onSaveCustom: (id: number, name: string) => boolean;
 };
 
@@ -31,7 +33,10 @@ type DragPreview = {
   width: number;
 };
 
-export function EditableTaskBoard({tasks, activeTasks, completedIds, onComplete, onAdd, onRemove, onMove, onSaveCustom}: Props) {
+export function EditableTaskBoard({tasks, activeTasks, completedIds, onComplete, onAdd, onRemove, onMove, onMoveTo, onSaveCustom}: Props) {
+  const handleOnly = isHandleTaskReorderEnabled();
+  const [draftTasks, setDraftTasks] = useState<TaskMaster[] | null>(null);
+  const lastScrollTime = useRef<number | null>(null);
   const [editing, setEditing] = useState(false);
   const [adding, setAdding] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
@@ -50,17 +55,22 @@ export function EditableTaskBoard({tasks, activeTasks, completedIds, onComplete,
   const dragPointerPosition = useRef({x: 0, y: 0});
   const autoScrollFrame = useRef<number | null>(null);
   const draggingRef = useRef<number | null>(null);
+  const capturedPointer = useRef<{ element: HTMLElement; id: number } | null>(null);
   const order = useRef(activeTasks);
   const cancelHold = () => { if (hold.current) clearTimeout(hold.current); hold.current = null; };
+  useEffect(() => {
+    document.documentElement.classList.toggle("task-drag-scroll", handleOnly && dragging !== null);
+    return () => document.documentElement.classList.remove("task-drag-scroll");
+  }, [handleOnly, dragging]);
   useEffect(() => () => {
     cancelHold();
     if (autoScrollFrame.current !== null) cancelAnimationFrame(autoScrollFrame.current);
   }, []);
-  useEffect(() => { order.current = activeTasks; }, [activeTasks]);
+  useEffect(() => { if (draggingRef.current === null) order.current = activeTasks; }, [activeTasks]);
   useEffect(() => {
     const root = board.current;
     document.documentElement.classList.toggle("task-reorder-active", editing);
-    if (!editing || !root) {
+    if (!editing || !root || handleOnly) {
       return () => document.documentElement.classList.remove("task-reorder-active");
     }
 
@@ -84,7 +94,7 @@ export function EditableTaskBoard({tasks, activeTasks, completedIds, onComplete,
       root.removeEventListener("touchmove", preventNativeLongPress);
       root.removeEventListener("contextmenu", preventContextMenu, true);
     };
-  }, [editing]);
+  }, [editing, handleOnly]);
   useEffect(() => {
     if (window.location.hash === "#task-add-custom") setAdding(true);
   }, []);
@@ -142,38 +152,65 @@ export function EditableTaskBoard({tasks, activeTasks, completedIds, onComplete,
       const nextOrder = [...order.current];
       [nextOrder[currentIndex], nextOrder[nextIndex]] = [nextOrder[nextIndex], nextOrder[currentIndex]];
       order.current = nextOrder;
-      onMove(id, direction);
+      if (!handleOnly) onMove(id, direction);
     }
+    if (handleOnly && moveCount > 0) setDraftTasks(order.current);
   };
   const stopAutoScroll = () => {
     if (autoScrollFrame.current !== null) cancelAnimationFrame(autoScrollFrame.current);
     autoScrollFrame.current = null;
+    lastScrollTime.current = null;
   };
-  const runAutoScroll = () => {
+  const moveAtPointer = (id: number, x: number, y: number) => {
+    if (!handleOnly) {
+      const target = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-task-id]");
+      if (target) moveTowardPointer(id, Number(target.dataset.taskId), y, target);
+      return;
+    }
+    // Use vertical row geometry, including gaps; the finger may cover the
+    // navigation or leave the narrow handle column during a vertical drag.
+    const rows = Array.from(board.current?.querySelectorAll<HTMLElement>("[data-task-id]") ?? []);
+    let nearest: HTMLElement | undefined;
+    let distance = Infinity;
+    for (const row of rows) {
+      const rect = row.getBoundingClientRect();
+      const nextDistance = Math.abs(y - (rect.top + rect.height / 2));
+      if (nextDistance < distance) { nearest = row; distance = nextDistance; }
+    }
+    if (nearest) moveTowardPointer(id, Number(nearest.dataset.taskId), y, nearest);
+  };
+  const runAutoScroll = (timestamp: number) => {
     if (draggingRef.current === null) {
       stopAutoScroll();
       return;
     }
+    const elapsed = lastScrollTime.current === null ? 16.67 : Math.min(32, timestamp - lastScrollTime.current);
+    lastScrollTime.current = timestamp;
     const {x, y} = dragPointerPosition.current;
-    const topEdge = 100;
-    const bottomEdge = window.innerHeight - 110;
+    const summaryBottom = handleOnly ? document.querySelector(".page-tasks .screen-summary-card")?.getBoundingClientRect().bottom : undefined;
+    const topEdge = summaryBottom === undefined ? 100 : Math.max(60, summaryBottom + 72);
+    const navTop = handleOnly ? document.querySelector(".bottom-nav")?.getBoundingClientRect().top : undefined;
+    const bottomEdge = navTop === undefined ? window.innerHeight - 110 : Math.min(window.innerHeight, navTop) - 96;
     const speed = y < topEdge
       ? -Math.min(16, Math.max(3, (topEdge - y) / 5))
       : y > bottomEdge
         ? Math.min(16, Math.max(3, (y - bottomEdge) / 5))
         : 0;
     if (speed !== 0) {
-      window.scrollBy(0, speed);
-      const target = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-task-id]");
-      if (target) moveTowardPointer(draggingRef.current, Number(target.dataset.taskId), y, target);
+      window.scrollBy({ top: handleOnly ? speed * elapsed / 16.67 : speed, behavior: "instant" });
+      moveAtPointer(draggingRef.current, x, y);
     }
     autoScrollFrame.current = requestAnimationFrame(runAutoScroll);
   };
-  const beginDrag = (id: number, element: HTMLElement, pointerId: number, pointerY: number) => {
+  const beginDrag = (id: number, element: HTMLElement, pointerId: number, pointerY: number, captureElement = element) => {
+    if (draggingRef.current !== null) return;
     cancelHold();
-    element.setPointerCapture(pointerId);
+    order.current = activeTasks;
+    if (handleOnly) setDraftTasks(activeTasks);
+    captureElement.setPointerCapture(pointerId);
+    capturedPointer.current = { element: captureElement, id: pointerId };
     const rect = element.getBoundingClientRect();
-    const liftY = Math.min(58, Math.max(0, rect.top - 8));
+    const liftY = handleOnly ? 0 : Math.min(58, Math.max(0, rect.top - 8));
     dragPointerOffsetY.current = pointerY - rect.top;
     dragPreviewLiftY.current = liftY;
     dragPreviewStartTop.current = rect.top - liftY;
@@ -185,40 +222,55 @@ export function EditableTaskBoard({tasks, activeTasks, completedIds, onComplete,
     autoScrollFrame.current = requestAnimationFrame(runAutoScroll);
   };
   const moveDrag = (id: number, event: ReactPointerEvent<HTMLElement>) => {
-    if (draggingRef.current !== id) return;
+    if (draggingRef.current !== id || capturedPointer.current?.id !== event.pointerId) return;
     dragPointerPosition.current = {x: event.clientX, y: event.clientY};
     const previewY = event.clientY - dragPointerOffsetY.current - dragPreviewLiftY.current - dragPreviewStartTop.current;
     if (dragPreviewElement.current) {
       dragPreviewElement.current.style.transform = `translate3d(0, ${previewY}px, 0) scale(1.015)`;
     }
-    const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>("[data-task-id]");
-    if (target) moveTowardPointer(id, Number(target.dataset.taskId), event.clientY, target);
+    moveAtPointer(id, event.clientX, event.clientY);
   };
-  const endDrag = () => {
-    const completedDrag = draggingRef.current !== null;
+  const endDrag = (commit = true) => {
+    const draggedId = draggingRef.current;
+    const completedDrag = draggedId !== null;
+    if (handleOnly && draggedId !== null && commit) {
+      const index = order.current.findIndex(task => task.taskId === draggedId);
+      if (index !== activeTasks.findIndex(task => task.taskId === draggedId)) onMoveTo(draggedId, index);
+    }
     cancelHold();
     stopAutoScroll();
     draggingRef.current = null;
+    const captured = capturedPointer.current;
+    capturedPointer.current = null;
+    if (captured?.element.hasPointerCapture(captured.id)) captured.element.releasePointerCapture(captured.id);
     setDragging(null);
     setDragPreview(null);
-    if (completedDrag) setMessage("並び順を保存しました");
+    setDraftTasks(null);
+    order.current = activeTasks;
+    if (completedDrag) setMessage(commit ? "並び順を保存しました" : "移動を取り消しました");
   };
   const availableTasks = tasks.filter(task => !CUSTOM_TASK_IDS.some(id => id === task.taskId) && !activeTasks.some(active => active.taskId === task.taskId));
   const availableCategories = TASK_CATEGORY_ORDER.filter(category => availableTasks.some(task => task.category === category));
   const scrollToAddSection = (sectionId: string) => {
     dialog.current?.querySelector<HTMLElement>(`#${sectionId}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
-  return <section ref={board} className={`card decorated-card task-board-card task-edit-board ${editing ? "task-edit-mode" : ""} ${dragging !== null ? "task-is-dragging" : ""}`}>
+  return <section ref={board}
+    onPointerMove={event => { if (handleOnly && draggingRef.current !== null) { event.preventDefault(); moveDrag(draggingRef.current, event); } }}
+    onPointerUp={event => { if (handleOnly && capturedPointer.current?.id === event.pointerId) endDrag(); }}
+    onPointerCancel={event => { if (handleOnly && capturedPointer.current?.id === event.pointerId) endDrag(false); }}
+    onLostPointerCapture={event => { if (handleOnly && capturedPointer.current?.id === event.pointerId) endDrag(false); }}
+    onKeyDown={event => { if (handleOnly && event.key === "Escape" && draggingRef.current !== null) { event.preventDefault(); endDrag(false); } }}
+    className={`card decorated-card task-board-card task-edit-board ${handleOnly ? "task-handle-reorder" : ""} ${editing ? "task-edit-mode" : ""} ${dragging !== null ? "task-is-dragging" : ""}`}>
     <div className="task-edit-toolbar"><h2 className="screen-section-title">クエスト一覧</h2><button className="quest-btn" onClick={() => setEditing(!editing)}>{editing ? "完了" : "編集"}</button><button className="quest-btn quest-btn-primary" aria-label="タスクを追加" onClick={() => {setLimitReached(false); setAdding(true); setMessage("");}}>＋</button></div>
-    <p className="task-edit-hint"><span className="task-edit-hint-icon" aria-hidden="true">?</span><span>{editing ? "カードを長押ししてドラッグ。≡でも並び替え、×で一覧から外せます。" : "「編集」を押すと、タスクの並び替え・削除ができます。"}</span></p>
+    <p className="task-edit-hint"><span className="task-edit-hint-icon" aria-hidden="true">?</span><span>{editing ? (handleOnly ? "カードはスワイプでスクロール。「移動」をつかんで上下に並び替え、×で一覧から外せます。" : "カードを長押ししてドラッグ。≡でも並び替え、×で一覧から外せます。") : "「編集」を押すと、タスクの並び替え・削除ができます。"}</span></p>
     <p role="status" className="task-edit-hint">{message}</p>
-    <ul className="quest-list">{activeTasks.map((task) => {
+    <ul className="quest-list">{(draftTasks ?? activeTasks).map((task) => {
       const completed = completedIds.includes(task.taskId);
       return <li key={task.taskId} data-task-id={task.taskId} className={`quest-item task-row-rpg ${editing ? "task-row-editable" : ""} ${completed ? "task-row-completed" : ""} ${dragging === task.taskId ? "task-row-dragging" : ""}`}
         onContextMenu={event => event.preventDefault()}
         onDragStart={event => event.preventDefault()}
         onPointerDown={event => {
-          if (!editing || (event.target as HTMLElement).closest("button")) return;
+          if (handleOnly || !editing || !event.isPrimary || event.button !== 0 || (event.target as HTMLElement).closest("button")) return;
           event.preventDefault();
           origin.current = {x: event.clientX, y: event.clientY};
           const element = event.currentTarget;
@@ -230,16 +282,24 @@ export function EditableTaskBoard({tasks, activeTasks, completedIds, onComplete,
           }, 250);
         }}
         onPointerMove={event => {
+          if (handleOnly) return;
           if (draggingRef.current === task.taskId) {
             event.preventDefault();
             moveDrag(task.taskId, event);
           }
           else if (Math.hypot(event.clientX-origin.current.x, event.clientY-origin.current.y)>10) cancelHold();
         }}
-        onPointerUp={endDrag} onPointerCancel={endDrag}>
+        onPointerUp={() => { if (!handleOnly) endDrag(); }} onPointerCancel={() => { if (!handleOnly) endDrag(); }}>
         <div className="task-row-main"><div><div className="task-row-title">{task.name}</div><small>EXP +{task.baseExp} · コイン +2</small><small className="task-edit-attributes">Power {task.power} · Heal {task.heal}<br />Knowledge {task.knowledge} · Create {task.create}</small></div></div>
-        {editing ? <div className="task-edit-controls"><button className="task-drag-handle" aria-label={`${task.name}を並び替え`} onPointerDown={event => {event.preventDefault(); event.stopPropagation(); const card = event.currentTarget.closest<HTMLElement>("[data-task-id]"); if (card) beginDrag(task.taskId, card, event.pointerId, event.clientY);}}
-          onPointerMove={event => {event.stopPropagation(); moveDrag(task.taskId, event);}} onPointerUp={event => {event.stopPropagation(); endDrag();}} onPointerCancel={event => {event.stopPropagation(); endDrag();}}>≡</button><button className="task-remove-cross" aria-label={`${task.name}を削除`} onClick={() => setMessage(onRemove(task.taskId)?.removed ? "一覧から外しました。＋から再追加できます。" : "タスクは3件以上残してください。")}>×</button></div>
+        {editing ? <div className="task-edit-controls"><button className="task-drag-handle" aria-label={`${task.name}を並び替え`} title={handleOnly ? "つかんで上下に移動（キーボードは↑↓）" : undefined}
+          onKeyDown={event => {
+            if (!handleOnly || draggingRef.current !== null || !["ArrowUp", "ArrowDown"].includes(event.key)) return;
+            event.preventDefault();
+            onMove(task.taskId, event.key === "ArrowUp" ? "up" : "down");
+          }}
+          onPointerDown={event => {if (!event.isPrimary || event.button !== 0) return; event.preventDefault(); event.stopPropagation(); const card = event.currentTarget.closest<HTMLElement>("[data-task-id]"); if (card) beginDrag(task.taskId, card, event.pointerId, event.clientY, handleOnly ? board.current ?? card : card);}}
+          onPointerMove={event => {event.stopPropagation(); moveDrag(task.taskId, event);}} onPointerUp={event => {event.stopPropagation(); if (capturedPointer.current?.id === event.pointerId) endDrag();}} onPointerCancel={event => {event.stopPropagation(); if (capturedPointer.current?.id === event.pointerId) endDrag();}}
+          onLostPointerCapture={event => {if (capturedPointer.current?.id === event.pointerId) endDrag();}}>{handleOnly ? <><img src="/img/icon/task_reorder_vertical.svg" alt="" draggable={false} /><span>移動</span></> : "≡"}</button><button className="task-remove-cross" aria-label={`${task.name}を削除`} onClick={() => setMessage(onRemove(task.taskId)?.removed ? "一覧から外しました。＋から再追加できます。" : "タスクは3件以上残してください。")}>×</button></div>
           : <button className="quest-btn quest-btn-primary" disabled={completed} onClick={() => onComplete(task.taskId)}>{completed ? "達成済み" : "達成"}</button>}
       </li>;
     })}</ul>
@@ -253,7 +313,7 @@ export function EditableTaskBoard({tasks, activeTasks, completedIds, onComplete,
         aria-hidden="true"
       >
         <div className="task-row-main"><div><div className="task-row-title">{task.name}</div><small>EXP +{task.baseExp} · コイン +2</small><small className="task-edit-attributes">Power {task.power} · Heal {task.heal}<br />Knowledge {task.knowledge} · Create {task.create}</small></div></div>
-        <span className="task-drag-preview-handle">≡</span>
+        <span className="task-drag-preview-handle">{handleOnly ? <img src="/img/icon/task_reorder_vertical.svg" width="32" height="32" alt="" /> : "≡"}</span>
       </div>, document.body);
     })()}
     <dialog ref={dialog} className="task-add-dialog" aria-label="タスクを追加" onCancel={closeAddDialog}>

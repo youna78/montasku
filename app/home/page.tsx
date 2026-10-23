@@ -188,7 +188,7 @@ export default function HomePage() {
   }
 
   if (octoberUi && gameState.birthEventPending && !gameState.endEventPending) {
-    return <BirthTransition />;
+    return <BirthTransition currentMonsterId={gameState.currentMonsterId} monsters={monsters} />;
   }
 
   const currentMonster = monsters.find((m) => m.monsterId === gameState.currentMonsterId);

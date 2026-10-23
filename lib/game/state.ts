@@ -1350,6 +1350,19 @@ export function removeTaskFromActive(state: GameState, taskId: number): RemoveTa
   };
 }
 
+/** Commit a long-distance drag in one update, preserving the latest game progress. */
+export function moveTaskToIndex(state: GameState, taskId: number, index: number): ReorderTaskResult {
+  const tasks = sortAndReindexActiveTasks(state.activeTasks);
+  const from = tasks.findIndex(task => task.taskId === taskId);
+  if (from < 0) return { nextState: state, moved: false, reason: "not_found" };
+  if (!Number.isInteger(index) || index < 0 || index >= tasks.length || from === index) {
+    return { nextState: state, moved: false, reason: "boundary" };
+  }
+  const [task] = tasks.splice(from, 1);
+  tasks.splice(index, 0, task);
+  return { nextState: { ...state, activeTasks: reindexActiveTasksInCurrentOrder(tasks) }, moved: true };
+}
+
 export function moveTaskInActive(
   state: GameState,
   taskId: number,

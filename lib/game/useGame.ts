@@ -39,6 +39,7 @@ import {
   loadGameState,
   markEventIntroPopupSeen as runMarkEventIntroPopupSeen,
   moveTaskInActive,
+  moveTaskToIndex,
   purchaseEventReward as runPurchaseEventReward,
   queueEventEgg as runQueueEventEgg,
   reconcileMonsterProgress,
@@ -192,6 +193,7 @@ type UseGameResult = {
   addTask: (taskId: number) => AddTaskResult | null;
   removeTask: (taskId: number) => RemoveTaskResult | null;
   moveTask: (taskId: number, direction: "up" | "down") => ReorderTaskResult | null;
+  moveTaskTo: (taskId: number, index: number) => ReorderTaskResult | null;
   saveCustomTask: (taskId: number, name: string) => boolean;
   purchaseBackground: (backgroundId: string, price: number) => PurchaseShopItemResult | null;
   equipBackground: (backgroundId: string) => EquipBackgroundResult | null;
@@ -542,6 +544,14 @@ export function useGame(): UseGameResult {
     },
     [commitState]
   );
+
+  const moveTaskTo = useCallback((taskId: number, index: number): ReorderTaskResult | null => {
+    const current = gameStateRef.current;
+    if (!current) return null;
+    const result = moveTaskToIndex(current, taskId, index);
+    if (result.moved) commitState(result.nextState);
+    return result;
+  }, [commitState]);
 
   const purchaseBackground = useCallback(
     (backgroundId: string, price: number): PurchaseShopItemResult | null => {
@@ -1168,6 +1178,7 @@ export function useGame(): UseGameResult {
     addTask,
     removeTask,
     moveTask,
+    moveTaskTo,
     saveCustomTask,
     purchaseBackground,
     equipBackground,
