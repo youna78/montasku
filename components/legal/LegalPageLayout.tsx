@@ -18,6 +18,7 @@ type LegalPageLayoutProps = {
 const legalLinks: LegalLink[] = [
   { href: "/privacy", label: "プライバシーポリシー" },
   { href: "/terms", label: "利用規約" },
+  { href: "/licenses", label: "ライセンス" },
   { href: "/contact", label: "お問い合わせ" },
   { href: "/commerce", label: "特定商取引法に基づく表記" }
 ];

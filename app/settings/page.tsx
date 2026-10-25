@@ -91,6 +91,9 @@ export default function SettingsPage() {
           <Link href="/terms" className="ui-link-button settings-menu-button settings-menu-button-neutral">
             利用規約
           </Link>
+          <Link href="/licenses" className="ui-link-button settings-menu-button settings-menu-button-neutral">
+            ライセンス
+          </Link>
           <Link href="/contact" className="ui-link-button settings-menu-button settings-menu-button-neutral">
             お問い合わせ
           </Link>
